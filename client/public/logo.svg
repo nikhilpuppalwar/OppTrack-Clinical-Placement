@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- Geometric Acid Green & Dark N Logo -->
+  <defs>
+    <linearGradient id="limeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d6ff73"/>
+      <stop offset="100%" stop-color="#aad53d"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(40, 40) scale(0.84)">
+    <!-- Black Diagonal Left Leg -->
+    <polygon points="90,320 200,150 240,150 130,380 90,380" fill="#000000"/>
+    <polygon points="90,320 130,380 90,380" fill="#151f00"/>
+    
+    <!-- Central Lime Green Parallel Ribbon -->
+    <polygon points="90,380 150,380 300,120 240,120" fill="url(#limeGrad)"/>
+    <polygon points="240,120 300,120 300,150 240,150" fill="#c5f258"/>
+    
+    <!-- Black Diagonal Right Leg -->
+    <polygon points="240,230 290,350 400,120 350,120" fill="#000000"/>
+    <polygon points="290,350 400,120 400,150 290,350" fill="#1a1c1b"/>
+  </g>
+</svg>
