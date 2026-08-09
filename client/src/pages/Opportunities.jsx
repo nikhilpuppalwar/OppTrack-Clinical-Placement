@@ -5,6 +5,8 @@ import DeadlineBadge from '../components/DeadlineBadge';
 import { Plus, Search, Trash2, Eye, Sparkles, Wand2, CalendarDays, X, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import MissingKeyModal from '../components/MissingKeyModal';
+
 const STATUSES = ['', 'not_applied', 'applied', 'oa', 'interview', 'hr', 'offer', 'rejected'];
 const EMP_TYPES = [
   { key: '', label: 'All Records' },
@@ -24,6 +26,7 @@ export default function Opportunities() {
   const [followUpText, setFollowUpText] = useState('');
   const [aiUpdating, setAiUpdating] = useState(false);
   const [changesSummary, setChangesSummary] = useState(null);
+  const [keyModal, setKeyModal] = useState({ isOpen: false, keyType: 'AI', message: '' });
 
   const fetchOpps = async () => {
     setLoading(true);
@@ -86,7 +89,17 @@ export default function Opportunities() {
       toast.success(`✅ Updated! ${data.changesSummary?.length || 0} changes saved to calendar!`, { id: toastId });
       fetchOpps();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'AI Update failed', { id: toastId });
+      if (err.response?.data?.isKeyMissing) {
+        toast.dismiss(toastId);
+        setActiveAiOpp(null);
+        setKeyModal({
+          isOpen: true,
+          keyType: err.response.data.keyType || 'AI',
+          message: err.response.data.message || 'AI API Key is missing. Please add your key in Settings.',
+        });
+      } else {
+        toast.error(err.response?.data?.message || 'AI Update failed', { id: toastId });
+      }
     } finally {
       setAiUpdating(false);
     }
@@ -475,6 +488,14 @@ export default function Opportunities() {
           </div>
         </div>
       )}
+
+      {/* Missing Key Modal */}
+      <MissingKeyModal
+        isOpen={keyModal.isOpen}
+        onClose={() => setKeyModal(k => ({ ...k, isOpen: false }))}
+        keyType={keyModal.keyType}
+        message={keyModal.message}
+      />
     </div>
   );
 }

@@ -167,6 +167,14 @@ const extractFromEmail = async (req, res) => {
   const { rawText } = req.body;
   if (!rawText) return res.status(400).json({ message: 'rawText is required.' });
 
+  if (!req.user?.settings?.llmApiKey) {
+    return res.status(400).json({
+      isKeyMissing: true,
+      keyType: 'AI',
+      message: 'AI API Key is missing! Please configure your LLM API Key in Settings to use AI Smart Paste.',
+    });
+  }
+
   const aiService = require('../services/aiExtraction.service');
   const duplicateService = require('../services/duplicate.service');
 
@@ -189,6 +197,14 @@ const extractFromEmail = async (req, res) => {
 const aiUpdateOpportunity = async (req, res) => {
   const { rawText } = req.body;
   if (!rawText) return res.status(400).json({ message: 'rawText is required.' });
+
+  if (!req.user?.settings?.llmApiKey) {
+    return res.status(400).json({
+      isKeyMissing: true,
+      keyType: 'AI',
+      message: 'AI API Key is missing! Please configure your LLM API Key in Settings.',
+    });
+  }
 
   const opp = await Opportunity.findOne({ _id: req.params.id, userId: req.user._id });
   if (!opp) return res.status(404).json({ message: 'Opportunity not found.' });
@@ -237,35 +253,40 @@ const aiUpdateOpportunity = async (req, res) => {
 
 // @GET /api/dashboard/stats
 const getDashboardStats = async (req, res) => {
-  const userId = req.user._id;
-  const ALL_STATUSES = ['not_applied', 'applied', 'oa', 'interview', 'hr', 'offer', 'rejected'];
+  try {
+    const userId = req.user._id;
+    const ALL_STATUSES = ['not_applied', 'applied', 'oa', 'interview', 'hr', 'offer', 'rejected'];
 
-  const [total, applied, inProgress, offers, rejected, ...statusCounts] = await Promise.all([
-    Opportunity.countDocuments({ userId }),
-    Opportunity.countDocuments({ userId, status: 'applied' }),
-    Opportunity.countDocuments({ userId, status: { $in: ['oa', 'interview', 'hr'] } }),
-    Opportunity.countDocuments({ userId, status: 'offer' }),
-    Opportunity.countDocuments({ userId, status: 'rejected' }),
-    ...ALL_STATUSES.map(s => Opportunity.countDocuments({ userId, status: s })),
-  ]);
+    const [total, applied, inProgress, offers, rejected, ...statusCounts] = await Promise.all([
+      Opportunity.countDocuments({ userId }),
+      Opportunity.countDocuments({ userId, status: 'applied' }),
+      Opportunity.countDocuments({ userId, status: { $in: ['oa', 'interview', 'hr'] } }),
+      Opportunity.countDocuments({ userId, status: 'offer' }),
+      Opportunity.countDocuments({ userId, status: 'rejected' }),
+      ...ALL_STATUSES.map(s => Opportunity.countDocuments({ userId, status: s })),
+    ]);
 
-  // Build byStatus map
-  const byStatus = {};
-  ALL_STATUSES.forEach((s, i) => { byStatus[s] = statusCounts[i]; });
+    // Build byStatus map
+    const byStatus = {};
+    ALL_STATUSES.forEach((s, i) => { byStatus[s] = statusCounts[i]; });
 
-  const now = new Date();
-  const upcoming = await Opportunity.find({
-    userId,
-    deadline: { $gte: now, $lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) },
-    status: { $nin: ['offer', 'rejected'] },
-  })
-    .sort({ deadline: 1 })
-    .limit(5)
-    .select('company role deadline status');
+    const now = new Date();
+    const upcoming = await Opportunity.find({
+      userId,
+      deadline: { $gte: now, $lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) },
+      status: { $nin: ['offer', 'rejected'] },
+    })
+      .sort({ deadline: 1 })
+      .limit(5)
+      .select('company role deadline status');
 
-  const rejectionRate = total > 0 ? Math.round((rejected / total) * 100) : 0;
+    const rejectionRate = total > 0 ? Math.round((rejected / total) * 100) : 0;
 
-  res.json({ total, applied, inProgress, offers, rejected, rejectionRate, upcoming, byStatus });
+    res.json({ total, applied, inProgress, offers, rejected, rejectionRate, upcoming, byStatus });
+  } catch (err) {
+    console.error('Error fetching dashboard stats:', err);
+    res.status(500).json({ message: err.message || 'Failed to fetch dashboard statistics' });
+  }
 };
 
 module.exports = {

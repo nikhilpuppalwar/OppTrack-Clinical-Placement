@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { settingsAPI } from '../api';
-import { Eye, EyeOff, Sparkles, Send, Save, Bell, Download, CheckCircle2 } from 'lucide-react';
+import { 
+  Eye, EyeOff, Sparkles, Send, Save, Bell, Download, CheckCircle2, 
+  AlertCircle, Cpu, Mail, ShieldCheck, Database, Sliders, Check
+} from 'lucide-react';
 import toast from 'react-hot-toast';
+import MissingKeyModal from '../components/MissingKeyModal';
 
 // --- Constants ---
 const DEFAULT_SETTINGS = {
@@ -17,9 +21,9 @@ const DEFAULT_SETTINGS = {
 };
 
 const PRESET_PROVIDERS = [
-  { value: 'groq', label: 'Groq Cloud (Recommended — Free & Fast)' },
+  { value: 'groq', label: 'Groq Cloud (Recommended — Ultra Fast & Free)' },
   { value: 'openai', label: 'OpenAI (ChatGPT / GPT-4o)' },
-  { value: 'anthropic', label: 'Anthropic (Claude)' },
+  { value: 'anthropic', label: 'Anthropic (Claude 3.5)' },
   { value: 'openrouter', label: 'OpenRouter.ai (All Open Models)' },
   { value: 'deepseek', label: 'DeepSeek AI' },
   { value: 'together', label: 'Together.ai' },
@@ -52,20 +56,20 @@ const PRESET_MODELS = {
   ],
 };
 
-// Reusable dark input field with optional prefix icon
 function DarkInput({ id, type = 'text', placeholder, value, onChange, prefix, suffix, accentColor = '#B7E34A' }) {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{
       display: 'flex', alignItems: 'center',
-      background: '#171B18',
+      background: '#121413',
       border: `1px solid ${focused ? accentColor : '#2A302B'}`,
-      borderRadius: 6,
+      boxShadow: focused ? `0 0 12px ${accentColor}25` : 'none',
+      borderRadius: 10,
       overflow: 'hidden',
-      transition: 'border-color 0.15s ease',
+      transition: 'all 0.2s ease',
     }}>
       {prefix && (
-        <span style={{ padding: '0 12px', color: 'rgba(242,243,237,0.4)', fontSize: 18, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+        <span style={{ paddingLeft: 14, color: focused ? accentColor : 'rgba(242,243,237,0.4)', fontSize: 16, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           {prefix}
         </span>
       )}
@@ -84,7 +88,7 @@ function DarkInput({ id, type = 'text', placeholder, value, onChange, prefix, su
           outline: 'none',
           color: '#F2F3ED',
           fontSize: 14,
-          padding: '10px 12px',
+          padding: '12px 14px',
           fontFamily: type === 'password' ? 'DM Mono, monospace' : 'inherit',
         }}
       />
@@ -98,15 +102,16 @@ function DarkSelect({ id, value, onChange, options, accentColor = '#B7E34A', pre
   return (
     <div style={{
       display: 'flex', alignItems: 'center',
-      background: '#171B18',
+      background: '#121413',
       border: `1px solid ${focused ? accentColor : '#2A302B'}`,
-      borderRadius: 6,
+      boxShadow: focused ? `0 0 12px ${accentColor}25` : 'none',
+      borderRadius: 10,
       overflow: 'hidden',
       position: 'relative',
-      transition: 'border-color 0.15s ease',
+      transition: 'all 0.2s ease',
     }}>
       {prefix && (
-        <span style={{ padding: '0 12px', color: 'rgba(242,243,237,0.4)', fontSize: 18, flexShrink: 0 }}>
+        <span style={{ paddingLeft: 14, color: focused ? accentColor : 'rgba(242,243,237,0.4)', fontSize: 16, flexShrink: 0 }}>
           {prefix}
         </span>
       )}
@@ -118,65 +123,32 @@ function DarkSelect({ id, value, onChange, options, accentColor = '#B7E34A', pre
         onBlur={() => setFocused(false)}
         style={{
           flex: 1, background: 'transparent', border: 'none', outline: 'none',
-          color: '#F2F3ED', fontSize: 14, padding: '10px 36px 10px 12px',
+          color: '#F2F3ED', fontSize: 14, padding: '12px 38px 12px 14px',
           appearance: 'none', cursor: 'pointer',
         }}
       >
         {options.map(o => (
-          <option key={o.value} value={o.value} style={{ background: '#171B18' }}>{o.label}</option>
+          <option key={o.value} value={o.value} style={{ background: '#171B18', color: '#F2F3ED' }}>{o.label}</option>
         ))}
       </select>
-      <span style={{ position: 'absolute', right: 12, color: 'rgba(242,243,237,0.4)', fontSize: 18, pointerEvents: 'none' }}>
+      <span style={{ position: 'absolute', right: 14, color: 'rgba(242,243,237,0.4)', fontSize: 14, pointerEvents: 'none' }}>
         ▾
       </span>
     </div>
   );
 }
 
-// Styled label above each input
 function FieldLabel({ children, htmlFor }) {
   return (
-    <label htmlFor={htmlFor} style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#F2F3ED', marginBottom: 6, letterSpacing: '0.01em' }}>
+    <label htmlFor={htmlFor} style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#F2F3ED', marginBottom: 8, letterSpacing: '0.01em' }}>
       {children}
     </label>
   );
 }
 
-// Section divider hr
-const HR = () => <hr style={{ border: 'none', borderTop: '1px solid #2A302B', margin: '0' }} />;
-
-// Section wrapper (2-column: left label, right form)
-function Section({ label, description, badge, badgeColor = '#B7E34A', children, accentColor = '#B7E34A' }) {
-  return (
-    <section style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 40, alignItems: 'start' }}>
-      <div>
-        <h2 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#F2F3ED', marginBottom: 12 }}>
-          {label}
-        </h2>
-        <p style={{ fontSize: 14, color: 'rgba(242,243,237,0.6)', lineHeight: 1.6, marginBottom: 16 }}>
-          {description}
-        </p>
-        {badge && (
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: `${badgeColor}15`, color: badgeColor,
-            border: `1px solid ${badgeColor}40`,
-            padding: '6px 12px', borderRadius: 6, fontSize: 13
-          }}>
-            <CheckCircle2 size={14} />
-            {badge}
-          </div>
-        )}
-      </div>
-      <div>
-        {children}
-      </div>
-    </section>
-  );
-}
-
 export default function Settings() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [initialSettings, setInitialSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -185,12 +157,15 @@ export default function Settings() {
   const [showSmtpPass, setShowSmtpPass] = useState(false);
   const [isCustomProvider, setIsCustomProvider] = useState(false);
   const [isCustomModel, setIsCustomModel] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+  const [keyModal, setKeyModal] = useState({ isOpen: false, keyType: 'AI', message: '' });
 
   useEffect(() => {
     settingsAPI.get()
       .then(({ data }) => {
         const loaded = { ...DEFAULT_SETTINGS, ...data };
         setSettings(loaded);
+        setInitialSettings(loaded);
         const isKnownProvider = PRESET_PROVIDERS.some(p => p.value === loaded.llmProvider);
         if (!isKnownProvider && loaded.llmProvider) setIsCustomProvider(true);
         const providerPresets = PRESET_MODELS[loaded.llmProvider] || [];
@@ -201,10 +176,13 @@ export default function Settings() {
       .finally(() => setLoading(false));
   }, []);
 
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(initialSettings);
+
   const handleSave = async () => {
     setSaving(true);
     try {
       await settingsAPI.update(settings);
+      setInitialSettings(settings);
       toast.success('Settings saved successfully!');
     } catch {
       toast.error('Failed to save settings');
@@ -214,28 +192,58 @@ export default function Settings() {
   };
 
   const handleTestEmail = async () => {
-    if (!settings.smtpUser || !settings.smtpPass) return toast.error('Enter SMTP email and password first');
+    if (!settings.smtpUser || !settings.smtpPass) {
+      return setKeyModal({
+        isOpen: true,
+        keyType: 'Email',
+        message: 'Please enter your SMTP Email and App Password before testing.',
+      });
+    }
     setTestingEmail(true);
     const id = toast.loading('Sending test email...');
     try {
       const { data } = await settingsAPI.testEmail(settings);
       toast.success(data.message || 'Test email sent!', { id });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'SMTP failed. Check credentials.', { id });
+      if (err.response?.data?.isKeyMissing) {
+        toast.dismiss(id);
+        setKeyModal({
+          isOpen: true,
+          keyType: 'Email',
+          message: err.response.data.message || 'SMTP Email and App Password are not configured.',
+        });
+      } else {
+        toast.error(err.response?.data?.message || 'SMTP failed. Check credentials.', { id });
+      }
     } finally {
       setTestingEmail(false);
     }
   };
 
   const handleTestAi = async () => {
-    if (!settings.llmApiKey) return toast.error('Enter your AI API key first');
+    if (!settings.llmApiKey) {
+      return setKeyModal({
+        isOpen: true,
+        keyType: 'AI',
+        message: 'Please enter your AI API Key before testing.',
+      });
+    }
     setTestingAi(true);
     const id = toast.loading(`Testing ${settings.llmProvider || 'AI'} connection...`);
     try {
       const { data } = await settingsAPI.testAiKey(settings);
       toast.success(data.message || 'AI connected!', { id });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'AI test failed.', { id });
+      if (err.response?.data?.isKeyMissing) {
+        toast.dismiss(id);
+        setKeyModal({
+          isOpen: true,
+          keyType: 'AI',
+          message: err.response.data.message || 'AI API Key is missing.',
+        });
+      } else {
+        toast.error(err.response?.data?.message || 'AI test failed.', { id });
+      }
     } finally {
       setTestingAi(false);
     }
@@ -256,148 +264,179 @@ export default function Settings() {
     { value: 'other', label: '✏️ Custom Model...' },
   ];
 
-  // Button styles
-  const btnGhost = {
-    background: 'transparent', border: '1px solid #2A302B', color: '#F2F3ED',
-    padding: '8px 20px', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-    display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.15s ease',
-  };
-  const btnLime = {
-    background: '#171B18', color: '#F2F3ED',
-    border: 'none', borderBottom: '2px solid #B7E34A',
-    padding: '8px 20px', borderRadius: 6, fontSize: 13, fontWeight: 600,
-    cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-  };
-  const btnViolet = {
-    background: '#171B18', color: '#F2F3ED',
-    border: 'none', borderBottom: '2px solid #9A8CFF',
-    padding: '8px 20px', borderRadius: 6, fontSize: 13, fontWeight: 600,
-    cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-  };
-
   if (loading) return <div className="loading-center"><div className="spinner" /></div>;
 
+  const isAiConfigured = Boolean(settings.llmApiKey);
+  const isEmailConfigured = Boolean(settings.smtpUser && settings.smtpPass);
+
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-      {/* Page Header */}
-      <header style={{ borderBottom: '1px solid #2A302B', paddingBottom: 32, marginBottom: 48 }}>
-        <h1 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 400, fontFamily: 'serif', color: '#F2F3ED', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
-          Settings
-        </h1>
-        <p style={{ margin: 0, fontSize: 16, color: 'rgba(242,243,237,0.6)' }}>
-          Manage notifications, AI integrations and account preferences.
-        </p>
+    <div style={{ maxWidth: 980, margin: '0 auto', paddingBottom: 100, fontFamily: 'Manrope, sans-serif' }}>
+      
+      {/* ── HEADER ── */}
+      <header style={{ borderBottom: '1px solid #2A302B', paddingBottom: 28, marginBottom: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 400, fontFamily: 'serif', color: '#F2F3ED', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+              System Settings
+            </h1>
+            <p style={{ margin: 0, fontSize: 14, color: 'rgba(242,243,237,0.6)' }}>
+              Configure your user-specific AI extraction keys, email SMTP credentials, and system preferences.
+            </p>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              background: isDirty ? '#B7E34A' : '#171B18',
+              color: isDirty ? '#101311' : '#F2F3ED',
+              border: isDirty ? 'none' : '1px solid #2A302B',
+              padding: '10px 24px',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: isDirty ? '0 4px 16px rgba(183, 227, 74, 0.3)' : 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Save size={16} /> {saving ? 'Saving…' : 'Save All Settings'}
+          </button>
+        </div>
+
+        {/* ── SYSTEM STATUS BADGES ── */}
+        <div style={{ display: 'flex', gap: 14, marginTop: 24, flexWrap: 'wrap' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+            background: isAiConfigured ? 'rgba(154, 140, 255, 0.12)' : 'rgba(255, 180, 171, 0.12)',
+            border: `1px solid ${isAiConfigured ? '#9A8CFF50' : '#ffb4ab50'}`,
+            color: isAiConfigured ? '#9A8CFF' : '#ffb4ab',
+          }}>
+            <Cpu size={15} />
+            <span>AI Smart Paste: <strong>{isAiConfigured ? `${settings.llmProvider?.toUpperCase() || 'AI'} Connected` : 'Key Not Added'}</strong></span>
+            {isAiConfigured ? <Check size={14} /> : <AlertCircle size={14} />}
+          </div>
+
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+            background: isEmailConfigured ? 'rgba(183, 227, 74, 0.12)' : 'rgba(255, 180, 171, 0.12)',
+            border: `1px solid ${isEmailConfigured ? '#B7E34A50' : '#ffb4ab50'}`,
+            color: isEmailConfigured ? '#B7E34A' : '#ffb4ab',
+          }}>
+            <Mail size={15} />
+            <span>Email Reminders: <strong>{isEmailConfigured ? 'SMTP Active' : 'Credentials Missing'}</strong></span>
+            {isEmailConfigured ? <Check size={14} /> : <AlertCircle size={14} />}
+          </div>
+
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+            background: 'rgba(242, 243, 237, 0.05)',
+            border: '1px solid #2A302B',
+            color: 'rgba(242, 243, 237, 0.7)',
+          }}>
+            <ShieldCheck size={15} color="#B7E34A" />
+            <span>User Isolated Credentials</span>
+          </div>
+        </div>
       </header>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+      {/* ── SETTINGS NAVIGATION TABS ── */}
+      <div style={{
+        display: 'flex', gap: 8, marginBottom: 32,
+        background: '#121413', padding: 6, borderRadius: 12, border: '1px solid #2A302B',
+        overflowX: 'auto',
+      }}>
+        {[
+          { id: 'all', label: 'All Settings', icon: Sliders },
+          { id: 'ai', label: 'AI Integration', icon: Cpu, accent: '#9A8CFF' },
+          { id: 'email', label: 'Email & SMTP', icon: Mail, accent: '#B7E34A' },
+          { id: 'reminders', label: 'Notifications', icon: Bell, accent: '#3B82F6' },
+          { id: 'data', label: 'Data & Backup', icon: Database, accent: '#F59E0B' },
+        ].map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                background: isActive ? '#171B18' : 'transparent',
+                color: isActive ? (tab.accent || '#F2F3ED') : 'rgba(242,243,237,0.5)',
+                border: isActive ? `1px solid ${tab.accent || '#2A302B'}50` : '1px solid transparent',
+                cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease',
+              }}
+            >
+              <Icon size={15} color={isActive ? (tab.accent || '#F2F3ED') : 'currentColor'} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* ── SECTION 1: Email Notifications ── */}
-        <Section
-          label="Email Notifications"
-          description="Configure your SMTP settings to receive placement alerts and daily summaries directly to your inbox."
-          badge={settings.smtpUser ? 'Email configured' : undefined}
-          badgeColor="#B7E34A"
-        >
-          <div style={{ borderTop: '2px solid #B7E34A', paddingTop: 2 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
-              {/* Sender Email */}
-              <div>
-                <FieldLabel htmlFor="smtpUser">Sender Email</FieldLabel>
-                <DarkInput
-                  id="smtpUser" type="email"
-                  placeholder="name@domain.com"
-                  value={settings.smtpUser || ''}
-                  onChange={e => setSettings(s => ({ ...s, smtpUser: e.target.value }))}
-                  prefix="✉"
-                />
-              </div>
-
-              {/* App Password */}
-              <div>
-                <FieldLabel htmlFor="smtpPass">App Password</FieldLabel>
-                <DarkInput
-                  id="smtpPass"
-                  type={showSmtpPass ? 'text' : 'password'}
-                  placeholder="Gmail 16-char app password"
-                  value={settings.smtpPass || ''}
-                  onChange={e => setSettings(s => ({ ...s, smtpPass: e.target.value }))}
-                  prefix="🔑"
-                  suffix={
-                    <button
-                      type="button"
-                      onClick={() => setShowSmtpPass(!showSmtpPass)}
-                      style={{ background: 'transparent', border: 'none', color: 'rgba(242,243,237,0.4)', cursor: 'pointer', padding: '0 12px', display: 'flex', alignItems: 'center' }}
-                    >
-                      {showSmtpPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  }
-                />
-              </div>
-
-              {/* SMTP Host + Port (2-col) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <FieldLabel htmlFor="smtpHost">SMTP Host</FieldLabel>
-                  <DarkInput
-                    id="smtpHost"
-                    placeholder="smtp.gmail.com"
-                    value={settings.smtpHost || 'smtp.gmail.com'}
-                    onChange={e => setSettings(s => ({ ...s, smtpHost: e.target.value }))}
-                  />
+        {/* ── CARD 1: AI INTEGRATION ── */}
+        {(activeTab === 'all' || activeTab === 'ai') && (
+          <div style={{
+            background: '#171B18',
+            border: '1px solid #2A302B',
+            borderTop: '4px solid #9A8CFF',
+            borderRadius: 16,
+            padding: 32,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: 10,
+                  background: 'rgba(154, 140, 255, 0.12)', border: '1px solid rgba(154, 140, 255, 0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9A8CFF'
+                }}>
+                  <Cpu size={22} />
                 </div>
                 <div>
-                  <FieldLabel htmlFor="smtpPort">SMTP Port</FieldLabel>
-                  <DarkInput
-                    id="smtpPort" type="number"
-                    placeholder="587"
-                    value={settings.smtpPort || 587}
-                    onChange={e => setSettings(s => ({ ...s, smtpPort: Number(e.target.value) }))}
-                  />
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F2F3ED', margin: '0 0 2px 0' }}>
+                    AI Integration Settings
+                  </h2>
+                  <p style={{ margin: 0, fontSize: 13, color: 'rgba(242,243,237,0.55)' }}>
+                    Power Smart Paste, automatic email parsing, and follow-up merger with your personal AI key.
+                  </p>
                 </div>
               </div>
+              <span style={{
+                fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                padding: '4px 10px', borderRadius: 6,
+                background: 'rgba(154, 140, 255, 0.15)', color: '#9A8CFF', border: '1px solid rgba(154, 140, 255, 0.3)'
+              }}>
+                Strictly Account Specific
+              </span>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-              <button style={btnGhost} onClick={handleTestEmail} disabled={testingEmail}>
-                <Send size={14} /> {testingEmail ? 'Sending...' : 'Send Test Email'}
-              </button>
-              <button style={btnLime} onClick={handleSave} disabled={saving}>
-                <Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        </Section>
-
-        <HR />
-
-        {/* ── SECTION 2: AI Integration ── */}
-        <Section
-          label="AI Integration"
-          description="Connect your preferred LLM provider to power OppTrack's Smart Paste and intelligent email extraction features."
-          badge={settings.llmApiKey ? 'AI Smart Paste connected' : undefined}
-          badgeColor="#9A8CFF"
-        >
-          <div style={{ borderTop: '2px solid #9A8CFF', paddingTop: 2 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
-
-              {/* Provider */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 24 }}>
+              {/* Provider Selection */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <FieldLabel htmlFor="llmProvider">Provider</FieldLabel>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <FieldLabel htmlFor="llmProvider">AI Provider</FieldLabel>
                   <button
                     type="button"
                     onClick={() => setIsCustomProvider(!isCustomProvider)}
-                    style={{ background: 'transparent', border: 'none', color: '#9A8CFF', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
+                    style={{ background: 'transparent', border: 'none', color: '#9A8CFF', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}
                   >
-                    {isCustomProvider ? '← Use Presets' : '✏️ Custom'}
+                    {isCustomProvider ? '← Select from Presets' : '✏️ Custom Provider'}
                   </button>
                 </div>
                 {isCustomProvider ? (
                   <DarkInput
                     id="llmProvider"
-                    placeholder="e.g. groq / openrouter / deepseek"
+                    placeholder="e.g. groq / openrouter / deepseek / vllm"
                     value={settings.llmProvider || ''}
                     onChange={e => setSettings(s => ({ ...s, llmProvider: e.target.value }))}
                     accentColor="#9A8CFF"
@@ -421,16 +460,16 @@ export default function Settings() {
                 )}
               </div>
 
-              {/* Model */}
+              {/* Model Selection */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <FieldLabel htmlFor="llmModel">Model</FieldLabel>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <FieldLabel htmlFor="llmModel">LLM Model</FieldLabel>
                   <button
                     type="button"
                     onClick={() => setIsCustomModel(!isCustomModel)}
-                    style={{ background: 'transparent', border: 'none', color: '#9A8CFF', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
+                    style={{ background: 'transparent', border: 'none', color: '#9A8CFF', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}
                   >
-                    {isCustomModel ? '← Use Presets' : '✏️ Custom'}
+                    {isCustomModel ? '← Select from Presets' : '✏️ Custom Model String'}
                   </button>
                 </div>
                 {isCustomModel ? (
@@ -459,10 +498,10 @@ export default function Settings() {
 
               {/* API Key */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <FieldLabel htmlFor="llmApiKey">API Key</FieldLabel>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <FieldLabel htmlFor="llmApiKey">LLM API Key</FieldLabel>
                   <span style={{ fontSize: 12, color: 'rgba(242,243,237,0.4)', fontFamily: 'DM Mono, monospace' }}>
-                    For {settings.llmProvider || 'provider'}
+                    Required for {settings.llmProvider || 'AI'}
                   </span>
                 </div>
                 <DarkInput
@@ -477,7 +516,7 @@ export default function Settings() {
                     <button
                       type="button"
                       onClick={() => setShowKey(!showKey)}
-                      style={{ background: 'transparent', border: 'none', color: 'rgba(242,243,237,0.4)', cursor: 'pointer', padding: '0 12px', display: 'flex', alignItems: 'center', transition: 'color 0.15s' }}
+                      style={{ background: 'transparent', border: 'none', color: 'rgba(242,243,237,0.4)', cursor: 'pointer', padding: '0 14px', display: 'flex', alignItems: 'center' }}
                     >
                       {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -486,92 +525,353 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-              <button style={btnGhost} onClick={handleTestAi} disabled={testingAi}>
-                <Sparkles size={14} /> {testingAi ? 'Testing...' : 'Test AI Connection'}
+            {/* Test & Save Actions */}
+            <div style={{ display: 'flex', gap: 12, marginTop: 28, pt: 16, borderTop: '1px solid #2A302B' }}>
+              <button
+                onClick={handleTestAi}
+                disabled={testingAi}
+                style={{
+                  padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                  background: 'transparent', border: '1px solid #9A8CFF50', color: '#9A8CFF',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Sparkles size={15} /> {testingAi ? 'Validating Key...' : 'Test AI Connection'}
               </button>
-              <button style={btnViolet} onClick={handleSave} disabled={saving}>
-                <Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        </Section>
 
-        <HR />
-
-        {/* ── SECTION 3: Reminder Preferences ── */}
-        <Section
-          label="Reminder Preferences"
-          description="Set how far in advance you receive deadline reminder notifications for placement tests and registration closings."
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <FieldLabel htmlFor="reminderLeadHours">Reminder Lead Time</FieldLabel>
-              <DarkSelect
-                id="reminderLeadHours"
-                value={settings.reminderLeadHours}
-                onChange={e => setSettings(s => ({ ...s, reminderLeadHours: Number(e.target.value) }))}
-                options={[
-                  { value: 1, label: '1 hour before deadline' },
-                  { value: 3, label: '3 hours before deadline' },
-                  { value: 12, label: '12 hours before deadline' },
-                  { value: 24, label: '24 hours before deadline (default)' },
-                  { value: 48, label: '48 hours before deadline' },
-                ]}
-              />
-            </div>
-            <div>
-              <FieldLabel htmlFor="notificationChannel">Notification Channel</FieldLabel>
-              <DarkSelect
-                id="notificationChannel"
-                value={settings.notificationChannel}
-                onChange={e => setSettings(s => ({ ...s, notificationChannel: e.target.value }))}
-                options={[
-                  { value: 'email', label: 'Email Notification' },
-                  { value: 'browser', label: 'Browser Notification' },
-                ]}
-              />
-            </div>
-            <div>
-              <button style={btnLime} onClick={handleSave} disabled={saving}>
-                <Save size={14} /> Save Preferences
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                  background: '#9A8CFF', color: '#101311', border: 'none',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                  boxShadow: '0 4px 12px rgba(154, 140, 255, 0.3)',
+                }}
+              >
+                <Save size={15} /> {saving ? 'Saving…' : 'Save AI Settings'}
               </button>
             </div>
           </div>
-        </Section>
+        )}
 
-        <HR />
+        {/* ── CARD 2: EMAIL & SMTP CREDENTIALS ── */}
+        {(activeTab === 'all' || activeTab === 'email') && (
+          <div style={{
+            background: '#171B18',
+            border: '1px solid #2A302B',
+            borderTop: '4px solid #B7E34A',
+            borderRadius: 16,
+            padding: 32,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: 10,
+                  background: 'rgba(183, 227, 74, 0.12)', border: '1px solid rgba(183, 227, 74, 0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#B7E34A'
+                }}>
+                  <Mail size={22} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F2F3ED', margin: '0 0 2px 0' }}>
+                    Email & SMTP Configuration
+                  </h2>
+                  <p style={{ margin: 0, fontSize: 13, color: 'rgba(242,243,237,0.55)' }}>
+                    Configure your personal Gmail App Password or SMTP account to dispatch test notifications & automated reminders.
+                  </p>
+                </div>
+              </div>
+              <span style={{
+                fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                padding: '4px 10px', borderRadius: 6,
+                background: 'rgba(183, 227, 74, 0.15)', color: '#B7E34A', border: '1px solid rgba(183, 227, 74, 0.3)'
+              }}>
+                No Shared Fallback
+              </span>
+            </div>
 
-        {/* ── SECTION 4: Data Export ── */}
-        <Section
-          label="Data & Backup"
-          description="Download a complete JSON backup of your opportunities, profile vault, and activity history."
-        >
-          <div>
-            <p style={{ fontSize: 14, color: 'rgba(242,243,237,0.5)', marginBottom: 20, fontFamily: 'DM Mono, monospace' }}>
-              All your data is stored locally in your MongoDB instance.
-            </p>
-            <button style={btnGhost} onClick={handleExport}>
-              <Download size={14} /> Export All My Data
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 24 }}>
+              {/* Sender Email */}
+              <div>
+                <FieldLabel htmlFor="smtpUser">Sender Email Address</FieldLabel>
+                <DarkInput
+                  id="smtpUser" type="email"
+                  placeholder="your.email@gmail.com"
+                  value={settings.smtpUser || ''}
+                  onChange={e => setSettings(s => ({ ...s, smtpUser: e.target.value }))}
+                  prefix="✉"
+                  accentColor="#B7E34A"
+                />
+              </div>
+
+              {/* App Password */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <FieldLabel htmlFor="smtpPass">App Password / SMTP Password</FieldLabel>
+                  <a
+                    href="https://myaccount.google.com/apppasswords"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: 12, color: '#B7E34A', textDecoration: 'none', fontWeight: 600 }}
+                  >
+                    Generate Google App Password ↗
+                  </a>
+                </div>
+                <DarkInput
+                  id="smtpPass"
+                  type={showSmtpPass ? 'text' : 'password'}
+                  placeholder="16-character app password"
+                  value={settings.smtpPass || ''}
+                  onChange={e => setSettings(s => ({ ...s, smtpPass: e.target.value }))}
+                  prefix="🔑"
+                  accentColor="#B7E34A"
+                  suffix={
+                    <button
+                      type="button"
+                      onClick={() => setShowSmtpPass(!showSmtpPass)}
+                      style={{ background: 'transparent', border: 'none', color: 'rgba(242,243,237,0.4)', cursor: 'pointer', padding: '0 14px', display: 'flex', alignItems: 'center' }}
+                    >
+                      {showSmtpPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  }
+                />
+              </div>
+
+              {/* Host & Port */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <FieldLabel htmlFor="smtpHost">SMTP Host</FieldLabel>
+                  <DarkInput
+                    id="smtpHost"
+                    placeholder="smtp.gmail.com"
+                    value={settings.smtpHost || 'smtp.gmail.com'}
+                    onChange={e => setSettings(s => ({ ...s, smtpHost: e.target.value }))}
+                    accentColor="#B7E34A"
+                  />
+                </div>
+                <div>
+                  <FieldLabel htmlFor="smtpPort">SMTP Port</FieldLabel>
+                  <DarkInput
+                    id="smtpPort" type="number"
+                    placeholder="587"
+                    value={settings.smtpPort || 587}
+                    onChange={e => setSettings(s => ({ ...s, smtpPort: Number(e.target.value) }))}
+                    accentColor="#B7E34A"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Test & Save Actions */}
+            <div style={{ display: 'flex', gap: 12, marginTop: 28, paddingTop: 16, borderTop: '1px solid #2A302B' }}>
+              <button
+                onClick={handleTestEmail}
+                disabled={testingEmail}
+                style={{
+                  padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                  background: 'transparent', border: '1px solid #B7E34A50', color: '#B7E34A',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Send size={15} /> {testingEmail ? 'Sending Test...' : 'Send Test Email'}
+              </button>
+
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                  background: '#B7E34A', color: '#101311', border: 'none',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                  boxShadow: '0 4px 12px rgba(183, 227, 74, 0.3)',
+                }}
+              >
+                <Save size={15} /> {saving ? 'Saving…' : 'Save Email Settings'}
+              </button>
+            </div>
           </div>
-        </Section>
+        )}
 
-        <HR />
+        {/* ── CARD 3: REMINDER & NOTIFICATION PREFERENCES ── */}
+        {(activeTab === 'all' || activeTab === 'reminders') && (
+          <div style={{
+            background: '#171B18',
+            border: '1px solid #2A302B',
+            borderTop: '4px solid #3B82F6',
+            borderRadius: 16,
+            padding: 32,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{
+                width: 42, height: 42, borderRadius: 10,
+                background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6'
+              }}>
+                <Bell size={22} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F2F3ED', margin: '0 0 2px 0' }}>
+                  Deadline Reminder Preferences
+                </h2>
+                <p style={{ margin: 0, fontSize: 13, color: 'rgba(242,243,237,0.55)' }}>
+                  Set lead times for automated placement test & application closing reminders.
+                </p>
+              </div>
+            </div>
 
-        {/* ── SECTION 5: About ── */}
-        <Section
-          label="About OppTrack"
-          description="Personal placement & internship tracking system built for B.Tech students with AI-powered email extraction."
-        >
-          <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 12, color: 'rgba(242,243,237,0.3)', lineHeight: 1.8 }}>
-            <div>v1.5.0 — Built with ❤️ for PCCOE students</div>
-            <div>AI Smart Paste • Automated Reminders • Calendar Sync</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 24 }}>
+              <div>
+                <FieldLabel htmlFor="reminderLeadHours">Lead Time Before Deadline</FieldLabel>
+                <DarkSelect
+                  id="reminderLeadHours"
+                  value={settings.reminderLeadHours}
+                  accentColor="#3B82F6"
+                  onChange={e => setSettings(s => ({ ...s, reminderLeadHours: Number(e.target.value) }))}
+                  options={[
+                    { value: 1, label: '1 Hour Before Deadline' },
+                    { value: 3, label: '3 Hours Before Deadline' },
+                    { value: 12, label: '12 Hours Before Deadline' },
+                    { value: 24, label: '24 Hours Before Deadline (Default)' },
+                    { value: 48, label: '48 Hours Before Deadline' },
+                  ]}
+                />
+              </div>
+
+              <div>
+                <FieldLabel htmlFor="notificationChannel">Notification Delivery Channel</FieldLabel>
+                <DarkSelect
+                  id="notificationChannel"
+                  value={settings.notificationChannel}
+                  accentColor="#3B82F6"
+                  onChange={e => setSettings(s => ({ ...s, notificationChannel: e.target.value }))}
+                  options={[
+                    { value: 'email', label: 'Email Notification (via SMTP)' },
+                    { value: 'browser', label: 'Browser Toast Notification' },
+                  ]}
+                />
+              </div>
+            </div>
           </div>
-        </Section>
+        )}
+
+        {/* ── CARD 4: DATA EXPORT & ABOUT ── */}
+        {(activeTab === 'all' || activeTab === 'data') && (
+          <div style={{
+            background: '#171B18',
+            border: '1px solid #2A302B',
+            borderTop: '4px solid #F59E0B',
+            borderRadius: 16,
+            padding: 32,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{
+                width: 42, height: 42, borderRadius: 10,
+                background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B'
+              }}>
+                <Database size={22} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F2F3ED', margin: '0 0 2px 0' }}>
+                  Data Backup & System Info
+                </h2>
+                <p style={{ margin: 0, fontSize: 13, color: 'rgba(242,243,237,0.55)' }}>
+                  Download a complete JSON export of your placement opportunities, student profile vault, and log history.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginTop: 24 }}>
+              <div>
+                <p style={{ fontSize: 13, color: 'rgba(242,243,237,0.6)', margin: '0 0 4px 0' }}>
+                  Local Storage Engine: <strong>MongoDB Instance</strong>
+                </p>
+                <span style={{ fontSize: 12, fontFamily: 'DM Mono, monospace', color: 'rgba(242,243,237,0.35)' }}>
+                  v1.5.0 • PCCOE Placement Tracker Module
+                </span>
+              </div>
+
+              <button
+                onClick={handleExport}
+                style={{
+                  padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                  background: 'transparent', border: '1px solid #F59E0B70', color: '#F59E0B',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Download size={15} /> Export All Account Data (JSON)
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
+
+      {/* ── STICKY FLOATING SAVE BAR (WHEN CHANGED) ── */}
+      {isDirty && (
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 999,
+          background: '#171B18',
+          border: '1px solid #B7E34A',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.8), 0 0 24px rgba(183, 227, 74, 0.2)',
+          borderRadius: 14,
+          padding: '12px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 20,
+          animation: 'fadeIn 0.2s ease-out',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#B7E34A' }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#F2F3ED' }}>
+              You have unsaved setting changes
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={() => setSettings(initialSettings)}
+              style={{
+                background: 'transparent', border: '1px solid #2A302B', color: 'rgba(242,243,237,0.6)',
+                padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer'
+              }}
+            >
+              Reset
+            </button>
+
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                background: '#B7E34A', color: '#101311', border: 'none',
+                padding: '6px 18px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Missing Key Modal Popup */}
+      <MissingKeyModal
+        isOpen={keyModal.isOpen}
+        onClose={() => setKeyModal(k => ({ ...k, isOpen: false }))}
+        keyType={keyModal.keyType}
+        message={keyModal.message}
+      />
     </div>
   );
 }

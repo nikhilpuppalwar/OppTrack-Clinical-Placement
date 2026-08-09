@@ -23,13 +23,35 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    Promise.all([opportunityAPI.stats(), historyAPI.list({ limit: 6 })])
-      .then(([s, h]) => {
-        setStats(s.data);
-        setRecentLogs(h.data.logs || []);
-      })
-      .catch(() => toast.error('Failed to load dashboard statistics'))
-      .finally(() => setLoading(false));
+    let isMounted = true;
+    const loadDashboard = async () => {
+      try {
+        const [statsRes, historyRes] = await Promise.allSettled([
+          opportunityAPI.stats(),
+          historyAPI.list({ limit: 6 }),
+        ]);
+
+        if (isMounted) {
+          if (statsRes.status === 'fulfilled') {
+            setStats(statsRes.value.data);
+          } else {
+            console.error('Stats error:', statsRes.reason);
+            toast.error('Failed to load dashboard statistics');
+          }
+
+          if (historyRes.status === 'fulfilled') {
+            setRecentLogs(historyRes.value.data?.logs || []);
+          }
+        }
+      } catch (err) {
+        if (isMounted) toast.error('Failed to load dashboard statistics');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadDashboard();
+    return () => { isMounted = false; };
   }, []);
 
   if (loading) {

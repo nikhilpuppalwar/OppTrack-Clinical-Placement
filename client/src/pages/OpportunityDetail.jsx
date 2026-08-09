@@ -5,6 +5,8 @@ import DeadlineBadge from '../components/DeadlineBadge';
 import { ArrowLeft, Edit, Trash2, ExternalLink, Plus, X, Sparkles, Wand2, CalendarDays, Save, FolderPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import MissingKeyModal from '../components/MissingKeyModal';
+
 const PIPELINE = ['not_applied', 'applied', 'oa', 'interview', 'hr', 'offer'];
 const STAGE_LABELS = { not_applied: 'Not Applied', applied: 'Applied', oa: 'OA / Test', interview: 'Interview', hr: 'HR Round', offer: 'Offer', rejected: 'Rejected' };
 
@@ -26,6 +28,7 @@ export default function OpportunityDetail() {
   const [addingNewSection, setAddingNewSection] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
   const [newField, setNewField] = useState({ label: '', value: '' });
+  const [keyModal, setKeyModal] = useState({ isOpen: false, keyType: 'AI', message: '' });
 
   useEffect(() => {
     opportunityAPI.get(id)
@@ -67,8 +70,19 @@ export default function OpportunityDetail() {
       setOpp(data.opportunity); setEditForm(data.opportunity);
       setChangesSummary(data.changesSummary); setFollowUpText('');
       toast.success(`✅ ${data.changesSummary?.length || 0} changes merged & calendar synced.`, { id: tid });
-    } catch (err) { toast.error(err.response?.data?.message || 'AI Update failed', { id: tid }); }
-    finally { setAiUpdating(false); }
+    } catch (err) {
+      if (err.response?.data?.isKeyMissing) {
+        toast.dismiss(tid);
+        setShowAiModal(false);
+        setKeyModal({
+          isOpen: true,
+          keyType: err.response.data.keyType || 'AI',
+          message: err.response.data.message || 'AI API Key is missing. Please add your key in Settings.',
+        });
+      } else {
+        toast.error(err.response?.data?.message || 'AI Update failed', { id: tid });
+      }
+    } finally { setAiUpdating(false); }
   };
 
   const updateCF = (fid, key, val) => setEditForm(f => ({ ...f, customFields: (f.customFields || []).map(cf => (cf.id === fid || cf._id === fid) ? { ...cf, [key]: val } : cf) }));
@@ -322,6 +336,14 @@ export default function OpportunityDetail() {
           </div>
         </div>
       )}
+
+      {/* Missing Key Modal */}
+      <MissingKeyModal
+        isOpen={keyModal.isOpen}
+        onClose={() => setKeyModal(k => ({ ...k, isOpen: false }))}
+        keyType={keyModal.keyType}
+        message={keyModal.message}
+      />
     </div>
   );
 }

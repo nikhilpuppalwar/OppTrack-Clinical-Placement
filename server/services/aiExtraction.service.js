@@ -229,15 +229,18 @@ Raw Email:
 `;
 
 const extract = async (rawText, userSettings = {}) => {
-  let provider = (userSettings?.llmProvider || process.env.LLM_PROVIDER || 'groq').toLowerCase().trim();
-  const apiKey = userSettings?.llmApiKey || process.env.LLM_API_KEY;
-  let model = userSettings?.llmModel || process.env.LLM_MODEL;
+  let provider = (userSettings?.llmProvider || 'groq').toLowerCase().trim();
+  const apiKey = userSettings?.llmApiKey;
+  let model = userSettings?.llmModel;
 
   if (apiKey && apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';
   else if (apiKey && apiKey.startsWith('sk-or-') && provider !== 'openrouter') provider = 'openrouter';
 
   if (!apiKey || apiKey === 'your_llm_api_key_here') {
-    return getMockExtraction(rawText);
+    const err = new Error('AI API Key is missing. Please configure your LLM API Key in Settings.');
+    err.isKeyMissing = true;
+    err.keyType = 'AI';
+    throw err;
   }
 
   let result;
@@ -484,9 +487,9 @@ EXISTING FIELDS & DEADLINE:
 `;
 
 const updateExtraction = async (rawText, existingCustomFields = [], existingDeadline = null, userSettings = {}) => {
-  let provider = (userSettings?.llmProvider || process.env.LLM_PROVIDER || 'groq').toLowerCase().trim();
-  const apiKey = userSettings?.llmApiKey || process.env.LLM_API_KEY;
-  let model = userSettings?.llmModel || process.env.LLM_MODEL;
+  let provider = (userSettings?.llmProvider || 'groq').toLowerCase().trim();
+  const apiKey = userSettings?.llmApiKey;
+  let model = userSettings?.llmModel;
 
   if (apiKey && apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';
   else if (apiKey && apiKey.startsWith('sk-or-') && provider !== 'openrouter') provider = 'openrouter';
@@ -494,7 +497,10 @@ const updateExtraction = async (rawText, existingCustomFields = [], existingDead
   const contextPrompt = UPDATE_SCHEMA_PROMPT + JSON.stringify({ existingDeadline, existingCustomFields }, null, 2) + '\n\nNEW FOLLOW-UP EMAIL:\n' + rawText;
 
   if (!apiKey || apiKey === 'your_llm_api_key_here') {
-    return getMockUpdateExtraction(rawText, existingCustomFields, existingDeadline);
+    const err = new Error('AI API Key is missing. Please configure your LLM API Key in Settings.');
+    err.isKeyMissing = true;
+    err.keyType = 'AI';
+    throw err;
   }
 
   let result;

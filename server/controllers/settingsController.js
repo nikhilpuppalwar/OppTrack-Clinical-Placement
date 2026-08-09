@@ -22,14 +22,24 @@ const updateSettings = async (req, res) => {
 const testEmail = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    if (req.body && Object.keys(req.body).length > 0) {
-      user.settings = { ...user.settings, ...req.body };
-      await user.save();
+    const settingsToTest = { ...user.settings, ...req.body };
+    if (!settingsToTest.smtpUser || !settingsToTest.smtpPass) {
+      return res.status(400).json({
+        isKeyMissing: true,
+        keyType: 'Email',
+        message: 'SMTP Email and App Password are not configured in Settings.',
+      });
     }
+    user.settings = settingsToTest;
+    await user.save();
     await reminderService.sendTestEmail(user);
     res.json({ message: `Test email sent successfully to ${user.email}!` });
   } catch (err) {
-    res.status(400).json({ message: err.message || 'Failed to send test email. Check your SMTP credentials.' });
+    res.status(400).json({
+      isKeyMissing: err.message?.includes('SMTP Email') || err.message?.includes('credentials'),
+      keyType: 'Email',
+      message: err.message || 'Failed to send test email. Check your SMTP credentials.',
+    });
   }
 };
 
@@ -40,7 +50,11 @@ const testAiKey = async (req, res) => {
     const settingsToTest = { ...user.settings, ...req.body };
     
     if (!settingsToTest.llmApiKey) {
-      return res.status(400).json({ message: 'API Key is required to perform AI test.' });
+      return res.status(400).json({
+        isKeyMissing: true,
+        keyType: 'AI',
+        message: 'API Key is required to perform AI test. Please enter an API Key.',
+      });
     }
 
     // Call extraction service with a sample text to test LLM connectivity
@@ -52,7 +66,11 @@ const testAiKey = async (req, res) => {
       result,
     });
   } catch (err) {
-    res.status(400).json({ message: err.message || 'AI API Key validation failed. Check your Provider, Model, and API Key.' });
+    res.status(400).json({
+      isKeyMissing: err.isKeyMissing || err.message?.includes('missing'),
+      keyType: 'AI',
+      message: err.message || 'AI API Key validation failed. Check your Provider, Model, and API Key.',
+    });
   }
 };
 

@@ -59,6 +59,8 @@ const selectStyle = {
   outline: 'none', cursor: 'pointer', width: '100%',
 };
 
+import MissingKeyModal from '../components/MissingKeyModal';
+
 export default function NewOpportunity() {
   const [tab, setTab] = useState('manual');
   const [sections, setSections] = useState(DEFAULT_SECTIONS);
@@ -70,6 +72,7 @@ export default function NewOpportunity() {
   const [collapsedSections, setCollapsedSections] = useState({});
   const [addingToSection, setAddingToSection] = useState(null);
   const [newField, setNewField] = useState({ label: '', value: '' });
+  const [keyModal, setKeyModal] = useState({ isOpen: false, keyType: 'AI', message: '' });
   const navigate = useNavigate();
 
   const toggleSection = (i) => setCollapsedSections(p => ({ ...p, [i]: !p[i] }));
@@ -136,7 +139,16 @@ export default function NewOpportunity() {
       toast.success('✅ Fields extracted & form filled!', { id });
       setTab('manual');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Extraction failed', { id });
+      if (err.response?.data?.isKeyMissing) {
+        toast.dismiss(id);
+        setKeyModal({
+          isOpen: true,
+          keyType: err.response.data.keyType || 'AI',
+          message: err.response.data.message || 'AI API Key is missing. Please add your key in Settings.',
+        });
+      } else {
+        toast.error(err.response?.data?.message || 'Extraction failed', { id });
+      }
     } finally { setExtracting(false); }
   };
 
@@ -419,6 +431,14 @@ export default function NewOpportunity() {
           </div>
         </div>
       )}
+
+      {/* Missing Key Popup Modal */}
+      <MissingKeyModal
+        isOpen={keyModal.isOpen}
+        onClose={() => setKeyModal(k => ({ ...k, isOpen: false }))}
+        keyType={keyModal.keyType}
+        message={keyModal.message}
+      />
     </div>
   );
 }
