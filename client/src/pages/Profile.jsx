@@ -72,64 +72,88 @@ function VaultField({ label, value, isMonospace, isLink }) {
     <div
       style={{
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
+        flexDirection: 'column',
+        gap: 6,
         borderBottom: '1px solid #2A302B',
-        paddingBottom: 8,
-        position: 'relative'
+        paddingBottom: 12,
       }}
       className="group"
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, paddingRight: 12 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          {label}
-        </span>
-        {isUrl ? (
-          <a
-            href={value}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: '#c7bfff',
-              fontSize: 14,
-              fontFamily: 'DM Mono, monospace',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6
-            }}
-            onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-            onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
-          >
-            {value} <ExternalLink size={12} />
-          </a>
-        ) : (
-          <span
-            style={{
-              color: '#F2F3ED',
-              fontSize: 14,
-              fontFamily: isMonospace || label.toLowerCase().includes('email') || label.toLowerCase().includes('phone') ? 'DM Mono, monospace' : 'inherit'
-            }}
-          >
-            {value || <span style={{ color: 'rgba(242,243,237,0.25)', fontStyle: 'italic' }}>Not provided</span>}
-          </span>
-        )}
-      </div>
+      {/* Label */}
+      <span style={{
+        fontSize: 11,
+        fontWeight: 600,
+        color: 'rgba(242,243,237,0.5)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.06em'
+      }}>
+        {label}
+      </span>
 
-      <button
-        onClick={handleCopy}
-        title="Copy to clipboard"
-        style={{
-          background: 'transparent',
-          border: 'none',
-          color: copied ? '#b7e34a' : 'rgba(242,243,237,0.4)',
-          cursor: 'pointer',
-          padding: 4,
-          transition: 'color 0.15s ease'
-        }}
-      >
-        {copied ? <Check size={16} /> : <Copy size={16} />}
-      </button>
+      {/* Value row: text + copy button side by side, text wraps */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {isUrl ? (
+            <a
+              href={value}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: '#c7bfff',
+                fontSize: 14,
+                fontFamily: 'DM Mono, monospace',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 6,
+                overflow: 'hidden',
+              }}
+              onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+              onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+            >
+              <span style={{ wordBreak: 'break-all', overflowWrap: 'anywhere', minWidth: 0, flex: 1 }}>{value}</span>
+              <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 2 }} />
+            </a>
+          ) : (
+            <span
+              style={{
+                color: '#F2F3ED',
+                fontSize: 14,
+                wordBreak: 'break-all',
+                fontFamily: isMonospace || label.toLowerCase().includes('email') || label.toLowerCase().includes('phone') ? 'DM Mono, monospace' : 'inherit'
+              }}
+            >
+              {value || <span style={{ color: 'rgba(242,243,237,0.25)', fontStyle: 'italic' }}>Not provided</span>}
+            </span>
+          )}
+        </div>
+
+        {/* Copy button — always visible and never overlaps */}
+        <button
+          onClick={handleCopy}
+          title={`Copy ${label}`}
+          style={{
+            flexShrink: 0,
+            background: copied ? 'rgba(183,227,74,0.12)' : 'rgba(242,243,237,0.05)',
+            border: `1px solid ${copied ? '#b7e34a' : '#2A302B'}`,
+            borderRadius: 6,
+            color: copied ? '#b7e34a' : 'rgba(242,243,237,0.5)',
+            cursor: value ? 'pointer' : 'default',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 11,
+            fontWeight: 600,
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={e => { if (value) { e.currentTarget.style.borderColor = '#b7e34a'; e.currentTarget.style.color = '#b7e34a'; } }}
+          onMouseLeave={e => { if (!copied) { e.currentTarget.style.borderColor = '#2A302B'; e.currentTarget.style.color = 'rgba(242,243,237,0.5)'; } }}
+        >
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+          <span>{copied ? 'Copied' : 'Copy'}</span>
+        </button>
+      </div>
     </div>
   );
 }
@@ -444,14 +468,15 @@ export default function Profile() {
                   ))}
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
                   {sectionFields.map(field => (
-                    <VaultField
-                      key={field.id}
-                      label={field.label}
-                      value={field.value}
-                      isLink={field.fieldType === 'file_path' || field.id.toLowerCase().includes('link') || field.id.toLowerCase().includes('url')}
-                    />
+                    <div key={field.id} style={{ overflow: 'hidden', minWidth: 0 }}>
+                      <VaultField
+                        label={field.label}
+                        value={field.value}
+                        isLink={field.fieldType === 'file_path' || field.id.toLowerCase().includes('link') || field.id.toLowerCase().includes('url')}
+                      />
+                    </div>
                   ))}
                 </div>
               )}
