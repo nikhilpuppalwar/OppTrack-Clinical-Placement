@@ -235,6 +235,7 @@ const extract = async (rawText, userSettings = {}) => {
 
   if (apiKey && apiKey.startsWith('gsk_')) provider = 'groq';
   else if (apiKey && apiKey.startsWith('sk-or-')) provider = 'openrouter';
+  else if (apiKey && apiKey.startsWith('AIzaSy')) provider = 'gemini';
   else if (apiKey && apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
 
   if (!apiKey || apiKey === 'your_llm_api_key_here') {
@@ -244,24 +245,25 @@ const extract = async (rawText, userSettings = {}) => {
     throw err;
   }
 
-  // Model safety validation per provider to prevent provider mismatch errors
+  // Model safety validation per provider
   if (provider === 'groq') {
-    if (!model || model.includes('gpt-') || model.includes('claude') || model.includes('/') || model === 'other' || model === 'llama-3.3-70b-versatile') {
-      model = 'llama-3.1-8b-instant';
-    }
+    const validGroqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+    if (!model || !validGroqModels.includes(model)) model = 'llama-3.3-70b-versatile';
+  } else if (provider === 'gemini') {
+    const validGeminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp', 'gemini-2.0-flash'];
+    if (!model || !validGeminiModels.includes(model)) model = 'gemini-1.5-flash';
   } else if (provider === 'openai') {
-    if (!model || model.includes('llama') || model.includes('mixtral') || model.includes('/') || model === 'other') {
-      model = 'gpt-4o-mini';
-    }
+    const validOpenAIModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'];
+    if (!model || !validOpenAIModels.includes(model)) model = 'gpt-4o-mini';
   } else if (provider === 'openrouter') {
-    if (!model || !model.includes('/') || model === 'other') {
-      model = 'meta-llama/llama-3.3-70b-instruct';
-    }
+    if (!model || !model.includes('/') || model === 'other') model = 'meta-llama/llama-3.3-70b-instruct';
   }
 
   let result;
   if (provider === 'groq') {
     result = await extractWithGroq(rawText, apiKey, model);
+  } else if (provider === 'gemini') {
+    result = await extractWithGemini(rawText, apiKey, model);
   } else if (provider === 'openai') {
     result = await extractWithOpenAI(rawText, apiKey, model);
   } else if (provider === 'anthropic') {
@@ -425,6 +427,41 @@ const extractWithOpenRouter = async (rawText, apiKey, model) => {
     throw new Error(`OpenRouter Error: ${msg}`);
   }
   return cleanAndParseJSON(data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '');
+};
+
+const extractWithGemini = async (rawText, apiKey, model) => {
+  const selectedModel = model || 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+
+  const systemInstruction = 'You are a JSON-only extraction assistant. Return only valid JSON that matches the schema. No markdown, no explanations.';
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemInstruction }] },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: SCHEMA_PROMPT + rawText }],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 3000,
+        responseMimeType: 'application/json',
+      },
+    }),
+  });
+
+  const data = await response.json();
+  if (data.error) {
+    const msg = data.error.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+    throw new Error(`Google Gemini Error: ${msg}`);
+  }
+
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return cleanAndParseJSON(text);
 };
 
 const extractWithAnthropic = async (rawText, apiKey, model) => {

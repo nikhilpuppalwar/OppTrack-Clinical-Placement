@@ -11,6 +11,7 @@ let matchedOpp = null;
 
 const PRESET_PROVIDERS = [
   { value: 'groq', label: 'Groq Cloud (Recommended — Ultra Fast & Free)' },
+  { value: 'gemini', label: 'Google Gemini (gemini-1.5-flash / Pro)' },
   { value: 'openai', label: 'OpenAI (ChatGPT / GPT-4o)' },
   { value: 'anthropic', label: 'Anthropic (Claude 3.5)' },
   { value: 'openrouter', label: 'OpenRouter.ai (All Open Models)' },
@@ -21,10 +22,18 @@ const PRESET_PROVIDERS = [
 
 const PRESET_MODELS = {
   groq: [
-    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Fastest & Free)' },
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
+    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile (Recommended)' },
+    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Fastest)' },
     { value: 'llama3-70b-8192', label: 'llama3-70b-8192' },
     { value: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768' },
+    { value: 'gemma2-9b-it', label: 'gemma2-9b-it' },
+    { value: 'other', label: '✏️ Custom Model...' },
+  ],
+  gemini: [
+    { value: 'gemini-1.5-flash', label: 'gemini-1.5-flash (Fast & Free)' },
+    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Latest)' },
+    { value: 'gemini-2.0-flash-exp', label: 'gemini-2.0-flash-exp (Experimental)' },
+    { value: 'gemini-1.5-pro', label: 'gemini-1.5-pro (High Accuracy)' },
     { value: 'other', label: '✏️ Custom Model...' },
   ],
   openai: [
@@ -201,12 +210,13 @@ $('llm-provider').addEventListener('change', (e) => {
     return;
   }
   const defaultModels = {
-    groq: 'llama-3.1-8b-instant',
+    groq: 'llama-3.3-70b-versatile',
+    gemini: 'gemini-1.5-flash',
     openai: 'gpt-4o-mini',
     anthropic: 'claude-3-haiku-20240307',
     openrouter: 'meta-llama/llama-3.3-70b-instruct',
   };
-  const defModel = defaultModels[prov] || 'llama-3.1-8b-instant';
+  const defModel = defaultModels[prov] || 'llama-3.3-70b-versatile';
   updateModelSelectOptions(prov, defModel);
   $('key-hint').textContent = `Required for ${prov}`;
 });

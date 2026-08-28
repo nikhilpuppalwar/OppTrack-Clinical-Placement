@@ -17,6 +17,7 @@ function resolveApiKeyAndProvider(userSettings = {}) {
   if (apiKey) {
     if (apiKey.startsWith('gsk_')) provider = 'groq';
     else if (apiKey.startsWith('sk-or-')) provider = 'openrouter';
+    else if (apiKey.startsWith('AIzaSy')) provider = 'gemini';
     else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
   }
 
@@ -25,6 +26,11 @@ function resolveApiKeyAndProvider(userSettings = {}) {
     const validGroqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
     if (!model || !validGroqModels.includes(model)) {
       model = 'llama-3.3-70b-versatile';
+    }
+  } else if (provider === 'gemini') {
+    const validGeminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp', 'gemini-2.0-flash'];
+    if (!model || !validGeminiModels.includes(model)) {
+      model = 'gemini-1.5-flash';
     }
   } else if (provider === 'openai') {
     const validOpenAIModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'];
@@ -55,6 +61,37 @@ async function callLLM(prompt, userSettings) {
 
   const systemMessage =
     'You are an expert AI form-filling assistant. Understand form questions, map them to candidate database values or generate concise accurate answers, and return valid JSON only.';
+
+  if (provider === 'gemini') {
+    const selectedModel = model || 'gemini-1.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: systemMessage + '\n\n' + prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: 'application/json',
+        },
+      }),
+    });
+
+    const data = await response.json();
+    if (data.error) {
+      const err = new Error(`Google Gemini Error: ${data.error.message || JSON.stringify(data.error)}`);
+      if (response.status === 429) err.isRateLimit = true;
+      throw err;
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return cleanAndParseJSON(text);
+  }
 
   let baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
   if (provider === 'openai') baseUrl = 'https://api.openai.com/v1/chat/completions';
