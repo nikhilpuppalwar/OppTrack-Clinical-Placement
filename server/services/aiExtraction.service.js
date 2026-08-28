@@ -332,13 +332,14 @@ const extractWithGroq = async (rawText, apiKey, model) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: model || 'llama-3.1-8b-instant',
+      model: model || 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: 'You are a JSON-only extraction assistant. Return only valid JSON, no markdown, no code blocks.' },
         { role: 'user', content: SCHEMA_PROMPT + rawText },
       ],
       temperature: 0.1,
       max_tokens: 3000,
+      response_format: { type: 'json_object' },
     }),
   });
   const data = await response.json();

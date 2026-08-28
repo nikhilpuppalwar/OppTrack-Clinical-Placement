@@ -16,13 +16,15 @@ function resolveApiKeyAndProvider(userSettings = {}) {
     else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
   }
 
-  // Model safety validation per provider to prevent provider mismatch errors
+  // Model safety validation per provider according to official documentation
   if (provider === 'groq') {
-    if (!model || model.includes('gpt-') || model.includes('claude') || model.includes('/') || model === 'other') {
-      model = 'llama-3.1-8b-instant';
+    const validGroqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+    if (!model || !validGroqModels.includes(model)) {
+      model = 'llama-3.3-70b-versatile';
     }
   } else if (provider === 'openai') {
-    if (!model || model.includes('llama') || model.includes('mixtral') || model.includes('/') || model === 'other') {
+    const validOpenAIModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'];
+    if (!model || !validOpenAIModels.includes(model)) {
       model = 'gpt-4o-mini';
     }
   } else if (provider === 'openrouter') {
