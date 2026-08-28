@@ -85,8 +85,60 @@ async function callLLM(prompt, userSettings) {
     throw new Error(data.error.message || JSON.stringify(data.error));
   }
 
-  const content = data.choices[0].message.content;
-  return JSON.parse(content);
+  const content = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+  return cleanAndParseJSON(content);
+}
+
+function cleanAndParseJSON(text) {
+  if (!text) throw new Error('Empty response received from LLM.');
+  if (typeof text === 'object') return text;
+
+  let cleaned = text
+    .replace(/^```[a-z]*\n?/im, '')
+    .replace(/\n?```$/im, '')
+    .trim();
+
+  const firstCurly = cleaned.indexOf('{');
+  const firstBracket = cleaned.indexOf('[');
+  let startIdx = -1;
+
+  if (firstCurly !== -1 && firstBracket !== -1) {
+    startIdx = Math.min(firstCurly, firstBracket);
+  } else if (firstCurly !== -1) {
+    startIdx = firstCurly;
+  } else if (firstBracket !== -1) {
+    startIdx = firstBracket;
+  }
+
+  if (startIdx !== -1) {
+    const endCurly = cleaned.lastIndexOf('}');
+    const endBracket = cleaned.lastIndexOf(']');
+    const endIdx = Math.max(endCurly, endBracket);
+
+    if (endIdx > startIdx) {
+      cleaned = cleaned.substring(startIdx, endIdx + 1);
+    }
+  }
+
+  cleaned = cleaned
+    .replace(/,\s*([\]}])/g, '$1')
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
+      if (match === '\n' || match === '\r' || match === '\t') return match;
+      return '';
+    });
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (parseErr) {
+    try {
+      const sanitized = cleaned
+        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+        .replace(/'/g, '"');
+      return JSON.parse(sanitized);
+    } catch {
+      throw new Error(`LLM output format error: ${parseErr.message}`);
+    }
+  }
 }
 
 // @POST /api/ai/form-autofill

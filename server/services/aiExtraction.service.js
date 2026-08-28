@@ -259,6 +259,58 @@ const extract = async (rawText, userSettings = {}) => {
   return result;
 };
 
+function cleanAndParseJSON(text) {
+  if (!text) throw new Error('Empty response received from LLM.');
+  if (typeof text === 'object') return text;
+
+  let cleaned = text
+    .replace(/^```[a-z]*\n?/im, '')
+    .replace(/\n?```$/im, '')
+    .trim();
+
+  const firstCurly = cleaned.indexOf('{');
+  const firstBracket = cleaned.indexOf('[');
+  let startIdx = -1;
+
+  if (firstCurly !== -1 && firstBracket !== -1) {
+    startIdx = Math.min(firstCurly, firstBracket);
+  } else if (firstCurly !== -1) {
+    startIdx = firstCurly;
+  } else if (firstBracket !== -1) {
+    startIdx = firstBracket;
+  }
+
+  if (startIdx !== -1) {
+    const endCurly = cleaned.lastIndexOf('}');
+    const endBracket = cleaned.lastIndexOf(']');
+    const endIdx = Math.max(endCurly, endBracket);
+
+    if (endIdx > startIdx) {
+      cleaned = cleaned.substring(startIdx, endIdx + 1);
+    }
+  }
+
+  cleaned = cleaned
+    .replace(/,\s*([\]}])/g, '$1')
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
+      if (match === '\n' || match === '\r' || match === '\t') return match;
+      return '';
+    });
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (parseErr) {
+    try {
+      const sanitized = cleaned
+        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+        .replace(/'/g, '"');
+      return JSON.parse(sanitized);
+    } catch {
+      throw new Error(`LLM output format error: ${parseErr.message}`);
+    }
+  }
+}
+
 const extractWithGroq = async (rawText, apiKey, model) => {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -271,12 +323,11 @@ const extractWithGroq = async (rawText, apiKey, model) => {
       ],
       temperature: 0.1,
       max_tokens: 3000,
-      response_format: { type: 'json_object' },
     }),
   });
   const data = await response.json();
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  return JSON.parse(data.choices[0].message.content);
+  return cleanAndParseJSON(data.choices[0].message.content);
 };
 
 const extractWithOpenAI = async (rawText, apiKey, model) => {
@@ -291,12 +342,11 @@ const extractWithOpenAI = async (rawText, apiKey, model) => {
       ],
       temperature: 0.1,
       max_tokens: 3000,
-      response_format: { type: 'json_object' },
     }),
   });
   const data = await response.json();
   if (data.error) throw new Error(data.error.message);
-  return JSON.parse(data.choices[0].message.content);
+  return cleanAndParseJSON(data.choices[0].message.content);
 };
 
 const extractWithOpenRouter = async (rawText, apiKey, model) => {
@@ -314,10 +364,7 @@ const extractWithOpenRouter = async (rawText, apiKey, model) => {
   });
   const data = await response.json();
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  const content = data.choices[0].message.content;
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Could not parse JSON from response');
-  return JSON.parse(jsonMatch[0]);
+  return cleanAndParseJSON(data.choices[0].message.content);
 };
 
 const extractWithAnthropic = async (rawText, apiKey, model) => {
