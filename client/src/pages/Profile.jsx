@@ -52,6 +52,43 @@ const DEFAULT_INITIAL_FIELDS = [
   { id: 'leetcodeLink', section: 'links', label: 'LeetCode Rating / Profile', fieldType: 'file_path', value: '' },
   { id: 'codechefLink', section: 'links', label: 'CodeChef Rating / Profile', fieldType: 'file_path', value: '' },
   { id: 'resumeLink', section: 'links', label: 'Resume Link / Storage Path', fieldType: 'file_path', value: '' },
+
+  // 7. Skills
+  { id: 'technicalSkills', section: 'skills', label: 'Technical Skills', fieldType: 'paragraph', value: '' },
+  { id: 'programmingLanguages', section: 'skills', label: 'Programming Languages', fieldType: 'short_text', value: '' },
+  { id: 'frameworks', section: 'skills', label: 'Frameworks & Libraries', fieldType: 'short_text', value: '' },
+  { id: 'tools', section: 'skills', label: 'Tools & Technologies', fieldType: 'short_text', value: '' },
+  { id: 'softSkills', section: 'skills', label: 'Soft Skills', fieldType: 'short_text', value: '' },
+  { id: 'languages', section: 'skills', label: 'Languages Known', fieldType: 'short_text', value: '' },
+
+  // 8. Technical Achievements
+  { id: 'technicalAchievements', section: 'technical_achievements', label: 'Technical Achievements', fieldType: 'paragraph', value: '' },
+  { id: 'hackathons', section: 'technical_achievements', label: 'Hackathons / Competitions', fieldType: 'paragraph', value: '' },
+  { id: 'openSource', section: 'technical_achievements', label: 'Open Source Contributions', fieldType: 'paragraph', value: '' },
+  { id: 'publications', section: 'technical_achievements', label: 'Research Papers / Publications', fieldType: 'paragraph', value: '' },
+
+  // 9. Personal Achievements
+  { id: 'personalAchievements', section: 'personal_achievements', label: 'Personal Achievements', fieldType: 'paragraph', value: '' },
+  { id: 'extracurricular', section: 'personal_achievements', label: 'Extra-Curricular Activities', fieldType: 'paragraph', value: '' },
+  { id: 'sportsAchievements', section: 'personal_achievements', label: 'Sports / NSS / NCC', fieldType: 'paragraph', value: '' },
+  { id: 'hobby', section: 'personal_achievements', label: 'Hobbies & Interests', fieldType: 'short_text', value: '' },
+
+  // 10. Current Address
+  { id: 'currentAddressLine1', section: 'current_address', label: 'Address Line 1', fieldType: 'short_text', value: '' },
+  { id: 'currentAddressLine2', section: 'current_address', label: 'Address Line 2', fieldType: 'short_text', value: '' },
+  { id: 'currentCity', section: 'current_address', label: 'City', fieldType: 'short_text', value: '' },
+  { id: 'currentState', section: 'current_address', label: 'State', fieldType: 'short_text', value: '' },
+  { id: 'currentPincode', section: 'current_address', label: 'Pincode', fieldType: 'short_text', value: '' },
+  { id: 'currentCountry', section: 'current_address', label: 'Country', fieldType: 'short_text', value: 'India' },
+
+  // 11. Permanent Address
+  { id: 'sameAsCurrentAddress', section: 'permanent_address', label: 'Same as Current Address', fieldType: 'select', options: ['Yes', 'No'], value: 'Yes' },
+  { id: 'permanentAddressLine1', section: 'permanent_address', label: 'Address Line 1', fieldType: 'short_text', value: '' },
+  { id: 'permanentAddressLine2', section: 'permanent_address', label: 'Address Line 2', fieldType: 'short_text', value: '' },
+  { id: 'permanentCity', section: 'permanent_address', label: 'City', fieldType: 'short_text', value: '' },
+  { id: 'permanentState', section: 'permanent_address', label: 'State', fieldType: 'short_text', value: '' },
+  { id: 'permanentPincode', section: 'permanent_address', label: 'Pincode', fieldType: 'short_text', value: '' },
+  { id: 'permanentCountry', section: 'permanent_address', label: 'Country', fieldType: 'short_text', value: 'India' },
 ];
 
 // Single Copyable Field Component styled for Stitch AI design
@@ -291,6 +328,11 @@ export default function Profile() {
     { key: 'courses', title: '04. Specializations & Certifications' },
     { key: 'internships', title: '05. Internships & Projects' },
     { key: 'links', title: '06. Professional Links & Platforms' },
+    { key: 'skills', title: '07. Skills' },
+    { key: 'technical_achievements', title: '08. Technical Achievements' },
+    { key: 'personal_achievements', title: '09. Personal Achievements' },
+    { key: 'current_address', title: '10. Current Address' },
+    { key: 'permanent_address', title: '11. Permanent Address' },
   ];
 
   const hiddenFields = fields.filter(f => f.hidden);
@@ -458,11 +500,30 @@ export default function Profile() {
                         <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>
                           Field Value
                         </label>
-                        <input
-                          value={field.value || ''}
-                          onChange={e => handleUpdateField(field.id, 'value', e.target.value)}
-                          style={{ width: '100%', background: '#171B18', border: '1px solid #2A302B', color: '#F2F3ED', padding: '6px 10px', borderRadius: 4, fontSize: 13 }}
-                        />
+                        {field.fieldType === 'paragraph' ? (
+                          <textarea
+                            rows={3}
+                            value={field.value || ''}
+                            onChange={e => handleUpdateField(field.id, 'value', e.target.value)}
+                            style={{ width: '100%', background: '#171B18', border: '1px solid #2A302B', color: '#F2F3ED', padding: '6px 10px', borderRadius: 4, fontSize: 13, resize: 'vertical', fontFamily: 'inherit' }}
+                          />
+                        ) : field.fieldType === 'select' && field.options?.length > 0 ? (
+                          <select
+                            value={field.value || ''}
+                            onChange={e => handleUpdateField(field.id, 'value', e.target.value)}
+                            style={{ width: '100%', background: '#171B18', border: '1px solid #2A302B', color: '#F2F3ED', padding: '6px 10px', borderRadius: 4, fontSize: 13 }}
+                          >
+                            {field.options.map(opt => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            value={field.value || ''}
+                            onChange={e => handleUpdateField(field.id, 'value', e.target.value)}
+                            style={{ width: '100%', background: '#171B18', border: '1px solid #2A302B', color: '#F2F3ED', padding: '6px 10px', borderRadius: 4, fontSize: 13 }}
+                          />
+                        )}
                       </div>
                     </div>
                   ))}
