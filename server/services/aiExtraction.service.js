@@ -231,10 +231,11 @@ Raw Email:
 const extract = async (rawText, userSettings = {}) => {
   let provider = (userSettings?.llmProvider || 'groq').toLowerCase().trim();
   const apiKey = userSettings?.llmApiKey;
-  let model = userSettings?.llmModel;
+  let model = userSettings?.llmModel?.trim();
 
-  if (apiKey && apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';
-  else if (apiKey && apiKey.startsWith('sk-or-') && provider !== 'openrouter') provider = 'openrouter';
+  if (apiKey && apiKey.startsWith('gsk_')) provider = 'groq';
+  else if (apiKey && apiKey.startsWith('sk-or-')) provider = 'openrouter';
+  else if (apiKey && apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
 
   if (!apiKey || apiKey === 'your_llm_api_key_here') {
     const err = new Error('AI API Key is missing. Please configure your LLM API Key in Settings.');
@@ -243,17 +244,32 @@ const extract = async (rawText, userSettings = {}) => {
     throw err;
   }
 
+  // Model safety validation per provider to prevent provider mismatch errors
+  if (provider === 'groq') {
+    if (!model || model.includes('gpt-') || model.includes('claude') || model.includes('/') || model === 'other' || model === 'llama-3.3-70b-versatile') {
+      model = 'llama-3.1-8b-instant';
+    }
+  } else if (provider === 'openai') {
+    if (!model || model.includes('llama') || model.includes('mixtral') || model.includes('/') || model === 'other') {
+      model = 'gpt-4o-mini';
+    }
+  } else if (provider === 'openrouter') {
+    if (!model || !model.includes('/') || model === 'other') {
+      model = 'meta-llama/llama-3.3-70b-instruct';
+    }
+  }
+
   let result;
   if (provider === 'groq') {
-    result = await extractWithGroq(rawText, apiKey, model || 'llama-3.3-70b-versatile');
+    result = await extractWithGroq(rawText, apiKey, model);
   } else if (provider === 'openai') {
-    result = await extractWithOpenAI(rawText, apiKey, model || 'gpt-4o-mini');
+    result = await extractWithOpenAI(rawText, apiKey, model);
   } else if (provider === 'anthropic') {
     result = await extractWithAnthropic(rawText, apiKey, model || 'claude-3-haiku-20240307');
   } else if (provider === 'openrouter') {
-    result = await extractWithOpenRouter(rawText, apiKey, model || 'meta-llama/llama-3.3-70b-instruct');
+    result = await extractWithOpenRouter(rawText, apiKey, model);
   } else {
-    result = await extractWithOpenAICompatible(rawText, apiKey, model || 'llama-3.3-70b-versatile', provider);
+    result = await extractWithOpenAICompatible(rawText, apiKey, model || 'llama-3.1-8b-instant', provider);
   }
 
   return result;
