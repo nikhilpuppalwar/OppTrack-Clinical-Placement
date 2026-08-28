@@ -1,0 +1,386 @@
+/**
+ * aiFormController.js
+ * Handles AI-driven Google Form understanding, semantic vector-based autofill,
+ * confidence scoring, and novel field data analysis/saving.
+ */
+
+const User = require('../models/User');
+const Profile = require('../models/Profile');
+const Document = require('../models/Document');
+const vectorService = require('../services/vector.service');
+
+/**
+ * Call configured LLM API to process form questions
+ */
+async function callLLM(prompt, userSettings) {
+  let provider = (userSettings?.llmProvider || 'groq').toLowerCase().trim();
+  const apiKey = userSettings?.llmApiKey;
+  let model = userSettings?.llmModel;
+
+  if (apiKey && apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';
+  else if (apiKey && apiKey.startsWith('sk-or-') && provider !== 'openrouter') provider = 'openrouter';
+
+  if (!apiKey || apiKey === 'your_llm_api_key_here') {
+    const err = new Error('AI API Key is missing. Please configure your LLM API Key in Settings.');
+    err.isKeyMissing = true;
+    err.keyType = 'AI';
+    throw err;
+  }
+
+  const systemMessage =
+    'You are an expert AI form-filling assistant. Understand form questions, map them to candidate database values or generate concise accurate answers, and return valid JSON only.';
+
+  let baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
+  if (provider === 'openai') baseUrl = 'https://api.openai.com/v1/chat/completions';
+  if (provider === 'openrouter') baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
+
+  const defaultModel =
+    provider === 'openai'
+      ? 'gpt-4o-mini'
+      : provider === 'openrouter'
+      ? 'meta-llama/llama-3.3-70b-instruct'
+      : 'llama-3.3-70b-versatile';
+
+  const response = await fetch(baseUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: model || defaultModel,
+      messages: [
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.1,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  const data = await response.json();
+  if (data.error) {
+    throw new Error(data.error.message || JSON.stringify(data.error));
+  }
+
+  const content = data.choices[0].message.content;
+  return JSON.parse(content);
+}
+
+// @POST /api/ai/form-autofill
+const autofillForm = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { questions = [], formUrl = '', formTitle = '' } = req.body;
+
+    const [user, profile, documents] = await Promise.all([
+      User.findById(userId),
+      Profile.findOne({ userId }),
+      Document.find({ userId }),
+    ]);
+
+    if (!profile) {
+      return res.status(404).json({ message: 'Profile not found. Please complete your profile first.' });
+    }
+
+    const userSettings = user.settings || {};
+
+    // Build vector DB index for user profile & documents
+    const vectorIndex = vectorService.buildVectorIndex(profile, documents);
+
+    // Retrieve semantic context for each question using vector search
+    const questionsWithContext = questions.map((q) => {
+      const topContext = vectorService.searchVectorIndex(vectorIndex, q.label, 5);
+      return {
+        id: q.id,
+        label: q.label,
+        type: q.type,
+        options: q.options || [],
+        placeholder: q.placeholder || '',
+        relevantContext: topContext.map((c) => ({ label: c.label, value: c.value, key: c.key, score: c.score })),
+      };
+    });
+
+    // Prepare full candidate profile summary
+    const rawProfileSummary = {
+      candidateName: profile.candidateName,
+      prn: profile.prn,
+      collegeEmail: profile.collegeEmail,
+      personalEmail: profile.personalEmail,
+      phone: profile.phone,
+      gender: profile.gender,
+      collegeName: profile.collegeName,
+      stream: profile.stream,
+      branch: profile.branch,
+      passingYear: profile.passingYear,
+      cgpa: profile.cgpa,
+      tenthPercent: profile.tenthPercent,
+      twelfthPercent: profile.twelfthPercent,
+      resumeLink: profile.resumeLink,
+      leetcodeLink: profile.leetcodeLink,
+      codechefLink: profile.codechefLink,
+      hackerrankLink: profile.hackerrankLink,
+      leetcodeScore: profile.leetcodeScore,
+      codechefRating: profile.codechefRating,
+      projectTitle: profile.projectTitle,
+      projectDetails: profile.projectDetails,
+      hobby: profile.hobby,
+      technicalCertifications: profile.technicalCertifications,
+      previousInternships: profile.previousInternships,
+      customFields: (profile.fields || [])
+        .filter((f) => !f.hidden && f.value)
+        .map((f) => ({ label: f.label, value: f.value, key: f.id, sensitive: !!f.sensitive })),
+    };
+
+    const prompt = `
+Form Title: "${formTitle}"
+Form URL: "${formUrl}"
+
+Candidate Database Profile Context:
+${JSON.stringify(rawProfileSummary, null, 2)}
+
+Questions to Autofill (with Vector DB similarity matches):
+${JSON.stringify(questionsWithContext, null, 2)}
+
+INSTRUCTIONS:
+1. For each question in "Questions to Autofill", understand what data is requested.
+2. Search the Candidate Database Profile & Vector Context for the exact or best matching candidate value.
+3. If the question is an open-ended subjective question (e.g. "Describe your key project", "Why apply?", "Skills summary"), synthesize a high-quality response using the candidate's actual projects, skills, or background. Set matchedField to "AI_GENERATED".
+4. CONFIDENCE SCORE: Output a score between 0.00 and 1.00 representing how confident you are in the accuracy of the answer.
+5. MISSING DATA RULE: If no relevant data is present in the database profile for this question, or if you are uncertain, return "value": "", "matchedField": null, and "confidenceScore": 0.00. NEVER invent false candidate data (like fake phone numbers, fake emails, or fake PRN).
+6. SENSITIVE GATE: Set "sensitive": true if the field is Aadhar, PAN, or marked sensitive in profile.
+
+Return ONLY a JSON object with this exact structure:
+{
+  "answers": [
+    {
+      "questionId": "string (matching question id)",
+      "label": "string",
+      "value": "string (the value to fill, or empty string if no data)",
+      "confidenceScore": number (0.0 to 1.0),
+      "matchedField": "string | null (e.g. 'collegeEmail' or 'AI_GENERATED')",
+      "reason": "string (concise explanation of why/how this was matched)",
+      "sensitive": boolean
+    }
+  ]
+}
+`;
+
+    // Call LLM
+    let aiResult;
+    try {
+      aiResult = await callLLM(prompt, userSettings);
+    } catch (llmErr) {
+      // If API key is missing or failed, fallback to fallback matching
+      if (llmErr.isKeyMissing) {
+        return res.status(400).json({
+          isKeyMissing: true,
+          keyType: 'AI',
+          message: 'AI API Key is missing. Please configure your LLM API key in Extension Settings or Web Settings.',
+        });
+      }
+      throw llmErr;
+    }
+
+    res.json({
+      ok: true,
+      formTitle,
+      answers: aiResult.answers || [],
+    });
+  } catch (err) {
+    console.error('AI Form Autofill Error:', err);
+    res.status(500).json({ ok: false, message: err.message || 'AI Form Autofill failed.' });
+  }
+};
+
+// @POST /api/ai/analyze-new-data
+const analyzeNewData = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { formFields = [], formTitle = '' } = req.body;
+
+    const profile = await Profile.findOne({ userId });
+    if (!profile) {
+      return res.status(404).json({ message: 'Profile not found.' });
+    }
+
+    const existingProfileData = {
+      candidateName: profile.candidateName || '',
+      prn: profile.prn || '',
+      collegeEmail: profile.collegeEmail || '',
+      personalEmail: profile.personalEmail || '',
+      phone: profile.phone || '',
+      gender: profile.gender || '',
+      collegeName: profile.collegeName || '',
+      stream: profile.stream || '',
+      branch: profile.branch || '',
+      passingYear: profile.passingYear || '',
+      cgpa: profile.cgpa || '',
+      tenthPercent: profile.tenthPercent || '',
+      twelfthPercent: profile.twelfthPercent || '',
+      resumeLink: profile.resumeLink || '',
+      leetcodeLink: profile.leetcodeLink || '',
+      codechefLink: profile.codechefLink || '',
+      hackerrankLink: profile.hackerrankLink || '',
+      leetcodeScore: profile.leetcodeScore || '',
+      codechefRating: profile.codechefRating || '',
+      projectTitle: profile.projectTitle || '',
+      projectDetails: profile.projectDetails || '',
+      hobby: profile.hobby || '',
+      technicalCertifications: profile.technicalCertifications || '',
+      previousInternships: profile.previousInternships || '',
+      fields: (profile.fields || []).map((f) => ({ label: f.label, value: f.value, id: f.id })),
+    };
+
+    const user = await User.findById(userId);
+    const userSettings = user.settings || {};
+
+    const prompt = `
+Form Title: "${formTitle}"
+
+Existing Candidate Database Profile:
+${JSON.stringify(existingProfileData, null, 2)}
+
+Fields & Entered Values Scanned from Form:
+${JSON.stringify(formFields, null, 2)}
+
+INSTRUCTIONS:
+1. Analyze the fields and values scanned from the form.
+2. Compare each filled field against the candidate's existing database profile.
+3. Identify ANY NEW candidate information that is present in the form but MISSING or DIFFERENT in the database profile (for example: a new PRN, updated CGPA, new phone number, new GitHub/LeetCode link, new certification, or custom field).
+4. Ignore generic non-candidate form questions (like "Do you agree to terms?", "Select your batch timing", "Today's date").
+5. Return ONLY a JSON object with proposed additions/updates:
+
+{
+  "detectedNewData": [
+    {
+      "id": "string (suggested unique key/slug)",
+      "label": "string (human-readable field label)",
+      "value": "string (the new value found)",
+      "section": "personal | academic | competitive_coding | projects | dynamic",
+      "fieldType": "short_text | paragraph | date | select",
+      "isNew": true,
+      "reason": "string (e.g. 'Found PRN value in form which was empty in DB')"
+    }
+  ]
+}
+`;
+
+    let result;
+    try {
+      result = await callLLM(prompt, userSettings);
+    } catch (llmErr) {
+      if (llmErr.isKeyMissing) {
+        return res.status(400).json({
+          isKeyMissing: true,
+          keyType: 'AI',
+          message: 'AI API Key is missing. Please configure your LLM API Key in Settings.',
+        });
+      }
+      throw llmErr;
+    }
+
+    res.json({
+      ok: true,
+      detectedNewData: result.detectedNewData || [],
+    });
+  } catch (err) {
+    console.error('Analyze New Data Error:', err);
+    res.status(500).json({ ok: false, message: err.message || 'Failed to analyze form for new data.' });
+  }
+};
+
+// @POST /api/ai/sync-new-data
+const syncNewData = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { fieldsToSave = [] } = req.body;
+
+    const profile = await Profile.findOne({ userId });
+    if (!profile) {
+      return res.status(404).json({ message: 'Profile not found.' });
+    }
+
+    const stdKeys = [
+      'candidateName',
+      'prn',
+      'collegeEmail',
+      'personalEmail',
+      'phone',
+      'gender',
+      'collegeName',
+      'stream',
+      'branch',
+      'passingYear',
+      'hobby',
+      'cgpa',
+      'tenthPercent',
+      'twelfthPercent',
+      'technicalCertifications',
+      'previousInternships',
+      'projectTitle',
+      'projectDetails',
+      'codechefRating',
+      'codechefLink',
+      'hackerrankRating',
+      'hackerrankLink',
+      'leetcodeScore',
+      'leetcodeLink',
+      'resumeLink',
+    ];
+
+    let fieldsArray = profile.fields || [];
+
+    for (const item of fieldsToSave) {
+      if (!item.label || item.value === undefined) continue;
+
+      // Check if it matches a standard top-level property
+      const matchedStdKey = stdKeys.find(
+        (k) => k.toLowerCase() === item.id?.toLowerCase() || k.toLowerCase() === item.label?.toLowerCase().replace(/[^a-z0-9]/g, '')
+      );
+
+      if (matchedStdKey) {
+        profile[matchedStdKey] = String(item.value);
+      }
+
+      // Also ensure it is present in dynamic fields array so it shows in the builder
+      const existingFieldIndex = fieldsArray.findIndex(
+        (f) => f.id === item.id || f.label.toLowerCase() === item.label.toLowerCase()
+      );
+
+      if (existingFieldIndex >= 0) {
+        fieldsArray[existingFieldIndex].value = String(item.value);
+      } else {
+        fieldsArray.push({
+          id: item.id || `field_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          section: item.section || 'personal',
+          label: item.label,
+          fieldType: item.fieldType || 'short_text',
+          options: item.options || [],
+          value: String(item.value),
+          hidden: false,
+          isCustom: true,
+          sensitive: false,
+        });
+      }
+    }
+
+    profile.fields = fieldsArray;
+    await profile.save();
+
+    res.json({
+      ok: true,
+      message: `Successfully saved ${fieldsToSave.length} new/updated field(s) to your database profile!`,
+      profile,
+    });
+  } catch (err) {
+    console.error('Sync New Data Error:', err);
+    res.status(500).json({ ok: false, message: err.message || 'Failed to save new data to profile.' });
+  }
+};
+
+module.exports = {
+  autofillForm,
+  analyzeNewData,
+  syncNewData,
+};

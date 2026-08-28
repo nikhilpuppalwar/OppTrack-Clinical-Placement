@@ -251,7 +251,37 @@ const aiUpdateOpportunity = async (req, res) => {
   res.json({ opportunity: opp, changesSummary: updateResult.changesSummary || [] });
 };
 
-// @GET /api/dashboard/stats
+// @GET /api/opportunities/match-url?url={formUrl}
+// Strip query params from both sides and look for matching link in opportunities.
+const matchUrl = async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ message: 'url query param is required.' });
+
+  // Normalize URL: strip query string & trailing slash
+  const normalize = (raw) => {
+    try {
+      const u = new URL(raw);
+      return `${u.origin}${u.pathname}`.replace(/\/$/, '');
+    } catch {
+      return raw;
+    }
+  };
+
+  const canonical = normalize(url);
+
+  // Find any opportunity owned by this user whose links array contains a matching URL
+  const opportunities = await Opportunity.find({ userId: req.user._id, 'links.url': { $exists: true } })
+    .select('company role links');
+
+  const matched = opportunities.find(opp =>
+    opp.links.some(link => normalize(link.url) === canonical)
+  );
+
+  if (!matched) return res.json(null);
+
+  res.json({ _id: matched._id, company: matched.company, role: matched.role });
+};
+
 const getDashboardStats = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -299,4 +329,5 @@ module.exports = {
   extractFromEmail,
   aiUpdateOpportunity,
   getDashboardStats,
+  matchUrl,
 };

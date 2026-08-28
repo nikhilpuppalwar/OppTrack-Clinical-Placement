@@ -11,6 +11,7 @@ const {
   extractFromEmail,
   aiUpdateOpportunity,
   getDashboardStats,
+  matchUrl,
 } = require('../controllers/opportunityController');
 const { protect } = require('../middleware/auth');
 
@@ -18,6 +19,7 @@ const { protect } = require('../middleware/auth');
 const extractLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, message: 'Too many extract requests, slow down.' });
 
 router.get('/stats', protect, getDashboardStats);
+router.get('/match-url', protect, matchUrl);  // Feature 4: link form URL to opportunity
 router.post('/extract', protect, extractLimiter, extractFromEmail);
 router.post('/:id/ai-update', protect, extractLimiter, aiUpdateOpportunity);
 

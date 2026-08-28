@@ -61,6 +61,7 @@ const profileSchema = new mongoose.Schema(
         value: { type: String, default: '' },
         hidden: { type: Boolean, default: false },
         isCustom: { type: Boolean, default: false },
+        sensitive: { type: Boolean, default: false },
       },
     ],
   },

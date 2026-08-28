@@ -27,7 +27,9 @@ app.use('/api/profile', require('./routes/profile'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/opportunities', require('./routes/opportunities'));
 app.use('/api/history', require('./routes/history'));
+app.use('/api/form-history', require('./routes/formHistory'));
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/ai', require('./routes/ai'));
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ message: `Route ${req.method} ${req.path} not found` }));

@@ -39,6 +39,13 @@ export const historyAPI = {
   list: (params) => api.get('/history', { params }),
 };
 
+// Form History (Chrome Extension Activity — Feature 5)
+export const formHistoryAPI = {
+  list:   (params) => api.get('/form-history', { params }),
+  create: (data)   => api.post('/form-history', data),
+  logSensitiveReveal: (data) => api.post('/form-history/sensitive-reveal', data),
+};
+
 // Settings
 export const settingsAPI = {
   get: () => api.get('/settings'),
@@ -47,3 +54,4 @@ export const settingsAPI = {
   testAiKey: (data) => api.post('/settings/test-ai', data),
   export: () => api.get('/settings/export', { responseType: 'blob' }),
 };
+

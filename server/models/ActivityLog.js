@@ -6,7 +6,16 @@ const activityLogSchema = new mongoose.Schema(
     opportunityId: { type: mongoose.Schema.Types.ObjectId, ref: 'Opportunity', default: null },
     eventType: {
       type: String,
-      enum: ['created', 'status_changed', 'edited', 'deleted', 'reminder_sent', 'profile_updated'],
+      enum: [
+        'created',
+        'status_changed',
+        'edited',
+        'deleted',
+        'reminder_sent',
+        'profile_updated',
+        'sensitive_field_revealed', // Extension: user revealed a masked sensitive field
+        'applied_via_extension',    // Extension: status auto-set to "applied" after form submission
+      ],
       required: true,
     },
     description: { type: String, required: true },
