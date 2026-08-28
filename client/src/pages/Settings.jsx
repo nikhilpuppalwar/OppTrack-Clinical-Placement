@@ -221,6 +221,13 @@ export default function Settings() {
   };
 
   const handleTestAi = async () => {
+    if (!settings.llmApiKey) {
+      return setKeyModal({
+        isOpen: true,
+        keyType: 'AI',
+        message: 'No API Key found in your account settings. Please enter your LLM API Key before testing.',
+      });
+    }
     setTestingAi(true);
     const id = toast.loading(`Testing ${settings.llmProvider || 'AI'} connection...`);
     try {

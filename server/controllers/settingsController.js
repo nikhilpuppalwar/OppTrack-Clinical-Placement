@@ -10,20 +10,6 @@ function resolveApiKeyAndProvider(userSettings = {}) {
   let apiKey = userSettings.llmApiKey?.trim();
   let model = userSettings.llmModel?.trim();
 
-  // If no user API key in settings, check environment variable fallbacks
-  if (!apiKey || apiKey === 'your_llm_api_key_here') {
-    if (process.env.GROQ_API_KEY) {
-      apiKey = process.env.GROQ_API_KEY;
-      provider = 'groq';
-    } else if (process.env.OPENAI_API_KEY) {
-      apiKey = process.env.OPENAI_API_KEY;
-      provider = 'openai';
-    } else if (process.env.OPENROUTER_API_KEY) {
-      apiKey = process.env.OPENROUTER_API_KEY;
-      provider = 'openrouter';
-    }
-  }
-
   if (apiKey) {
     if (apiKey.startsWith('gsk_')) provider = 'groq';
     else if (apiKey.startsWith('sk-or-')) provider = 'openrouter';
@@ -114,7 +100,7 @@ const testAiKey = async (req, res) => {
       return res.status(400).json({
         isKeyMissing: true,
         keyType: 'AI',
-        message: 'No API Key found in your account settings or environment. Please enter an API Key.',
+        message: 'No API Key found in your account settings. Please enter your LLM API Key in Settings.',
       });
     }
 
