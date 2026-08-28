@@ -9,19 +9,41 @@ const Profile = require('../models/Profile');
 const Document = require('../models/Document');
 const vectorService = require('../services/vector.service');
 
+function resolveApiKeyAndProvider(userSettings = {}) {
+  let provider = (userSettings.llmProvider || 'groq').toLowerCase().trim();
+  let apiKey = userSettings.llmApiKey?.trim();
+  let model = userSettings.llmModel?.trim();
+
+  if (!apiKey || apiKey === 'your_llm_api_key_here') {
+    if (process.env.GROQ_API_KEY) {
+      apiKey = process.env.GROQ_API_KEY;
+      provider = 'groq';
+    } else if (process.env.OPENAI_API_KEY) {
+      apiKey = process.env.OPENAI_API_KEY;
+      provider = 'openai';
+    } else if (process.env.OPENROUTER_API_KEY) {
+      apiKey = process.env.OPENROUTER_API_KEY;
+      provider = 'openrouter';
+    }
+  }
+
+  if (apiKey) {
+    if (apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';
+    else if (apiKey.startsWith('sk-or-') && provider !== 'openrouter') provider = 'openrouter';
+    else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-') && provider !== 'openai') provider = 'openai';
+  }
+
+  return { apiKey, provider, model };
+}
+
 /**
  * Call configured LLM API to process form questions
  */
 async function callLLM(prompt, userSettings) {
-  let provider = (userSettings?.llmProvider || 'groq').toLowerCase().trim();
-  const apiKey = userSettings?.llmApiKey;
-  let model = userSettings?.llmModel;
+  const { apiKey, provider, model } = resolveApiKeyAndProvider(userSettings);
 
-  if (apiKey && apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';
-  else if (apiKey && apiKey.startsWith('sk-or-') && provider !== 'openrouter') provider = 'openrouter';
-
-  if (!apiKey || apiKey === 'your_llm_api_key_here') {
-    const err = new Error('AI API Key is missing. Please configure your LLM API Key in Settings.');
+  if (!apiKey) {
+    const err = new Error('AI API Key is missing. Please configure your LLM API Key in Settings or Extension Settings.');
     err.isKeyMissing = true;
     err.keyType = 'AI';
     throw err;

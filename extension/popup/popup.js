@@ -75,6 +75,17 @@ async function loadSettings() {
     $('llm-provider').value = s.llmProvider || 'groq';
     $('llm-api-key').value = s.llmApiKey || '';
     $('llm-model').value = s.llmModel || '';
+
+    const msgEl = $('settings-msg');
+    if (s.hasApiKey) {
+      msgEl.textContent = '🟢 API Key active from your database account!';
+      msgEl.className = 'settings-msg success';
+      msgEl.classList.remove('hidden');
+    } else {
+      msgEl.textContent = '⚠️ No AI API Key set. Enter your key above to enable AI.';
+      msgEl.className = 'settings-msg error';
+      msgEl.classList.remove('hidden');
+    }
   }
 }
 

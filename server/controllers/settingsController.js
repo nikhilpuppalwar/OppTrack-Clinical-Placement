@@ -5,9 +5,46 @@ const ActivityLog = require('../models/ActivityLog');
 const reminderService = require('../services/reminder.service');
 const aiService = require('../services/aiExtraction.service');
 
+function resolveApiKeyAndProvider(userSettings = {}) {
+  let provider = (userSettings.llmProvider || 'groq').toLowerCase().trim();
+  let apiKey = userSettings.llmApiKey?.trim();
+  let model = userSettings.llmModel?.trim();
+
+  // If no user API key in settings, check environment variable fallbacks
+  if (!apiKey || apiKey === 'your_llm_api_key_here') {
+    if (process.env.GROQ_API_KEY) {
+      apiKey = process.env.GROQ_API_KEY;
+      provider = 'groq';
+    } else if (process.env.OPENAI_API_KEY) {
+      apiKey = process.env.OPENAI_API_KEY;
+      provider = 'openai';
+    } else if (process.env.OPENROUTER_API_KEY) {
+      apiKey = process.env.OPENROUTER_API_KEY;
+      provider = 'openrouter';
+    }
+  }
+
+  if (apiKey) {
+    if (apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';
+    else if (apiKey.startsWith('sk-or-') && provider !== 'openrouter') provider = 'openrouter';
+    else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-') && provider !== 'openai') provider = 'openai';
+  }
+
+  return { apiKey, provider, model };
+}
+
 // @GET /api/settings
 const getSettings = async (req, res) => {
-  res.json(req.user.settings || {});
+  const userSettings = req.user.settings || {};
+  const { apiKey, provider, model } = resolveApiKeyAndProvider(userSettings);
+
+  res.json({
+    ...userSettings,
+    llmProvider: userSettings.llmProvider || provider || 'groq',
+    llmApiKey: userSettings.llmApiKey || '',
+    llmModel: userSettings.llmModel || model || '',
+    hasApiKey: !!apiKey,
+  });
 };
 
 // @PUT /api/settings
@@ -15,7 +52,15 @@ const updateSettings = async (req, res) => {
   const user = await User.findById(req.user._id);
   user.settings = { ...user.settings, ...req.body };
   await user.save();
-  res.json(user.settings);
+
+  const { apiKey, provider, model } = resolveApiKeyAndProvider(user.settings);
+
+  res.json({
+    ...user.settings,
+    hasApiKey: !!apiKey,
+    effectiveProvider: provider,
+    effectiveModel: model,
+  });
 };
 
 // @POST /api/settings/test-email
@@ -48,21 +93,25 @@ const testAiKey = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     const settingsToTest = { ...user.settings, ...req.body };
-    
-    if (!settingsToTest.llmApiKey) {
+    const { apiKey, provider, model } = resolveApiKeyAndProvider(settingsToTest);
+
+    if (!apiKey) {
       return res.status(400).json({
         isKeyMissing: true,
         keyType: 'AI',
-        message: 'API Key is required to perform AI test. Please enter an API Key.',
+        message: 'No API Key found in your account settings or environment. Please enter an API Key.',
       });
     }
 
-    // Call extraction service with a sample text to test LLM connectivity
     const sampleText = 'Company: TestCorp, Role: Software Engineer, CTC: 10 LPA, Deadline: 2026-12-31';
-    const result = await aiService.extract(sampleText, settingsToTest);
+    const result = await aiService.extract(sampleText, {
+      llmProvider: provider,
+      llmApiKey: apiKey,
+      llmModel: model,
+    });
 
     res.json({
-      message: `AI Connection Successful! (${settingsToTest.llmProvider || 'groq'} - ${settingsToTest.llmModel || 'default'})`,
+      message: `AI Connection Successful! (${provider} - ${model || 'default'})`,
       result,
     });
   } catch (err) {
