@@ -188,20 +188,21 @@ Return ONLY a JSON object with this exact structure:
 }
 `;
 
-    // Call LLM
+    // Call LLM with vector database context
     let aiResult;
     try {
       aiResult = await callLLM(prompt, userSettings);
     } catch (llmErr) {
-      // If API key is missing or failed, fallback to fallback matching
-      if (llmErr.isKeyMissing) {
-        return res.status(400).json({
-          isKeyMissing: true,
-          keyType: 'AI',
-          message: 'AI API Key is missing. Please configure your LLM API key in Extension Settings or Web Settings.',
-        });
-      }
-      throw llmErr;
+      console.warn('LLM API call failed or key missing. Falling back to direct database vector matching:', llmErr.message);
+      // Direct vector + rule matching from user's MongoDB database profile
+      const fallbackAnswers = performDatabaseFallbackMatching(questions, profile, vectorIndex);
+      return res.json({
+        ok: true,
+        formTitle,
+        isFallback: true,
+        message: 'Autofilled directly from database profile (vector match fallback)',
+        answers: fallbackAnswers,
+      });
     }
 
     res.json({
@@ -214,6 +215,85 @@ Return ONLY a JSON object with this exact structure:
     res.status(500).json({ ok: false, message: err.message || 'AI Form Autofill failed.' });
   }
 };
+
+/**
+ * Direct matching engine against user's MongoDB Database Profile & Vector Index
+ */
+function performDatabaseFallbackMatching(questions, profile, vectorIndex) {
+  return questions.map((q) => {
+    // 1. Vector similarity search in database profile
+    const searchHits = vectorService.searchVectorIndex(vectorIndex, q.label, 3);
+    const topHit = searchHits && searchHits[0];
+
+    if (topHit && topHit.score >= 0.40 && topHit.value) {
+      return {
+        questionId: q.id,
+        label: q.label,
+        value: String(topHit.value),
+        confidenceScore: Math.min(0.95, Number((topHit.score + 0.1).toFixed(2))),
+        matchedField: topHit.key || 'DB_PROFILE',
+        reason: `Matched database field '${topHit.label}' via Vector Similarity (${Math.round(topHit.score * 100)}%)`,
+        sensitive: topHit.sensitive || false,
+      };
+    }
+
+    // 2. Direct key mapping on MongoDB profile
+    const labelLower = q.label.toLowerCase();
+    let matchedValue = '';
+    let matchedField = null;
+    let confidence = 0.0;
+
+    if (labelLower.includes('prn') || labelLower.includes('roll')) {
+      matchedValue = profile.prn; matchedField = 'prn'; confidence = 0.95;
+    } else if (labelLower.includes('college email') || (labelLower.includes('email') && labelLower.includes('college'))) {
+      matchedValue = profile.collegeEmail || profile.personalEmail; matchedField = 'collegeEmail'; confidence = 0.95;
+    } else if (labelLower.includes('email')) {
+      matchedValue = profile.personalEmail || profile.collegeEmail; matchedField = 'personalEmail'; confidence = 0.90;
+    } else if (labelLower.includes('phone') || labelLower.includes('mobile') || labelLower.includes('contact no')) {
+      matchedValue = profile.phone; matchedField = 'phone'; confidence = 0.95;
+    } else if (labelLower.includes('name of student') || labelLower.includes('full name') || labelLower.includes('candidate name') || labelLower === 'name') {
+      matchedValue = profile.candidateName; matchedField = 'candidateName'; confidence = 0.95;
+    } else if (labelLower.includes('gender')) {
+      matchedValue = profile.gender; matchedField = 'gender'; confidence = 0.95;
+    } else if (labelLower.includes('college') || labelLower.includes('institute')) {
+      matchedValue = profile.collegeName; matchedField = 'collegeName'; confidence = 0.90;
+    } else if (labelLower.includes('branch')) {
+      matchedValue = profile.branch; matchedField = 'branch'; confidence = 0.95;
+    } else if (labelLower.includes('course') || labelLower.includes('stream') || labelLower.includes('degree')) {
+      matchedValue = profile.stream; matchedField = 'stream'; confidence = 0.90;
+    } else if (labelLower.includes('graduation') || labelLower.includes('passing year')) {
+      matchedValue = profile.passingYear; matchedField = 'passingYear'; confidence = 0.90;
+    } else if (labelLower.includes('10th') || labelLower.includes('ssc')) {
+      matchedValue = profile.tenthPercent; matchedField = 'tenthPercent'; confidence = 0.90;
+    } else if (labelLower.includes('12th') || labelLower.includes('hsc')) {
+      matchedValue = profile.twelfthPercent; matchedField = 'twelfthPercent'; confidence = 0.90;
+    } else if (labelLower.includes('cgpa') || labelLower.includes('btech %') || labelLower.includes('be %')) {
+      matchedValue = profile.cgpa; matchedField = 'cgpa'; confidence = 0.90;
+    }
+
+    if (matchedValue) {
+      return {
+        questionId: q.id,
+        label: q.label,
+        value: String(matchedValue),
+        confidenceScore: confidence,
+        matchedField,
+        reason: `Matched database field '${matchedField}' directly from MongoDB profile`,
+        sensitive: false,
+      };
+    }
+
+    return {
+      questionId: q.id,
+      label: q.label,
+      value: '',
+      confidenceScore: 0.0,
+      matchedField: null,
+      reason: 'No matching data in candidate database profile',
+      sensitive: false,
+    };
+  });
+}
 
 // @POST /api/ai/analyze-new-data
 const analyzeNewData = async (req, res) => {
