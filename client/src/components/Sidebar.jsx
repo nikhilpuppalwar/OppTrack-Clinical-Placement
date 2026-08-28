@@ -15,7 +15,7 @@ const NAV = [
 ];
 
 const GITHUB_URL = 'https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement';
-const EXTENSION_DOWNLOAD_URL = GITHUB_URL + '/releases/latest';
+const EXTENSION_DOWNLOAD_URL = 'https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement/releases/download/extension/OppTrack.AutoFill.Extension.zip';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();

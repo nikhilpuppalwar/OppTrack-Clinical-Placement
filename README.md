@@ -96,7 +96,7 @@ The app will be available at `http://localhost:5173`.
 
 ### Download Packaged Extension (Release)
 
-> ⬇️ **[Download Latest Release from GitHub](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement/releases/latest)**
+> ⬇️ **[Download OppTrack.AutoFill.Extension.zip](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement/releases/download/extension/OppTrack.AutoFill.Extension.zip)**
 
 ---
 
@@ -150,7 +150,7 @@ OppTrack-Clinical-Placement/
 | Resource | URL |
 |---|---|
 | 🌐 Live Web App | [opp-track-clinical-placement.vercel.app](https://opp-track-clinical-placement.vercel.app) |
-| 📦 Extension Download | [GitHub Releases](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement/releases/latest) |
+| 📦 Extension Download | [OppTrack.AutoFill.Extension.zip](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement/releases/download/extension/OppTrack.AutoFill.Extension.zip) |
 | ⭐ GitHub Repo | [nikhilpuppalwar/OppTrack-Clinical-Placement](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement) |
 
 ---
