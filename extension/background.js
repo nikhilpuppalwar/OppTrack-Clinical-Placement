@@ -174,6 +174,12 @@ async function handleMessage(msg, sender) {
         body: JSON.stringify(msg.settings),
       });
 
+    case 'TEST_AI_KEY':
+      return authedFetch('/settings/test-ai', {
+        method: 'POST',
+        body: JSON.stringify(msg.settings),
+      });
+
     // ── AI Form Autofill & Vector DB ─────────────────────────────────────────
     case 'AI_FORM_AUTOFILL':
       return authedFetch('/ai/form-autofill', {

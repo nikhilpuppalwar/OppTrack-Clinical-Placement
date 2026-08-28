@@ -1,14 +1,52 @@
 /**
  * OppTrack Extension — Popup Logic
  *
- * Handles: Auth state, AI Settings API key sync, Form detection,
- * AI Vector Autofill trigger, Analyze & Save New Data trigger.
+ * Fully synchronized with Website AI Integration Settings (Groq, OpenAI, Anthropic, OpenRouter, DeepSeek, etc.)
  */
 
 const $ = (id) => document.getElementById(id);
 
 let currentTab = null;
 let matchedOpp = null;
+
+const PRESET_PROVIDERS = [
+  { value: 'groq', label: 'Groq Cloud (Recommended — Ultra Fast & Free)' },
+  { value: 'openai', label: 'OpenAI (ChatGPT / GPT-4o)' },
+  { value: 'anthropic', label: 'Anthropic (Claude 3.5)' },
+  { value: 'openrouter', label: 'OpenRouter.ai (All Open Models)' },
+  { value: 'deepseek', label: 'DeepSeek AI' },
+  { value: 'together', label: 'Together.ai' },
+  { value: 'other', label: '✏️ Custom Provider...' },
+];
+
+const PRESET_MODELS = {
+  groq: [
+    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile (Recommended)' },
+    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Fastest)' },
+    { value: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768' },
+    { value: 'deepseek-r1-distill-llama-70b', label: 'deepseek-r1-distill-llama-70b' },
+    { value: 'other', label: '✏️ Custom Model...' },
+  ],
+  openai: [
+    { value: 'gpt-4o-mini', label: 'gpt-4o-mini (Fast & Affordable)' },
+    { value: 'gpt-4o', label: 'gpt-4o (High Accuracy)' },
+    { value: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' },
+    { value: 'other', label: '✏️ Custom Model...' },
+  ],
+  anthropic: [
+    { value: 'claude-3-haiku-20240307', label: 'claude-3-haiku-20240307' },
+    { value: 'claude-3-5-sonnet-20241022', label: 'claude-3-5-sonnet-20241022' },
+    { value: 'other', label: '✏️ Custom Model...' },
+  ],
+  openrouter: [
+    { value: 'meta-llama/llama-3.3-70b-instruct', label: 'meta-llama/llama-3.3-70b-instruct' },
+    { value: 'deepseek/deepseek-r1', label: 'deepseek/deepseek-r1' },
+    { value: 'other', label: '✏️ Custom Model...' },
+  ],
+};
+
+let isCustomProvider = false;
+let isCustomModel = false;
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
@@ -67,18 +105,31 @@ async function init() {
   loadRecentForms();
 }
 
-// ─── Settings Logic ───────────────────────────────────────────────────────────
+// ─── Settings Logic (Synced 100% with Web App) ────────────────────────────────
 async function loadSettings() {
   const res = await msg('GET_SETTINGS');
   if (res.ok && res.data) {
     const s = res.data;
-    $('llm-provider').value = s.llmProvider || 'groq';
+    const provider = s.llmProvider || 'groq';
+    const model = s.llmModel || 'llama-3.3-70b-versatile';
+
+    const isKnownProvider = PRESET_PROVIDERS.some((p) => p.value === provider);
+    if (!isKnownProvider && provider) {
+      setIsCustomProvider(true);
+      $('custom-provider-input').value = provider;
+    } else {
+      setIsCustomProvider(false);
+      $('llm-provider').value = provider;
+    }
+
+    updateModelSelectOptions(provider, model);
+
     $('llm-api-key').value = s.llmApiKey || '';
-    $('llm-model').value = s.llmModel || '';
+    $('key-hint').textContent = `Required for ${provider}`;
 
     const msgEl = $('settings-msg');
     if (s.hasApiKey) {
-      msgEl.textContent = '🟢 API Key active from your database account!';
+      msgEl.textContent = '🟢 API Key active & synced with database account!';
       msgEl.className = 'settings-msg success';
       msgEl.classList.remove('hidden');
     } else {
@@ -89,32 +140,162 @@ async function loadSettings() {
   }
 }
 
+function updateModelSelectOptions(provider, selectedModel) {
+  const select = $('llm-model-select');
+  select.innerHTML = '';
+
+  const models = PRESET_MODELS[provider] || [
+    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
+    { value: 'other', label: '✏️ Custom Model...' },
+  ];
+
+  models.forEach((m) => {
+    const opt = document.createElement('option');
+    opt.value = m.value;
+    opt.textContent = m.label;
+    select.appendChild(opt);
+  });
+
+  const isKnownModel = models.some((m) => m.value === selectedModel);
+  if (!isKnownModel && selectedModel) {
+    setIsCustomModel(true);
+    select.value = 'other';
+    $('custom-model-input').value = selectedModel;
+  } else {
+    setIsCustomModel(false);
+    select.value = selectedModel || models[0]?.value || '';
+  }
+}
+
+function setIsCustomProvider(custom) {
+  isCustomProvider = custom;
+  if (custom) {
+    $('llm-provider').classList.add('hidden');
+    $('custom-provider-input').classList.remove('hidden');
+    $('toggle-custom-provider').textContent = '← Presets';
+  } else {
+    $('llm-provider').classList.remove('hidden');
+    $('custom-provider-input').classList.add('hidden');
+    $('toggle-custom-provider').textContent = '✏️ Custom';
+  }
+}
+
+function setIsCustomModel(custom) {
+  isCustomModel = custom;
+  if (custom) {
+    $('llm-model-select').classList.add('hidden');
+    $('custom-model-input').classList.remove('hidden');
+    $('toggle-custom-model').textContent = '← Presets';
+  } else {
+    $('llm-model-select').classList.remove('hidden');
+    $('custom-model-input').classList.add('hidden');
+    $('toggle-custom-model').textContent = '✏️ Custom';
+  }
+}
+
+// Provider Select Change
+$('llm-provider').addEventListener('change', (e) => {
+  const prov = e.target.value;
+  if (prov === 'other') {
+    setIsCustomProvider(true);
+    return;
+  }
+  const defaultModels = {
+    openai: 'gpt-4o-mini',
+    anthropic: 'claude-3-haiku-20240307',
+    openrouter: 'meta-llama/llama-3.3-70b-instruct',
+  };
+  const defModel = defaultModels[prov] || 'llama-3.3-70b-versatile';
+  updateModelSelectOptions(prov, defModel);
+  $('key-hint').textContent = `Required for ${prov}`;
+});
+
+// Model Select Change
+$('llm-model-select').addEventListener('change', (e) => {
+  if (e.target.value === 'other') {
+    setIsCustomModel(true);
+  }
+});
+
+// Toggles for Custom
+$('toggle-custom-provider').addEventListener('click', () => {
+  setIsCustomProvider(!isCustomProvider);
+});
+
+$('toggle-custom-model').addEventListener('click', () => {
+  setIsCustomModel(!isCustomModel);
+});
+
+// Eye visibility toggle
+$('toggle-key-visibility').addEventListener('click', () => {
+  const input = $('llm-api-key');
+  const isPass = input.type === 'password';
+  input.type = isPass ? 'text' : 'password';
+  $('toggle-key-visibility').textContent = isPass ? '🙈' : '👁️';
+});
+
 $('settings-toggle-btn').addEventListener('click', () => {
   const card = $('settings-card');
   card.classList.toggle('hidden');
 });
 
-$('save-settings-btn').addEventListener('click', async () => {
-  const settings = {
-    llmProvider: $('llm-provider').value,
-    llmApiKey: $('llm-api-key').value.trim(),
-    llmModel: $('llm-model').value.trim(),
-  };
+// Helper to get active settings object
+function getSettingsFromUI() {
+  const provider = isCustomProvider
+    ? $('custom-provider-input').value.trim()
+    : $('llm-provider').value;
 
+  const model = isCustomModel
+    ? $('custom-model-input').value.trim()
+    : $('llm-model-select').value;
+
+  return {
+    llmProvider: provider,
+    llmApiKey: $('llm-api-key').value.trim(),
+    llmModel: model,
+  };
+}
+
+// Test AI Connection Button
+$('test-ai-btn').addEventListener('click', async () => {
+  const settings = getSettingsFromUI();
+  const btn = $('test-ai-btn');
+  btn.disabled = true;
+  btn.textContent = 'Testing…';
+
+  const msgEl = $('settings-msg');
+  const res = await msg('TEST_AI_KEY', { settings });
+  btn.disabled = false;
+  btn.textContent = '✨ Test AI';
+
+  if (res.ok) {
+    msgEl.textContent = `✓ ${res.data?.message || 'AI Connected Successfully!'}`;
+    msgEl.className = 'settings-msg success';
+    msgEl.classList.remove('hidden');
+  } else {
+    msgEl.textContent = `Failed: ${res.data?.message || res.error || 'AI Key test failed.'}`;
+    msgEl.className = 'settings-msg error';
+    msgEl.classList.remove('hidden');
+  }
+});
+
+// Save & Sync Settings Button
+$('save-settings-btn').addEventListener('click', async () => {
+  const settings = getSettingsFromUI();
   const btn = $('save-settings-btn');
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
+  const msgEl = $('settings-msg');
   const res = await msg('UPDATE_SETTINGS', { settings });
   btn.disabled = false;
-  btn.textContent = 'Save & Sync Settings';
+  btn.textContent = '💾 Save AI Settings';
 
-  const msgEl = $('settings-msg');
   if (res.ok) {
     msgEl.textContent = '✓ AI Settings saved and synced with web app!';
     msgEl.className = 'settings-msg success';
     msgEl.classList.remove('hidden');
-    setTimeout(() => msgEl.classList.add('hidden'), 3000);
+    setTimeout(() => loadSettings(), 1500);
   } else {
     msgEl.textContent = `Failed: ${res.data?.message || res.error}`;
     msgEl.className = 'settings-msg error';
@@ -201,7 +382,7 @@ $('analyze-btn').addEventListener('click', async () => {
 
   try {
     await chrome.tabs.sendMessage(currentTab.id, { type: 'ANALYZE_NEW_DATA_NOW' });
-    window.close(); // Close popup so user sees the on-page analysis modal
+    window.close();
   } catch (e) {
     alert('Analysis trigger failed. Try reloading the Google Form page.');
   }

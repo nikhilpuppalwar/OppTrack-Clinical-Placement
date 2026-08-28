@@ -66,27 +66,66 @@
       </div>
     </div>
 
-    <!-- Settings Card (Collapsible) -->
+    <!-- AI Integration Settings Card (100% Synced with Website) -->
     <div id="settings-card" class="settings-card hidden">
-      <div class="settings-title">🤖 AI Key & Vector Settings</div>
+      <div class="settings-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:16px;">🤖</span>
+          <div>
+            <div class="settings-title">AI Integration Settings</div>
+            <div class="settings-sub">Synced with Web App</div>
+          </div>
+        </div>
+        <span class="badge-tag">Account Specific</span>
+      </div>
+
+      <!-- AI Provider -->
       <div class="field-group">
-        <label for="llm-provider">LLM Provider</label>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label for="llm-provider">AI Provider</label>
+          <button type="button" id="toggle-custom-provider" class="text-link-btn">✏️ Custom</button>
+        </div>
         <select id="llm-provider">
-          <option value="groq">Groq (Llama 3.3 70B - Recommended)</option>
-          <option value="openai">OpenAI (GPT-4o Mini)</option>
-          <option value="openrouter">OpenRouter</option>
+          <option value="groq">Groq Cloud (Recommended — Ultra Fast & Free)</option>
+          <option value="openai">OpenAI (ChatGPT / GPT-4o)</option>
+          <option value="anthropic">Anthropic (Claude 3.5)</option>
+          <option value="openrouter">OpenRouter.ai (All Open Models)</option>
+          <option value="deepseek">DeepSeek AI</option>
+          <option value="together">Together.ai</option>
+          <option value="other">✏️ Custom Provider...</option>
         </select>
+        <input type="text" id="custom-provider-input" class="hidden" placeholder="e.g. vllm / local" />
       </div>
+
+      <!-- LLM Model -->
       <div class="field-group">
-        <label for="llm-api-key">API Key</label>
-        <input type="password" id="llm-api-key" placeholder="Enter gsk_ or sk- key..." />
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label for="llm-model">LLM Model</label>
+          <button type="button" id="toggle-custom-model" class="text-link-btn">✏️ Custom</button>
+        </div>
+        <select id="llm-model-select"></select>
+        <input type="text" id="custom-model-input" class="hidden" placeholder="e.g. llama-3.3-70b-versatile" />
       </div>
+
+      <!-- LLM API Key -->
       <div class="field-group">
-        <label for="llm-model">Model Name (Optional)</label>
-        <input type="text" id="llm-model" placeholder="e.g. llama-3.3-70b-versatile" />
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label for="llm-api-key">LLM API Key</label>
+          <span id="key-hint" class="hint-text">Required</span>
+        </div>
+        <div style="position:relative;display:flex;align-items:center;">
+          <input type="password" id="llm-api-key" placeholder="Paste your API key (gsk_… / sk-or-…)" style="padding-right:34px;" />
+          <button type="button" id="toggle-key-visibility" class="eye-btn" title="Toggle visibility">👁️</button>
+        </div>
       </div>
+
       <div id="settings-msg" class="settings-msg hidden"></div>
-      <button id="save-settings-btn" class="btn-secondary" style="width:100%;margin-top:6px;">Save & Sync Settings</button>
+
+      <!-- Action Buttons -->
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button id="test-ai-btn" class="btn-purple-outline" style="flex:1;">✨ Test AI</button>
+        <button id="save-settings-btn" class="btn-purple" style="flex:1;">💾 Save AI Settings</button>
+      </div>
     </div>
 
     <!-- Status row -->

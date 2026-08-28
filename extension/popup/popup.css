@@ -11,6 +11,8 @@
   --muted: rgba(242,243,237,0.5);
   --accent: #b7e34a;
   --accent-dim: rgba(183,227,74,0.12);
+  --purple: #9a8cff;
+  --purple-dim: rgba(154,140,255,0.15);
   --red: #ff6b6b;
   --yellow: #fbbf24;
   --blue: #60a5fa;
@@ -18,7 +20,7 @@
 }
 
 body {
-  width: 340px;
+  width: 360px;
   min-height: 200px;
   background: var(--bg);
   color: var(--text);
@@ -56,20 +58,49 @@ body {
 .view-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
 
 .field-group { margin-bottom: 12px; }
-.field-group label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
-.field-group input {
+.field-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 5px; letter-spacing: 0.01em; }
+.field-group input, .field-group select {
   width: 100%;
-  background: var(--surface);
+  background: #121413;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
   color: var(--text);
-  font-size: 13px;
+  font-size: 12px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.field-group input:focus { border-color: var(--accent); }
+.field-group input:focus, .field-group select:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 10px rgba(154, 140, 255, 0.2);
+}
+
+.text-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--purple);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+.hint-text {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.eye-btn {
+  position: absolute;
+  right: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  color: var(--muted);
+}
 
 .error-msg {
   background: rgba(255,107,107,0.1);
@@ -120,38 +151,78 @@ body {
   border-color: rgba(242,243,237,0.3);
 }
 
+.btn-purple {
+  background: var(--purple);
+  color: #101311;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(154, 140, 255, 0.3);
+  transition: opacity 0.2s;
+}
+.btn-purple:hover:not(:disabled) { opacity: 0.9; }
+
+.btn-purple-outline {
+  background: transparent;
+  color: var(--purple);
+  border: 1px solid rgba(154, 140, 255, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-purple-outline:hover:not(:disabled) { background: rgba(154, 140, 255, 0.1); }
+
 .settings-card {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-top: 4px solid var(--purple);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 14px;
   margin-bottom: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
 }
-.settings-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 10px;
+
+.settings-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
 }
-.settings-card select {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 10px;
+
+.settings-title {
+  font-size: 13px;
+  font-weight: 700;
   color: var(--text);
-  font-size: 12px;
-  font-family: inherit;
-  outline: none;
 }
+.settings-sub {
+  font-size: 10px;
+  color: var(--muted);
+}
+.badge-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: var(--purple-dim);
+  color: var(--purple);
+  border: 1px solid rgba(154, 140, 255, 0.3);
+}
+
 .settings-msg {
   font-size: 11px;
   padding: 6px 8px;
   border-radius: 6px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 .settings-msg.success { background: rgba(183,227,74,0.15); color: var(--accent); }
 .settings-msg.error   { background: rgba(255,107,107,0.15); color: var(--red); }
@@ -190,7 +261,7 @@ body {
   white-space: nowrap;
 }
 
-/* ── Opportunity Banner (Feature 4) ── */
+/* ── Opportunity Banner ── */
 .opp-banner {
   background: var(--accent-dim);
   border: 1px solid rgba(183,227,74,0.25);
@@ -263,7 +334,7 @@ body {
 .status-dot.ready { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
 .status-dot.error { background: var(--red); }
 
-/* ── Recent Forms (Feature 5) ── */
+/* ── Recent Forms ── */
 .section { margin-top: 14px; }
 .section-header {
   display: flex;
