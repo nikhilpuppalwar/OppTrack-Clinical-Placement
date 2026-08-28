@@ -201,11 +201,12 @@ $('llm-provider').addEventListener('change', (e) => {
     return;
   }
   const defaultModels = {
+    groq: 'llama-3.1-8b-instant',
     openai: 'gpt-4o-mini',
     anthropic: 'claude-3-haiku-20240307',
     openrouter: 'meta-llama/llama-3.3-70b-instruct',
   };
-  const defModel = defaultModels[prov] || 'llama-3.3-70b-versatile';
+  const defModel = defaultModels[prov] || 'llama-3.1-8b-instant';
   updateModelSelectOptions(prov, defModel);
   $('key-hint').textContent = `Required for ${prov}`;
 });

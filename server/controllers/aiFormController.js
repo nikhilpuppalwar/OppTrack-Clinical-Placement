@@ -28,9 +28,24 @@ function resolveApiKeyAndProvider(userSettings = {}) {
   }
 
   if (apiKey) {
-    if (apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';
-    else if (apiKey.startsWith('sk-or-') && provider !== 'openrouter') provider = 'openrouter';
-    else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-') && provider !== 'openai') provider = 'openai';
+    if (apiKey.startsWith('gsk_')) provider = 'groq';
+    else if (apiKey.startsWith('sk-or-')) provider = 'openrouter';
+    else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
+  }
+
+  // Model safety validation per provider to prevent provider mismatch errors
+  if (provider === 'groq') {
+    if (!model || model.includes('gpt-') || model.includes('claude') || model.includes('/') || model === 'other') {
+      model = 'llama-3.1-8b-instant';
+    }
+  } else if (provider === 'openai') {
+    if (!model || model.includes('llama') || model.includes('mixtral') || model.includes('/') || model === 'other') {
+      model = 'gpt-4o-mini';
+    }
+  } else if (provider === 'openrouter') {
+    if (!model || !model.includes('/') || model === 'other') {
+      model = 'meta-llama/llama-3.3-70b-instruct';
+    }
   }
 
   return { apiKey, provider, model };
