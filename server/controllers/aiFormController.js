@@ -56,12 +56,15 @@ async function callLLM(prompt, userSettings) {
   if (provider === 'openai') baseUrl = 'https://api.openai.com/v1/chat/completions';
   if (provider === 'openrouter') baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-  const defaultModel =
-    provider === 'openai'
-      ? 'gpt-4o-mini'
-      : provider === 'openrouter'
-      ? 'meta-llama/llama-3.3-70b-instruct'
-      : 'llama-3.3-70b-versatile';
+  let defaultModel = 'llama-3.3-70b-versatile';
+  if (provider === 'openai') defaultModel = 'gpt-4o-mini';
+  if (provider === 'openrouter') defaultModel = 'meta-llama/llama-3.3-70b-instruct';
+
+  let selectedModel = model || defaultModel;
+  // If model on Groq is gpt-oss-120b or rate-limited low-TPM model, switch to high-TPM model
+  if (provider === 'groq' && (selectedModel.includes('gpt-oss') || selectedModel === 'other')) {
+    selectedModel = 'llama-3.3-70b-versatile';
+  }
 
   const response = await fetch(baseUrl, {
     method: 'POST',
@@ -70,19 +73,22 @@ async function callLLM(prompt, userSettings) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: model || defaultModel,
+      model: selectedModel,
       messages: [
         { role: 'system', content: systemMessage },
         { role: 'user', content: prompt },
       ],
       temperature: 0.1,
-      response_format: { type: 'json_object' },
     }),
   });
 
   const data = await response.json();
   if (data.error) {
-    throw new Error(data.error.message || JSON.stringify(data.error));
+    const err = new Error(data.error.message || JSON.stringify(data.error));
+    if (response.status === 429 || (data.error.message && data.error.message.includes('Rate limit'))) {
+      err.isRateLimit = true;
+    }
+    throw err;
   }
 
   const content = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
@@ -162,9 +168,9 @@ const autofillForm = async (req, res) => {
     // Build vector DB index for user profile & documents
     const vectorIndex = vectorService.buildVectorIndex(profile, documents);
 
-    // Retrieve semantic context for each question using vector search
+    // Retrieve top 2 semantic context items per question to stay well within token limits
     const questionsWithContext = questions.map((q) => {
-      const topContext = vectorService.searchVectorIndex(vectorIndex, q.label, 5);
+      const topContext = vectorService.searchVectorIndex(vectorIndex, q.label, 2);
       return {
         id: q.id,
         label: q.label,
