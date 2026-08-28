@@ -342,8 +342,11 @@ const extractWithGroq = async (rawText, apiKey, model) => {
     }),
   });
   const data = await response.json();
-  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  return cleanAndParseJSON(data.choices[0].message.content);
+  if (data.error) {
+    const msg = data.error.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+    throw new Error(`Groq API Error: ${msg}`);
+  }
+  return cleanAndParseJSON(data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '');
 };
 
 const extractWithOpenAI = async (rawText, apiKey, model) => {
@@ -361,8 +364,11 @@ const extractWithOpenAI = async (rawText, apiKey, model) => {
     }),
   });
   const data = await response.json();
-  if (data.error) throw new Error(data.error.message);
-  return cleanAndParseJSON(data.choices[0].message.content);
+  if (data.error) {
+    const msg = data.error.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+    throw new Error(`OpenAI Error: ${msg}`);
+  }
+  return cleanAndParseJSON(data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '');
 };
 
 const extractWithOpenRouter = async (rawText, apiKey, model) => {
@@ -379,8 +385,11 @@ const extractWithOpenRouter = async (rawText, apiKey, model) => {
     }),
   });
   const data = await response.json();
-  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  return cleanAndParseJSON(data.choices[0].message.content);
+  if (data.error) {
+    const msg = data.error.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+    throw new Error(`OpenRouter Error: ${msg}`);
+  }
+  return cleanAndParseJSON(data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '');
 };
 
 const extractWithAnthropic = async (rawText, apiKey, model) => {
