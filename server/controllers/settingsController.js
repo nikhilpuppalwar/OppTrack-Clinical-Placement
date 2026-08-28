@@ -41,7 +41,7 @@ const getSettings = async (req, res) => {
   res.json({
     ...userSettings,
     llmProvider: userSettings.llmProvider || provider || 'groq',
-    llmApiKey: userSettings.llmApiKey || '',
+    llmApiKey: userSettings.llmApiKey || apiKey || '',
     llmModel: userSettings.llmModel || model || '',
     hasApiKey: !!apiKey,
   });
