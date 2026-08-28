@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Briefcase, Calendar, History,
-  User, Settings, LogOut, Puzzle
+  User, Settings, LogOut, Puzzle, HelpCircle
 } from 'lucide-react';
 
 const NAV = [
@@ -13,6 +13,7 @@ const NAV = [
   { to: '/history', icon: History, label: 'Activity Log' },
   { to: '/profile', icon: User, label: 'Profile Vault' },
   { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/help', icon: HelpCircle, label: 'Help & Extension' },
 ];
 
 const GITHUB_URL = 'https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement';

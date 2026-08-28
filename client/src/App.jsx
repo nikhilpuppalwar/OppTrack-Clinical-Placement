@@ -12,6 +12,7 @@ import CalendarPage from './pages/CalendarPage';
 import History from './pages/History';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import HelpGuide from './pages/HelpGuide';
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/history" element={<ProtectedLayout><History /></ProtectedLayout>} />
           <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
           <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
+          <Route path="/help" element={<ProtectedLayout><HelpGuide /></ProtectedLayout>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
