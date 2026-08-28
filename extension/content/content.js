@@ -1,13 +1,14 @@
 /**
- * OppTrack — Content Script (Google Forms AI & Vector Autofill + Data Analyzer)
+ * OppTrack — Content Script (Universal Google Forms AI & Vector Autofill + Data Analyzer)
  *
  * Features:
- *  1. AI + Vector DB Semantic Field Matching & Answer Generation
- *  2. Per-Field Confidence Score Dots & Detailed Tooltips
- *  3. Leaving missing / low-confidence (<40%) fields blank
- *  4. Sensitive Field Gate (Aadhaar / PAN masked overlay)
- *  5. File Upload Helper Card (suggested documents)
- *  6. Analyze Form & Save New Data Modal (detects novel input & updates MongoDB profile + web app)
+ *  1. Universal Google Form Parser — Handles Text, Textarea, MCQ/Radio, Checkboxes, Dropdowns & Ratings
+ *  2. AI + Vector DB Semantic Field Matching & Answer Generation
+ *  3. Per-Field Confidence Score Dots & Detailed Tooltips
+ *  4. Leaving missing / low-confidence (<40%) fields blank
+ *  5. Sensitive Field Gate (Aadhaar / PAN masked overlay)
+ *  6. File Upload Helper Card (suggested documents)
+ *  7. Analyze Form & Save New Data Modal (detects novel input & updates MongoDB profile + web app)
  */
 
 'use strict';
@@ -127,7 +128,7 @@ function injectGlobalStyles() {
       border-radius: 6px;
       border: 1px solid rgba(255,255,255,0.1);
       white-space: max-content;
-      max-width: 260px;
+      max-width: 280px;
       pointer-events: none;
       box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       z-index: 100000;
@@ -232,7 +233,7 @@ function injectGlobalStyles() {
   document.head.appendChild(style);
 }
 
-// ─── DOM Helpers ──────────────────────────────────────────────────────────────
+// ─── Universal Google Forms Parser ──────────────────────────────────────────
 function getQuestionBlocks() {
   return Array.from(document.querySelectorAll('div[role="listitem"]'));
 }
@@ -242,25 +243,138 @@ function getQuestionLabel(block) {
   return (labelEl?.textContent || '').trim();
 }
 
-function getInputFromBlock(block) {
-  return (
+/**
+ * Universal Form Field Inspection: Supports Text, Textarea, Radio, Checkbox, Dropdown & File Inputs
+ */
+function inspectQuestionBlock(block) {
+  const label = getQuestionLabel(block);
+  if (!label) return null;
+
+  // File Upload
+  const fileInput = block.querySelector('input[type="file"]');
+  if (fileInput) {
+    return { label, type: 'file', element: fileInput, options: [] };
+  }
+
+  // Text / Textarea / Email / Date / Number
+  const textInput =
     block.querySelector('input[type="text"]') ||
     block.querySelector('textarea') ||
     block.querySelector('input[type="email"]') ||
     block.querySelector('input[type="number"]') ||
-    block.querySelector('input[type="date"]') ||
-    null
-  );
+    block.querySelector('input[type="date"]');
+
+  if (textInput) {
+    return {
+      label,
+      type: textInput.tagName.toLowerCase() === 'textarea' ? 'paragraph' : 'short_text',
+      element: textInput,
+      placeholder: textInput.placeholder || '',
+      currentValue: textInput.value || '',
+      options: [],
+    };
+  }
+
+  // Radio Buttons / MCQ / Rating / Linear Scale
+  const radioEls = Array.from(block.querySelectorAll('div[role="radio"]'));
+  if (radioEls.length > 0) {
+    const options = radioEls.map((el) => getChoiceLabel(el)).filter(Boolean);
+    return { label, type: 'radio', radioEls, options };
+  }
+
+  // Checkboxes
+  const checkEls = Array.from(block.querySelectorAll('div[role="checkbox"]'));
+  if (checkEls.length > 0) {
+    const options = checkEls.map((el) => getChoiceLabel(el)).filter(Boolean);
+    return { label, type: 'checkbox', checkEls, options };
+  }
+
+  // Dropdown / Listbox
+  const listboxEl = block.querySelector('div[role="listbox"]');
+  if (listboxEl) {
+    const optionEls = Array.from(block.querySelectorAll('div[role="option"]'));
+    const options = optionEls.map((el) => getChoiceLabel(el)).filter(Boolean);
+    return { label, type: 'dropdown', listboxEl, optionEls, options };
+  }
+
+  return null;
 }
 
-function getFileInputFromBlock(block) {
-  return block.querySelector('input[type="file"]') || null;
+function getChoiceLabel(el) {
+  return (
+    el.getAttribute('data-value') ||
+    el.getAttribute('aria-label') ||
+    el.querySelector('.docssharedWiztogglelbl, span')?.textContent ||
+    el.textContent ||
+    ''
+  ).trim();
+}
+
+/**
+ * Click / Set value on any Google Form element (Text, Radio, Checkbox, Dropdown)
+ */
+function setAnswerOnBlock(blockInfo, value) {
+  if (!blockInfo || !value) return false;
+
+  const normalize = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const targetNorm = normalize(value);
+
+  // 1. Text Inputs
+  if (blockInfo.element && (blockInfo.type === 'short_text' || blockInfo.type === 'paragraph')) {
+    setNativeValue(blockInfo.element, value);
+    blockInfo.element.dataset.otFilled = '1';
+    blockInfo.element.dataset.otOriginal = value;
+    return true;
+  }
+
+  // 2. Radio Buttons / MCQ / Linear Scale
+  if (blockInfo.type === 'radio' && blockInfo.radioEls) {
+    const bestRadio = blockInfo.radioEls.find((rEl) => {
+      const lblNorm = normalize(getChoiceLabel(rEl));
+      return lblNorm === targetNorm || lblNorm.includes(targetNorm) || targetNorm.includes(lblNorm);
+    });
+
+    if (bestRadio) {
+      bestRadio.click();
+      return true;
+    }
+  }
+
+  // 3. Checkboxes
+  if (blockInfo.type === 'checkbox' && blockInfo.checkEls) {
+    let clickedAny = false;
+    blockInfo.checkEls.forEach((cEl) => {
+      const lblNorm = normalize(getChoiceLabel(cEl));
+      if (lblNorm === targetNorm || targetNorm.includes(lblNorm) || lblNorm.includes(targetNorm)) {
+        cEl.click();
+        clickedAny = true;
+      }
+    });
+    return clickedAny;
+  }
+
+  // 4. Dropdowns / Listbox
+  if (blockInfo.type === 'dropdown' && blockInfo.listboxEl) {
+    const optionEls = blockInfo.optionEls || Array.from(blockInfo.listboxEl.querySelectorAll('div[role="option"]'));
+    const bestOpt = optionEls.find((oEl) => {
+      const lblNorm = normalize(getChoiceLabel(oEl));
+      return lblNorm === targetNorm || lblNorm.includes(targetNorm) || targetNorm.includes(lblNorm);
+    });
+
+    if (bestOpt) {
+      blockInfo.listboxEl.click();
+      setTimeout(() => bestOpt.click(), 100);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // ─── Confidence Dot Injection ─────────────────────────────────────────────────
-function injectConfidenceDot(inputEl, score, profileFieldName, reason = '') {
-  // Remove existing dot if present
-  const existing = inputEl.parentElement?.querySelector(`.${NS}-dot-wrap`);
+function injectConfidenceDot(targetContainer, score, profileFieldName, reason = '') {
+  if (!targetContainer) return;
+  const existing = targetContainer.querySelector(`.${NS}-dot-wrap`);
   if (existing) existing.remove();
 
   const wrap = document.createElement('span');
@@ -277,29 +391,13 @@ function injectConfidenceDot(inputEl, score, profileFieldName, reason = '') {
   wrap.appendChild(dot);
   wrap.appendChild(tooltip);
 
-  const parent = inputEl.closest('div') || inputEl.parentElement;
-  if (parent) {
-    parent.style.position = 'relative';
-    parent.appendChild(wrap);
-  }
-
-  inputEl.addEventListener(
-    'blur',
-    () => {
-      if (inputEl.value !== inputEl.dataset.otOriginal) {
-        dot.className = `${NS}-dot manual`;
-        tooltip.textContent = 'Manually edited by user';
-        sessionCorrections.set(inputEl, inputEl.value);
-      }
-    },
-    { once: false }
-  );
-
-  return wrap;
+  targetContainer.style.position = 'relative';
+  targetContainer.appendChild(wrap);
 }
 
 // ─── Sensitive Overlay ────────────────────────────────────────────────────────
 function injectSensitiveOverlay(inputEl, maskedDisplay, profileValue, fieldLabel, formUrl) {
+  if (!inputEl) return;
   const wrapper = document.createElement('div');
   wrapper.style.cssText = 'position:relative;display:inline-block;width:100%;';
 
@@ -330,18 +428,36 @@ async function performAIAutofill() {
 
   const blocks = getQuestionBlocks();
   const questions = [];
+  const blockInfos = [];
+
+  // Fetch Documents list for File Helper Cards
+  const docsRes = await msg('GET_DOCUMENTS');
+  const documents = docsRes.ok ? docsRes.data || [] : [];
 
   blocks.forEach((block, index) => {
-    const label = getQuestionLabel(block);
-    const input = getInputFromBlock(block);
-    if (label && input) {
-      questions.push({
-        id: `q_${index}`,
-        label,
-        type: input.tagName.toLowerCase() === 'textarea' ? 'paragraph' : 'short_text',
-        placeholder: input.placeholder || '',
-      });
+    const info = inspectQuestionBlock(block);
+    if (!info) return;
+
+    blockInfos.push({ index, block, info });
+
+    if (info.type === 'file') {
+      if (documents.length > 0) {
+        const card = buildFileHelperCard(info.label, documents);
+        if (card && !block.querySelector(`.${NS}-file-helper`)) {
+          const uploadArea = block.querySelector('[role="button"]') || info.element.parentElement;
+          uploadArea.parentElement?.insertBefore(card, uploadArea) ?? block.appendChild(card);
+        }
+      }
+      return;
     }
+
+    questions.push({
+      id: `q_${index}`,
+      label: info.label,
+      type: info.type,
+      options: info.options || [],
+      placeholder: info.placeholder || '',
+    });
   });
 
   if (!questions.length) {
@@ -370,11 +486,8 @@ async function performAIAutofill() {
 
   answers.forEach((ans) => {
     const index = parseInt(ans.questionId.replace('q_', ''), 10);
-    if (isNaN(index) || !blocks[index]) return;
-
-    const block = blocks[index];
-    const inputEl = getInputFromBlock(block);
-    if (!inputEl) return;
+    const item = blockInfos.find((b) => b.index === index);
+    if (!item) return;
 
     const confidence = ans.confidenceScore || 0;
     const val = ans.value || '';
@@ -385,25 +498,70 @@ async function performAIAutofill() {
     }
 
     // Sensitive field gate check
-    if (ans.sensitive) {
+    if (ans.sensitive && item.info.element) {
       const visible = val.slice(-4);
       const masked = '•'.repeat(Math.max(0, val.length - 4)) + ' ' + visible;
-      injectSensitiveOverlay(inputEl, `${masked} — click to reveal & fill`, val, ans.label, formUrl);
-      inputEl.dataset.otOriginal = val;
+      injectSensitiveOverlay(item.info.element, `${masked} — click to reveal & fill`, val, ans.label, formUrl);
+      item.info.element.dataset.otOriginal = val;
       return;
     }
 
-    // Autofill field value
-    setNativeValue(inputEl, val);
-    inputEl.dataset.otFilled = '1';
-    inputEl.dataset.otOriginal = val;
-    filledCount++;
-
-    // Inject confidence dot with reason
-    injectConfidenceDot(inputEl, confidence, ans.matchedField || 'AI Match', ans.reason);
+    // Autofill / Click Answer Choice
+    const success = setAnswerOnBlock(item.info, val);
+    if (success) {
+      filledCount++;
+      const targetContainer = item.info.element?.parentElement || item.block.querySelector('.M7eMe') || item.block;
+      injectConfidenceDot(targetContainer, confidence, ans.matchedField || 'AI Match', ans.reason);
+    }
   });
 
   return { fieldsFilledCount: filledCount };
+}
+
+// ─── File Helper Card Builder ─────────────────────────────────────────────────
+function buildFileHelperCard(question, documents) {
+  const lower = question.toLowerCase();
+  let typeHint = 'other';
+  if (lower.includes('resume') || lower.includes('cv')) typeHint = 'resume';
+  else if (lower.includes('aadhar') || lower.includes('aadhaar')) typeHint = 'aadhar';
+  else if (lower.includes('pan')) typeHint = 'pan';
+  else if (lower.includes('marksheet') || lower.includes('mark sheet') || lower.includes('transcript')) typeHint = 'marksheet';
+  else if (lower.includes('photo') || lower.includes('photograph') || lower.includes('picture')) typeHint = 'photo';
+  else if (lower.includes('signature')) typeHint = 'signature';
+
+  const matched = documents.filter((d) => d.type === typeHint || d.type === 'other');
+  if (!matched.length) return null;
+
+  const card = document.createElement('div');
+  card.className = `${NS}-file-helper`;
+  card.style.cssText = 'border:1px dashed rgba(183,227,74,0.4);border-radius:8px;background:rgba(183,227,74,0.05);padding:10px 14px;margin-top:8px;font-size:12px;color:rgba(242,243,237,0.85);';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size:11px;font-weight:700;text-transform:uppercase;color:#b7e34a;margin-bottom:6px;';
+  title.textContent = `📎 Suggested ${typeHint.toUpperCase()} Document`;
+  card.appendChild(title);
+
+  matched.forEach((doc) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'padding:3px 0;';
+
+    const link = document.createElement('a');
+    link.href = doc.fileUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.style.cssText = 'color:#60a5fa;text-decoration:none;font-weight:500;';
+    link.textContent = `↗ Open ${doc.label}`;
+
+    row.appendChild(link);
+    card.appendChild(row);
+  });
+
+  const reminder = document.createElement('div');
+  reminder.style.cssText = 'font-size:11px;color:rgba(242,243,237,0.5);margin-top:6px;';
+  reminder.textContent = '⚠ Download file then upload manually above';
+  card.appendChild(reminder);
+
+  return card;
 }
 
 // ─── Feature: Analyze Form & Save New Data to DB ──────────────────────────────
@@ -414,13 +572,24 @@ async function analyzeAndSaveNewData() {
   const formFields = [];
 
   blocks.forEach((block) => {
-    const label = getQuestionLabel(block);
-    const input = getInputFromBlock(block);
-    if (label && input && input.value?.trim()) {
+    const info = inspectQuestionBlock(block);
+    if (!info) return;
+
+    let currentValue = '';
+    if (info.currentValue) currentValue = info.currentValue;
+    else if (info.type === 'radio' && info.radioEls) {
+      const selected = info.radioEls.find((r) => r.getAttribute('aria-checked') === 'true');
+      if (selected) currentValue = getChoiceLabel(selected);
+    } else if (info.type === 'checkbox' && info.checkEls) {
+      const selected = info.checkEls.filter((c) => c.getAttribute('aria-checked') === 'true');
+      if (selected.length) currentValue = selected.map(getChoiceLabel).join(', ');
+    }
+
+    if (currentValue.trim()) {
       formFields.push({
-        label,
-        value: input.value.trim(),
-        type: input.tagName.toLowerCase(),
+        label: info.label,
+        value: currentValue.trim(),
+        type: info.type,
       });
     }
   });
@@ -448,7 +617,6 @@ async function analyzeAndSaveNewData() {
     return;
   }
 
-  // Render Modal Window to let user confirm updates
   showNewDataModal(detectedNewData);
 }
 
@@ -460,8 +628,6 @@ function showNewDataModal(items) {
   overlay.id = `${NS}-modal-overlay`;
   overlay.className = `${NS}-modal-overlay`;
 
-  const selectedIds = new Set(items.map((it) => it.id));
-
   overlay.innerHTML = `
     <div class="${NS}-modal-card">
       <div class="${NS}-modal-header">
@@ -470,7 +636,7 @@ function showNewDataModal(items) {
       </div>
       <div class="${NS}-modal-body">
         <p style="font-size:12px;color:rgba(242,243,237,0.7);margin-bottom:14px;">
-          The AI scanned this form and found <strong>${items.length}</strong> new/updated detail(s) that are missing from your database profile. Select the fields you want to save:
+          The AI scanned this form and found <strong>${items.length}</strong> new/updated detail(s) missing from your database profile:
         </p>
         <div id="${NS}-items-container">
           ${items
@@ -561,12 +727,10 @@ function injectFloatingToolbar() {
   };
 }
 
-// Automatically inject floating toolbar on Google Form load
 if (window.location.href.includes('docs.google.com/forms')) {
   setTimeout(injectFloatingToolbar, 1000);
 }
 
-// Listen for messages from extension popup
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'AUTOFILL_NOW') {
     performAIAutofill()
