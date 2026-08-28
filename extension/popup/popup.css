@@ -373,3 +373,27 @@ body {
 .recent-meta  { font-size: 10px; color: var(--muted); margin-top: 1px; }
 
 .recent-count { font-size: 10px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+
+/* ── Login Footer ── */
+.login-footer { margin-top: 8px; }
+.btn-outline-full {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-outline-full:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}

@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Briefcase, Calendar, History,
-  User, Settings, LogOut, Sparkles
+  User, Settings, LogOut, Puzzle, Github
 } from 'lucide-react';
 
 const NAV = [
@@ -13,6 +13,9 @@ const NAV = [
   { to: '/profile', icon: User, label: 'Profile Vault' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
+
+const GITHUB_URL = 'https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement';
+const EXTENSION_DOWNLOAD_URL = GITHUB_URL + '/releases/latest';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -93,8 +96,48 @@ export default function Sidebar() {
         ))}
       </div>
 
+      {/* Extension + GitHub Promo */}
+      <div style={{ margin: '16px 0 12px', padding: '12px', background: '#121413', borderRadius: 8, border: '1px solid #2A302B' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#b7e34a', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+          🧩 Chrome Extension
+        </div>
+        <p style={{ margin: '0 0 8px', fontSize: 11, color: 'rgba(242,243,237,0.5)', lineHeight: 1.5 }}>
+          Autofill any form with AI using your profile data.
+        </p>
+        <a
+          href={EXTENSION_DOWNLOAD_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            background: '#b7e34a', color: '#0f1210',
+            borderRadius: 5, padding: '6px 10px',
+            fontSize: 11, fontWeight: 700, textDecoration: 'none',
+            transition: 'opacity 0.15s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+        >
+          <Puzzle size={12} /> Download Extension
+        </a>
+        <a
+          href={GITHUB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            color: 'rgba(242,243,237,0.4)', marginTop: 6,
+            fontSize: 10, textDecoration: 'none',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = '#F2F3ED'}
+          onMouseLeave={e => e.currentTarget.style.color = 'rgba(242,243,237,0.4)'}
+        >
+          <Github size={11} /> GitHub Repo ↗
+        </a>
+      </div>
+
       {/* Sidebar Footer */}
-      <div style={{ borderTop: '1px solid #2A302B', paddingTop: 20, marginTop: 'auto' }}>
+      <div style={{ borderTop: '1px solid #2A302B', paddingTop: 20 }}>
         <div style={{ padding: '0 8px 14px 8px' }}>
           <div style={{ fontFamily: 'Instrument Serif, serif', fontSize: 18, color: '#F2F3ED', lineHeight: 1.2 }}>
             {user?.name || 'Student'}

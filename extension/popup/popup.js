@@ -472,4 +472,21 @@ function relativeTime(isoStr) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+const WEBSITE_URL = 'https://opp-track-clinical-placement.vercel.app';
+
+// ─── Register / Open Website Buttons ──────────────────────────────────────────
+const regBtn = document.getElementById('open-register-btn');
+if (regBtn) {
+  regBtn.addEventListener('click', () => {
+    chrome.tabs.create({ url: `${WEBSITE_URL}/register` });
+  });
+}
+
+const openWebsiteBtn = document.getElementById('open-website-btn');
+if (openWebsiteBtn) {
+  openWebsiteBtn.addEventListener('click', () => {
+    chrome.tabs.create({ url: WEBSITE_URL });
+  });
+}
+
 init();
