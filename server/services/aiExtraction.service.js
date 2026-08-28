@@ -327,27 +327,61 @@ function cleanAndParseJSON(text) {
   }
 }
 
-const extractWithGroq = async (rawText, apiKey, model) => {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: model || 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: 'You are a JSON-only extraction assistant. Return only valid JSON, no markdown, no code blocks.' },
-        { role: 'user', content: SCHEMA_PROMPT + rawText },
-      ],
-      temperature: 0.1,
-      max_tokens: 3000,
-      response_format: { type: 'json_object' },
-    }),
-  });
-  const data = await response.json();
-  if (data.error) {
-    const msg = data.error.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
-    throw new Error(`Groq API Error: ${msg}`);
+const GROQ_FALLBACK_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+  'llama3-70b-8192',
+  'llama3-8b-8192',
+  'mixtral-8x7b-32768',
+  'gemma2-9b-it',
+];
+
+const extractWithGroq = async (rawText, apiKey, preferredModel) => {
+  const modelsToTry = [
+    preferredModel,
+    ...GROQ_FALLBACK_MODELS.filter((m) => m !== preferredModel),
+  ].filter(Boolean);
+
+  let lastError = null;
+
+  for (const modelCandidate of modelsToTry) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: modelCandidate,
+          messages: [
+            { role: 'system', content: 'You are a JSON-only extraction assistant. Return valid JSON only.' },
+            { role: 'user', content: SCHEMA_PROMPT + rawText },
+          ],
+          temperature: 0.1,
+          max_tokens: 3000,
+          response_format: { type: 'json_object' },
+        }),
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        const msg = data.error.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+        if (msg.includes('does not exist') || msg.includes('not have access') || msg.includes('Rate limit')) {
+          lastError = new Error(msg);
+          continue;
+        }
+        throw new Error(`Groq API Error: ${msg}`);
+      }
+
+      return cleanAndParseJSON(data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '');
+    } catch (err) {
+      if (err.message?.includes('does not exist') || err.message?.includes('not have access') || err.message?.includes('Rate limit')) {
+        lastError = err;
+        continue;
+      }
+      throw err;
+    }
   }
-  return cleanAndParseJSON(data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '');
+
+  throw new Error(`Groq API Error: ${lastError ? lastError.message : 'All model attempts failed.'}`);
 };
 
 const extractWithOpenAI = async (rawText, apiKey, model) => {

@@ -60,6 +60,62 @@ async function callLLM(prompt, userSettings) {
   if (provider === 'openai') baseUrl = 'https://api.openai.com/v1/chat/completions';
   if (provider === 'openrouter') baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
+  if (provider === 'groq') {
+    const modelsToTry = [
+      model,
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'llama3-70b-8192',
+      'llama3-8b-8192',
+      'mixtral-8x7b-32768',
+      'gemma2-9b-it',
+    ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+
+    let lastErr = null;
+
+    for (const candidate of modelsToTry) {
+      try {
+        const response = await fetch(baseUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: candidate,
+            messages: [
+              { role: 'system', content: systemMessage },
+              { role: 'user', content: prompt },
+            ],
+            temperature: 0.1,
+            response_format: { type: 'json_object' },
+          }),
+        });
+
+        const data = await response.json();
+        if (data.error) {
+          const msg = data.error.message || JSON.stringify(data.error);
+          if (msg.includes('does not exist') || msg.includes('not have access') || msg.includes('Rate limit')) {
+            lastErr = new Error(msg);
+            continue;
+          }
+          throw new Error(msg);
+        }
+
+        const content = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+        return cleanAndParseJSON(content);
+      } catch (err) {
+        if (err.message?.includes('does not exist') || err.message?.includes('not have access') || err.message?.includes('Rate limit')) {
+          lastErr = err;
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    if (lastErr) throw lastErr;
+  }
+
   const reqBody = {
     model,
     messages: [
@@ -69,7 +125,7 @@ async function callLLM(prompt, userSettings) {
     temperature: 0.1,
   };
 
-  if (provider === 'groq' || provider === 'openai') {
+  if (provider === 'openai') {
     reqBody.response_format = { type: 'json_object' };
   }
 
