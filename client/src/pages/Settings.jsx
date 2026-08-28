@@ -32,10 +32,10 @@ const PRESET_PROVIDERS = [
 
 const PRESET_MODELS = {
   groq: [
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile (Recommended)' },
-    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Fastest)' },
+    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Fastest & Free)' },
+    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
+    { value: 'llama3-70b-8192', label: 'llama3-70b-8192' },
     { value: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768' },
-    { value: 'deepseek-r1-distill-llama-70b', label: 'deepseek-r1-distill-llama-70b' },
     { value: 'other', label: '✏️ Custom Model...' },
   ],
   openai: [

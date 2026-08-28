@@ -56,14 +56,14 @@ async function callLLM(prompt, userSettings) {
   if (provider === 'openai') baseUrl = 'https://api.openai.com/v1/chat/completions';
   if (provider === 'openrouter') baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-  let defaultModel = 'llama-3.3-70b-versatile';
+  let defaultModel = 'llama-3.1-8b-instant';
   if (provider === 'openai') defaultModel = 'gpt-4o-mini';
   if (provider === 'openrouter') defaultModel = 'meta-llama/llama-3.3-70b-instruct';
 
   let selectedModel = model || defaultModel;
-  // If model on Groq is gpt-oss-120b or rate-limited low-TPM model, switch to high-TPM model
+  // If model on Groq is gpt-oss or llama-3.3-70b-versatile (if missing), default to llama-3.1-8b-instant
   if (provider === 'groq' && (selectedModel.includes('gpt-oss') || selectedModel === 'other')) {
-    selectedModel = 'llama-3.3-70b-versatile';
+    selectedModel = 'llama-3.1-8b-instant';
   }
 
   const response = await fetch(baseUrl, {
