@@ -92,7 +92,7 @@ const DEFAULT_INITIAL_FIELDS = [
 ];
 
 // Single Copyable Field Component styled for Stitch AI design
-function VaultField({ label, value, isMonospace, isLink }) {
+function VaultField({ label, value, isMonospace }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -103,7 +103,9 @@ function VaultField({ label, value, isMonospace, isLink }) {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const isUrl = isLink || (value && (value.startsWith('http://') || value.startsWith('https://')));
+  const rawVal = value !== undefined && value !== null ? String(value) : '';
+  const trimmed = rawVal.trim();
+  const isWebUrl = Boolean(trimmed && (trimmed.startsWith('http://') || trimmed.startsWith('https://')));
 
   return (
     <div
@@ -130,9 +132,9 @@ function VaultField({ label, value, isMonospace, isLink }) {
       {/* Value row: text + copy button side by side, text wraps */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          {isUrl ? (
+          {isWebUrl ? (
             <a
-              href={value}
+              href={trimmed}
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -148,7 +150,7 @@ function VaultField({ label, value, isMonospace, isLink }) {
               onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
               onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
             >
-              <span style={{ wordBreak: 'break-all', overflowWrap: 'anywhere', minWidth: 0, flex: 1 }}>{value}</span>
+              <span style={{ wordBreak: 'break-all', overflowWrap: 'anywhere', minWidth: 0, flex: 1 }}>{trimmed}</span>
               <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 2 }} />
             </a>
           ) : (
@@ -160,7 +162,7 @@ function VaultField({ label, value, isMonospace, isLink }) {
                 fontFamily: isMonospace || label.toLowerCase().includes('email') || label.toLowerCase().includes('phone') ? 'DM Mono, monospace' : 'inherit'
               }}
             >
-              {value || <span style={{ color: 'rgba(242,243,237,0.25)', fontStyle: 'italic' }}>Not provided</span>}
+              {rawVal ? rawVal : <span style={{ color: 'rgba(242,243,237,0.25)', fontStyle: 'italic' }}>Not provided</span>}
             </span>
           )}
         </div>
@@ -175,7 +177,7 @@ function VaultField({ label, value, isMonospace, isLink }) {
             border: `1px solid ${copied ? '#b7e34a' : '#2A302B'}`,
             borderRadius: 6,
             color: copied ? '#b7e34a' : 'rgba(242,243,237,0.5)',
-            cursor: value ? 'pointer' : 'default',
+            cursor: rawVal ? 'pointer' : 'default',
             padding: '4px 8px',
             display: 'flex',
             alignItems: 'center',
@@ -184,7 +186,7 @@ function VaultField({ label, value, isMonospace, isLink }) {
             fontWeight: 600,
             transition: 'all 0.15s ease',
           }}
-          onMouseEnter={e => { if (value) { e.currentTarget.style.borderColor = '#b7e34a'; e.currentTarget.style.color = '#b7e34a'; } }}
+          onMouseEnter={e => { if (rawVal) { e.currentTarget.style.borderColor = '#b7e34a'; e.currentTarget.style.color = '#b7e34a'; } }}
           onMouseLeave={e => { if (!copied) { e.currentTarget.style.borderColor = '#2A302B'; e.currentTarget.style.color = 'rgba(242,243,237,0.5)'; } }}
         >
           {copied ? <Check size={13} /> : <Copy size={13} />}
@@ -213,19 +215,53 @@ export default function Profile() {
   useEffect(() => {
     profileAPI.get()
       .then(({ data }) => {
-        let loadedFields = data.fields || [];
+        const rawFields = Array.isArray(data?.fields) ? data.fields : [];
+        const existingFieldMap = new Map();
 
-        if (loadedFields.length === 0) {
-          loadedFields = DEFAULT_INITIAL_FIELDS.map(def => ({
-            ...def,
-            value: data[def.id] !== undefined && data[def.id] !== null ? String(data[def.id]) : def.value,
-            hidden: false,
-          }));
+        // 1. Index existing saved fields by id
+        rawFields.forEach(f => {
+          if (f && f.id) existingFieldMap.set(f.id, { ...f });
+        });
 
-          if (Array.isArray(data.customFields)) {
-            data.customFields.forEach(cf => {
-              loadedFields.push({
-                id: cf.id || 'custom_' + Date.now(),
+        // 2. Ensure all DEFAULT_INITIAL_FIELDS are included and populated from DB
+        const mergedFields = DEFAULT_INITIAL_FIELDS.map(def => {
+          const existing = existingFieldMap.get(def.id);
+          const topVal = data && data[def.id] !== undefined && data[def.id] !== null ? String(data[def.id]) : '';
+
+          if (existing) {
+            // If existing value is blank but top-level DB has a value, use top-level
+            const effectiveVal = existing.value !== undefined && existing.value !== null && String(existing.value).trim() !== ''
+              ? String(existing.value)
+              : (topVal || def.value || '');
+
+            return {
+              ...def,
+              ...existing,
+              value: effectiveVal,
+            };
+          } else {
+            // Missing default field (e.g. from newer sections) -> include it seamlessly
+            return {
+              ...def,
+              value: topVal || def.value || '',
+              hidden: false,
+            };
+          }
+        });
+
+        // 3. Append any user custom fields
+        rawFields.forEach(f => {
+          if (f && f.id && !DEFAULT_INITIAL_FIELDS.some(def => def.id === f.id)) {
+            mergedFields.push({ ...f });
+          }
+        });
+
+        // 4. Also check legacy customFields array if present
+        if (Array.isArray(data?.customFields)) {
+          data.customFields.forEach(cf => {
+            if (cf && cf.id && !mergedFields.some(f => f.id === cf.id)) {
+              mergedFields.push({
+                id: cf.id,
                 section: cf.section || 'personal',
                 label: cf.label || 'Custom Field',
                 fieldType: cf.fieldType || 'short_text',
@@ -234,10 +270,11 @@ export default function Profile() {
                 hidden: false,
                 isCustom: true,
               });
-            });
-          }
+            }
+          });
         }
-        setFields(loadedFields);
+
+        setFields(mergedFields);
       })
       .catch(() => toast.error('Failed to load profile details'))
       .finally(() => setLoading(false));
@@ -252,7 +289,10 @@ export default function Profile() {
       });
 
       const { data } = await profileAPI.update(payload);
-      setFields(data.fields || fields);
+      if (data?.fields?.length) {
+        // Update keeping any loaded field structure
+        setFields(fields);
+      }
       setEditing(false);
       toast.success('Profile Vault updated successfully!');
     } catch {

@@ -19,18 +19,17 @@ function resolveApiKeyAndProvider(userSettings = {}) {
 
   // Model safety validation per provider according to official documentation
   if (provider === 'groq') {
-    const validGroqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
-    if (!model || !validGroqModels.includes(model)) {
-      model = 'llama-3.3-70b-versatile';
+    const deprecatedGroqModels = ['llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+    if (!model || model === 'other' || deprecatedGroqModels.includes(model)) {
+      model = 'openai/gpt-oss-120b';
     }
   } else if (provider === 'gemini') {
-    const validGeminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp', 'gemini-2.0-flash'];
-    if (!model || !validGeminiModels.includes(model)) {
-      model = 'gemini-1.5-flash';
+    const deprecatedGeminiModels = ['gemini-2.0-flash-exp'];
+    if (!model || model === 'other' || deprecatedGeminiModels.includes(model)) {
+      model = 'gemini-2.0-flash';
     }
   } else if (provider === 'openai') {
-    const validOpenAIModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'];
-    if (!model || !validOpenAIModels.includes(model)) {
+    if (!model || model === 'other') {
       model = 'gpt-4o-mini';
     }
   } else if (provider === 'openrouter') {

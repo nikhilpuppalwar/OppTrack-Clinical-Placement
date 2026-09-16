@@ -22,17 +22,16 @@ const PRESET_PROVIDERS = [
 
 const PRESET_MODELS = {
   groq: [
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile (Recommended)' },
-    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Fastest)' },
-    { value: 'llama3-70b-8192', label: 'llama3-70b-8192' },
-    { value: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768' },
-    { value: 'gemma2-9b-it', label: 'gemma2-9b-it' },
+    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended — Powerful & Fast)' },
+    { value: 'openai/gpt-oss-20b', label: 'openai/gpt-oss-20b (Ultra Fast)' },
+    { value: 'qwen/qwen3.8-27b', label: 'qwen/qwen3.8-27b' },
+    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
+    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant' },
     { value: 'other', label: '✏️ Custom Model...' },
   ],
   gemini: [
+    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Recommended — Fast & Latest)' },
     { value: 'gemini-1.5-flash', label: 'gemini-1.5-flash (Fast & Free)' },
-    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Latest)' },
-    { value: 'gemini-2.0-flash-exp', label: 'gemini-2.0-flash-exp (Experimental)' },
     { value: 'gemini-1.5-pro', label: 'gemini-1.5-pro (High Accuracy)' },
     { value: 'other', label: '✏️ Custom Model...' },
   ],
@@ -120,7 +119,7 @@ async function loadSettings() {
   if (res.ok && res.data) {
     const s = res.data;
     const provider = s.llmProvider || 'groq';
-    const model = s.llmModel || 'llama-3.3-70b-versatile';
+    const model = s.llmModel || 'openai/gpt-oss-120b';
 
     const isKnownProvider = PRESET_PROVIDERS.some((p) => p.value === provider);
     if (!isKnownProvider && provider) {
@@ -154,7 +153,7 @@ function updateModelSelectOptions(provider, selectedModel) {
   select.innerHTML = '';
 
   const models = PRESET_MODELS[provider] || [
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
+    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b' },
     { value: 'other', label: '✏️ Custom Model...' },
   ];
 
@@ -210,13 +209,13 @@ $('llm-provider').addEventListener('change', (e) => {
     return;
   }
   const defaultModels = {
-    groq: 'llama-3.3-70b-versatile',
-    gemini: 'gemini-1.5-flash',
+    groq: 'openai/gpt-oss-120b',
+    gemini: 'gemini-2.0-flash',
     openai: 'gpt-4o-mini',
     anthropic: 'claude-3-haiku-20240307',
     openrouter: 'meta-llama/llama-3.3-70b-instruct',
   };
-  const defModel = defaultModels[prov] || 'llama-3.3-70b-versatile';
+  const defModel = defaultModels[prov] || 'openai/gpt-oss-120b';
   updateModelSelectOptions(prov, defModel);
   $('key-hint').textContent = `Required for ${prov}`;
 });

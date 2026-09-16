@@ -8,7 +8,8 @@
  *  - Handle the "mark as applied" + activityLog on form submission detection
  */
 
-const API_BASE = 'https://opptrack-clinical-placement.onrender.com/api';
+const PRIMARY_API_BASE = 'https://opptrack-clinical-placement.onrender.com/api';
+const LOCAL_API_BASE = 'http://localhost:5000/api';
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 async function getToken() {
@@ -16,19 +17,38 @@ async function getToken() {
   return opptrack_token || null;
 }
 
+async function getApiBase() {
+  const { opptrack_api_url } = await chrome.storage.local.get('opptrack_api_url');
+  return opptrack_api_url || PRIMARY_API_BASE;
+}
+
 async function authedFetch(path, options = {}) {
   const token = await getToken();
-  const url = `${API_BASE}${path}`;
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
-  });
-  const data = await res.json().catch(() => null);
-  return { ok: res.ok, status: res.status, data };
+  let base = await getApiBase();
+
+  const doFetch = async (baseUrl) => {
+    const res = await fetch(`${baseUrl}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      },
+    });
+    const data = await res.json().catch(() => null);
+    return { ok: res.ok, status: res.status, data };
+  };
+
+  try {
+    return await doFetch(base);
+  } catch (err) {
+    const altBase = base.includes('onrender.com') ? LOCAL_API_BASE : PRIMARY_API_BASE;
+    try {
+      return await doFetch(altBase);
+    } catch {
+      return { ok: false, status: 0, error: err.message };
+    }
+  }
 }
 
 // ─── Tab tracking for form submission detection (Feature 4) ──────────────────
@@ -103,7 +123,15 @@ async function handleMessage(msg, sender) {
         body: JSON.stringify({ email: msg.email, password: msg.password }),
       });
       if (res.ok && res.data?.token) {
-        await chrome.storage.local.set({ opptrack_token: res.data.token, opptrack_user: res.data.user });
+        const userObj = res.data.user || {
+          _id: res.data._id,
+          name: res.data.name,
+          email: res.data.email,
+          collegeName: res.data.collegeName,
+          branch: res.data.branch,
+          batch: res.data.batch,
+        };
+        await chrome.storage.local.set({ opptrack_token: res.data.token, opptrack_user: userObj });
       }
       return res;
     }

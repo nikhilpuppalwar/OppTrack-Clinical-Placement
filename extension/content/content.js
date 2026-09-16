@@ -355,17 +355,16 @@ function setAnswerOnBlock(blockInfo, value) {
 
   // 4. Dropdowns / Listbox
   if (blockInfo.type === 'dropdown' && blockInfo.listboxEl) {
-    const optionEls = blockInfo.optionEls || Array.from(blockInfo.listboxEl.querySelectorAll('div[role="option"]'));
-    const bestOpt = optionEls.find((oEl) => {
-      const lblNorm = normalize(getChoiceLabel(oEl));
-      return lblNorm === targetNorm || lblNorm.includes(targetNorm) || targetNorm.includes(lblNorm);
-    });
-
-    if (bestOpt) {
-      blockInfo.listboxEl.click();
-      setTimeout(() => bestOpt.click(), 100);
-      return true;
-    }
+    blockInfo.listboxEl.click();
+    setTimeout(() => {
+      const optionEls = Array.from(document.querySelectorAll('div[role="option"], div.OA0qNb div[jsaction]'));
+      const bestOpt = optionEls.find((oEl) => {
+        const lblNorm = normalize(getChoiceLabel(oEl));
+        return lblNorm === targetNorm || lblNorm.includes(targetNorm) || targetNorm.includes(lblNorm);
+      });
+      if (bestOpt) bestOpt.click();
+    }, 150);
+    return true;
   }
 
   return false;

@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS = {
   notificationChannel: 'email',
   llmProvider: 'groq',
   llmApiKey: '',
-  llmModel: 'llama-3.3-70b-versatile',
+  llmModel: 'openai/gpt-oss-120b',
   smtpHost: 'smtp.gmail.com',
   smtpPort: 587,
   smtpUser: '',
@@ -22,7 +22,7 @@ const DEFAULT_SETTINGS = {
 
 const PRESET_PROVIDERS = [
   { value: 'groq', label: 'Groq Cloud (Recommended — Ultra Fast & Free)' },
-  { value: 'gemini', label: 'Google Gemini (gemini-1.5-flash / Pro)' },
+  { value: 'gemini', label: 'Google Gemini (gemini-2.0-flash / 1.5)' },
   { value: 'openai', label: 'OpenAI (ChatGPT / GPT-4o)' },
   { value: 'anthropic', label: 'Anthropic (Claude 3.5)' },
   { value: 'openrouter', label: 'OpenRouter.ai (All Open Models)' },
@@ -33,17 +33,16 @@ const PRESET_PROVIDERS = [
 
 const PRESET_MODELS = {
   groq: [
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile (Recommended)' },
-    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Fastest)' },
-    { value: 'llama3-70b-8192', label: 'llama3-70b-8192' },
-    { value: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768' },
-    { value: 'gemma2-9b-it', label: 'gemma2-9b-it' },
+    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended — Powerful & Fast)' },
+    { value: 'openai/gpt-oss-20b', label: 'openai/gpt-oss-20b (Ultra Fast)' },
+    { value: 'qwen/qwen3.8-27b', label: 'qwen/qwen3.8-27b' },
+    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
+    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant' },
     { value: 'other', label: '✏️ Custom Model...' },
   ],
   gemini: [
+    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Recommended — Latest & Fast)' },
     { value: 'gemini-1.5-flash', label: 'gemini-1.5-flash (Fast & Free)' },
-    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Latest)' },
-    { value: 'gemini-2.0-flash-exp', label: 'gemini-2.0-flash-exp (Experimental)' },
     { value: 'gemini-1.5-pro', label: 'gemini-1.5-pro (High Accuracy)' },
     { value: 'other', label: '✏️ Custom Model...' },
   ],
@@ -461,9 +460,9 @@ export default function Settings() {
                     onChange={e => {
                       const prov = e.target.value;
                       if (prov === 'other') { setIsCustomProvider(true); setSettings(s => ({ ...s, llmProvider: '' })); return; }
-                      const defaultModels = { openai: 'gpt-4o-mini', anthropic: 'claude-3-haiku-20240307', openrouter: 'meta-llama/llama-3.3-70b-instruct' };
+                      const defaultModels = { groq: 'openai/gpt-oss-120b', gemini: 'gemini-2.0-flash', openai: 'gpt-4o-mini', anthropic: 'claude-3-haiku-20240307', openrouter: 'meta-llama/llama-3.3-70b-instruct' };
                       setIsCustomModel(false);
-                      setSettings(s => ({ ...s, llmProvider: prov, llmModel: defaultModels[prov] || 'llama-3.3-70b-versatile' }));
+                      setSettings(s => ({ ...s, llmProvider: prov, llmModel: defaultModels[prov] || 'openai/gpt-oss-120b' }));
                     }}
                   />
                 )}
@@ -484,7 +483,7 @@ export default function Settings() {
                 {isCustomModel ? (
                   <DarkInput
                     id="llmModel"
-                    placeholder="e.g. llama-3.3-70b-versatile"
+                    placeholder="e.g. openai/gpt-oss-120b"
                     value={settings.llmModel || ''}
                     onChange={e => setSettings(s => ({ ...s, llmModel: e.target.value }))}
                     accentColor="#9A8CFF"

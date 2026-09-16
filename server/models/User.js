@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
       notificationChannel: { type: String, enum: ['email', 'browser'], default: 'email' },
       llmProvider: { type: String, default: 'groq' },
       llmApiKey: { type: String, default: '' },
-      llmModel: { type: String, default: 'llama-3.3-70b-versatile' },
+      llmModel: { type: String, default: 'openai/gpt-oss-120b' },
 
       // SMTP Custom Credentials
       smtpHost: { type: String, default: 'smtp.gmail.com' },

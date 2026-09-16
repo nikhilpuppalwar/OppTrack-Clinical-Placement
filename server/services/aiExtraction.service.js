@@ -247,14 +247,13 @@ const extract = async (rawText, userSettings = {}) => {
 
   // Model safety validation per provider
   if (provider === 'groq') {
-    const validGroqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
-    if (!model || !validGroqModels.includes(model)) model = 'llama-3.3-70b-versatile';
+    const deprecatedGroqModels = ['llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+    if (!model || model === 'other' || deprecatedGroqModels.includes(model)) model = 'openai/gpt-oss-120b';
   } else if (provider === 'gemini') {
-    const validGeminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp', 'gemini-2.0-flash'];
-    if (!model || !validGeminiModels.includes(model)) model = 'gemini-1.5-flash';
+    const deprecatedGeminiModels = ['gemini-2.0-flash-exp'];
+    if (!model || model === 'other' || deprecatedGeminiModels.includes(model)) model = 'gemini-2.0-flash';
   } else if (provider === 'openai') {
-    const validOpenAIModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'];
-    if (!model || !validOpenAIModels.includes(model)) model = 'gpt-4o-mini';
+    if (!model || model === 'other') model = 'gpt-4o-mini';
   } else if (provider === 'openrouter') {
     if (!model || !model.includes('/') || model === 'other') model = 'meta-llama/llama-3.3-70b-instruct';
   }
@@ -330,12 +329,11 @@ function cleanAndParseJSON(text) {
 }
 
 const GROQ_FALLBACK_MODELS = [
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'qwen/qwen3.8-27b',
   'llama-3.3-70b-versatile',
   'llama-3.1-8b-instant',
-  'llama3-70b-8192',
-  'llama3-8b-8192',
-  'mixtral-8x7b-32768',
-  'gemma2-9b-it',
 ];
 
 const extractWithGroq = async (rawText, apiKey, preferredModel) => {
@@ -366,7 +364,7 @@ const extractWithGroq = async (rawText, apiKey, preferredModel) => {
       const data = await response.json();
       if (data.error) {
         const msg = data.error.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
-        if (msg.includes('does not exist') || msg.includes('not have access') || msg.includes('Rate limit')) {
+        if (msg.includes('does not exist') || msg.includes('not have access') || msg.includes('decommissioned') || msg.includes('Rate limit')) {
           lastError = new Error(msg);
           continue;
         }
@@ -375,7 +373,7 @@ const extractWithGroq = async (rawText, apiKey, preferredModel) => {
 
       return cleanAndParseJSON(data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '');
     } catch (err) {
-      if (err.message?.includes('does not exist') || err.message?.includes('not have access') || err.message?.includes('Rate limit')) {
+      if (err.message?.includes('does not exist') || err.message?.includes('not have access') || err.message?.includes('decommissioned') || err.message?.includes('Rate limit')) {
         lastError = err;
         continue;
       }
@@ -649,35 +647,67 @@ const updateExtraction = async (rawText, existingCustomFields = [], existingDead
 
   let result;
   if (provider === 'groq') {
-    result = await extractUpdateWithGroq(contextPrompt, apiKey, model || 'llama-3.3-70b-versatile');
+    result = await extractUpdateWithGroq(contextPrompt, apiKey, model || 'openai/gpt-oss-120b');
   } else if (provider === 'openai') {
     result = await extractUpdateWithOpenAI(contextPrompt, apiKey, model || 'gpt-4o-mini');
   } else if (provider === 'openrouter') {
     result = await extractUpdateWithOpenRouter(contextPrompt, apiKey, model || 'meta-llama/llama-3.3-70b-instruct');
   } else {
-    result = await extractUpdateWithOpenAI(contextPrompt, apiKey, model || 'llama-3.3-70b-versatile');
+    result = await extractUpdateWithOpenAI(contextPrompt, apiKey, model || 'gpt-4o-mini');
   }
 
   return result;
 };
 
 const extractUpdateWithGroq = async (prompt, apiKey, model) => {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: model || 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: 'You are a JSON-only opportunity update assistant. Return only valid JSON.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-    }),
-  });
-  const data = await response.json();
-  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  return JSON.parse(data.choices[0].message.content);
+  const modelsToTry = [
+    model,
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b',
+    'qwen/qwen3.8-27b',
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+  ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+
+  let lastError = null;
+
+  for (const candidate of modelsToTry) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: candidate,
+          messages: [
+            { role: 'system', content: 'You are a JSON-only opportunity update assistant. Return only valid JSON.' },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0.1,
+          response_format: { type: 'json_object' },
+        }),
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        const msg = data.error.message || JSON.stringify(data.error);
+        if (msg.includes('does not exist') || msg.includes('not have access') || msg.includes('decommissioned') || msg.includes('Rate limit')) {
+          lastError = new Error(msg);
+          continue;
+        }
+        throw new Error(msg);
+      }
+
+      return JSON.parse(data.choices[0].message.content);
+    } catch (err) {
+      if (err.message?.includes('does not exist') || err.message?.includes('not have access') || err.message?.includes('decommissioned') || err.message?.includes('Rate limit')) {
+        lastError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  if (lastError) throw lastError;
 };
 
 const extractUpdateWithOpenAI = async (prompt, apiKey, model) => {
