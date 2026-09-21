@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logoImg from '../assets/logo.png';
 import {
-  ArrowRight, CheckCircle2, Calendar, Mail, Sparkles, Shield,
+  ArrowRight, ArrowDown, CheckCircle2, Calendar, Mail, Sparkles, Shield,
   Puzzle, Zap, ExternalLink, ChevronRight, Check, Eye, Lock,
-  GraduationCap, Clock, Award
+  GraduationCap, Clock, Award, Folder, Kanban, Bell, FileText,
+  AlertTriangle, CheckCircle, Download, Laptop, Building2, User
 } from 'lucide-react';
 
 const EXTENSION_DOWNLOAD_URL = 'https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement/releases/download/extension/OppTrack.AutoFill.Extension.zip';
@@ -14,62 +15,69 @@ const GITHUB_URL = 'https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placeme
 export default function Landing() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('autofill');
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F9FC', color: '#172033', fontFamily: 'Inter, sans-serif' }}>
-      {/* ── Sticky Top Navigation ──────────────────────────────────── */}
+      
+      {/* ── STICKY TOP NAVIGATION ── */}
       <header
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
-          zIndex: 1000,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          height: 64,
           background: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(10px)',
+          backdropFilter: 'blur(16px)',
           borderBottom: '1px solid #E5EAF0',
-          padding: '14px 24px'
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ maxWidth: 1240, width: '100%', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          
           {/* Logo & Brand */}
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src={logoImg} alt="OppTrack Logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
-            <div>
-              <span style={{ fontSize: 19, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em' }}>OppTrack</span>
-              <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, background: '#E8F8F5', color: '#087F71', padding: '2px 6px', borderRadius: 4 }}>
-                SaaS
-              </span>
-            </div>
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+              <img src={logoImg} alt="OppTrack Logo" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em' }}>OppTrack</span>
+            </Link>
+            <span style={{ color: '#C4C6CE', fontSize: 13, userSelect: 'none' }}>|</span>
+            <span style={{ fontSize: 13, color: '#64748B', display: 'none', fontWeight: 500 }} className="brand-subtitle">
+              Your placement journey, organized.
+            </span>
+          </div>
 
           {/* Nav Links */}
           <nav style={{ display: 'none', gap: 28, alignItems: 'center' }} className="desktop-nav">
-            <a href="#features" style={{ fontSize: 13.5, fontWeight: 600, color: '#667085', textDecoration: 'none' }}>Features</a>
-            <a href="#demo" style={{ fontSize: 13.5, fontWeight: 600, color: '#667085', textDecoration: 'none' }}>Product Demo</a>
-            <a href="#how-it-works" style={{ fontSize: 13.5, fontWeight: 600, color: '#667085', textDecoration: 'none' }}>How It Works</a>
-            <a href="#extension" style={{ fontSize: 13.5, fontWeight: 600, color: '#667085', textDecoration: 'none' }}>Extension</a>
+            <a href="#features" style={{ fontSize: 13.5, fontWeight: 600, color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Features</a>
+            <a href="#how-it-works" style={{ fontSize: 13.5, fontWeight: 600, color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>How it Works</a>
+            <a href="#extension" style={{ fontSize: 13.5, fontWeight: 600, color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Chrome Extension</a>
+            <a href="#workspace" style={{ fontSize: 13.5, fontWeight: 600, color: '#475569', textDecoration: 'none', transition: 'color 0.15s' }}>Workspace Demo</a>
           </nav>
 
           {/* Action CTAs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {user ? (
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/dashboard')}
                 style={{
                   background: '#0B1F3A',
                   color: '#FFFFFF',
-                  padding: '8px 18px',
-                  borderRadius: 6,
+                  padding: '9px 18px',
+                  borderRadius: 8,
                   fontSize: 13,
                   fontWeight: 600,
                   border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6
+                  gap: 6,
+                  boxShadow: '0 2px 6px rgba(11, 31, 58, 0.15)'
                 }}
               >
-                Go to Dashboard <ArrowRight size={14} />
+                Go to Workspace <ArrowRight size={14} />
               </button>
             ) : (
               <>
@@ -81,12 +89,11 @@ export default function Landing() {
                     fontWeight: 600,
                     textDecoration: 'none',
                     padding: '8px 14px',
-                    borderRadius: 6,
-                    border: '1px solid #E5EAF0',
-                    background: '#FFFFFF'
+                    borderRadius: 8,
+                    transition: 'all 0.15s'
                   }}
                 >
-                  Sign In
+                  Login
                 </Link>
                 <Link
                   to="/register"
@@ -96,12 +103,13 @@ export default function Landing() {
                     fontSize: 13,
                     fontWeight: 600,
                     textDecoration: 'none',
-                    padding: '8px 18px',
-                    borderRadius: 6,
-                    boxShadow: '0 2px 6px rgba(11, 31, 58, 0.15)',
-                    display: 'inline-flex',
+                    padding: '9px 18px',
+                    borderRadius: 8,
+                    display: 'flex',
                     alignItems: 'center',
-                    gap: 6
+                    gap: 6,
+                    boxShadow: '0 2px 8px rgba(11, 31, 58, 0.15)',
+                    transition: 'all 0.15s'
                   }}
                 >
                   Get Started Free
@@ -112,530 +120,831 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* ── Hero Section ───────────────────────────────────────────── */}
-      <section style={{ padding: '72px 24px 60px', maxWidth: 1200, margin: '0 auto', textAlign: 'center' }}>
-        {/* Pill Badge */}
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 7,
-          background: '#E8F8F5',
-          border: '1px solid rgba(24, 183, 160, 0.3)',
-          borderRadius: 20,
-          padding: '5px 14px',
-          fontSize: 12,
-          fontWeight: 700,
-          color: '#087F71',
-          marginBottom: 24
-        }}>
-          <Sparkles size={13} color="#18B7A0" />
-          <span>Next-Gen Placement OS for Engineering Students</span>
-        </div>
-
-        {/* Hero Title */}
-        <h1 style={{
-          fontSize: 'clamp(36px, 6vw, 64px)',
-          fontWeight: 800,
-          color: '#0B1F3A',
-          letterSpacing: '-0.03em',
-          lineHeight: 1.12,
-          maxWidth: 880,
-          margin: '0 auto 20px'
-        }}>
-          Track Today. <br />
-          <span style={{ color: '#18B7A0' }}>Place Tomorrow.</span>
-        </h1>
-
-        {/* Subtitle */}
-        <p style={{
-          fontSize: 'clamp(16px, 2vw, 19px)',
-          color: '#667085',
-          maxWidth: 680,
-          margin: '0 auto 36px',
-          lineHeight: 1.6
-        }}>
-          Automate campus placements from start to finish. Auto-extract job notices from college emails, sync deadlines to Google Calendar, and autofill lengthy company application forms with AI in seconds.
-        </p>
-
-        {/* CTA Buttons */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 48 }}>
-          <Link
-            to="/register"
-            style={{
-              background: '#0B1F3A',
-              color: '#FFFFFF',
-              padding: '13px 28px',
-              borderRadius: 8,
-              fontSize: 15,
-              fontWeight: 700,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              boxShadow: '0 4px 14px rgba(11, 31, 58, 0.18)'
-            }}
-          >
-            Start Tracking Free <ArrowRight size={16} />
-          </Link>
-
-          <a
-            href={EXTENSION_DOWNLOAD_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              background: '#18B7A0',
-              color: '#FFFFFF',
-              padding: '13px 24px',
-              borderRadius: 8,
-              fontSize: 15,
-              fontWeight: 700,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              boxShadow: '0 4px 14px rgba(24, 183, 160, 0.25)'
-            }}
-          >
-            <Puzzle size={16} /> Get Chrome Extension
-          </a>
-        </div>
-
-        {/* Trust Badges */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28, flexWrap: 'wrap', color: '#667085', fontSize: 12.5, fontWeight: 500 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <CheckCircle2 size={16} color="#16A34A" /> Official Google OAuth 2.0
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <CheckCircle2 size={16} color="#16A34A" /> AES-256-GCM Token Encryption
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <CheckCircle2 size={16} color="#16A34A" /> Zero Password Storage
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <CheckCircle2 size={16} color="#16A34A" /> Tailored for PCCOE & B.Tech Drives
-          </span>
-        </div>
-      </section>
-
-      {/* ── Interactive Demo Showcase ──────────────────────────────── */}
-      <section id="demo" style={{ maxWidth: 1100, margin: '0 auto 80px', padding: '0 20px' }}>
-        <div
+      {/* ── MAIN CONTAINER ── */}
+      <main style={{ paddingTop: 64 }}>
+        
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ── HERO SECTION ── */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        <section
           style={{
-            background: '#FFFFFF',
-            border: '1px solid #E5EAF0',
-            borderRadius: 16,
-            boxShadow: '0 16px 40px rgba(11, 31, 58, 0.08)',
-            overflow: 'hidden'
+            background: 'linear-gradient(180deg, #F7F9FC 0%, #EDF2F7 50%, #F7F9FC 100%)',
+            padding: '70px 24px 90px',
+            borderBottom: '1px solid #E5EAF0',
           }}
         >
-          {/* Mockup Window Header */}
-          <div style={{ background: '#0B1F3A', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #142E54' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#EF4444' }} />
-              <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#F59E0B' }} />
-              <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#10B981' }} />
-              <span style={{ marginLeft: 12, color: 'rgba(255,255,255,0.7)', fontSize: 12, fontFamily: 'monospace' }}>
-                opptrack.app / live-suite
-              </span>
-            </div>
-
-            {/* Switcher Tabs */}
-            <div style={{ display: 'flex', gap: 6 }}>
-              {[
-                { id: 'autofill', label: '✦ AI Autofill' },
-                { id: 'gmail', label: '✉️ Gmail Auto-Fetch' },
-                { id: 'calendar', label: '📅 Calendar Sync' },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+          <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 48, alignItems: 'center' }}>
+              
+              {/* Hero Content (Left) */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 18 }}>
+                
+                {/* Status Pill */}
+                <div
                   style={{
-                    background: activeTab === tab.id ? '#18B7A0' : 'rgba(255,255,255,0.08)',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    padding: '6px 12px',
-                    borderRadius: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '5px 14px',
+                    borderRadius: 20,
+                    background: '#E8F8F5',
+                    border: '1px solid rgba(24, 183, 160, 0.3)',
+                    color: '#087F71',
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase'
                   }}
                 >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Interactive Screen Preview */}
-          <div style={{ padding: '32px 28px', background: '#F8FAFD' }}>
-            {activeTab === 'autofill' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, alignItems: 'center' }}>
-                <div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#E8F8F5', color: '#087F71', padding: '3px 9px', borderRadius: 4, fontSize: 11, fontWeight: 700, marginBottom: 12 }}>
-                    <Sparkles size={13} color="#18B7A0" /> Live AI Form Detection
-                  </div>
-                  <h3 style={{ fontSize: 24, fontWeight: 800, color: '#0B1F3A', margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>
-                    18 Fields Detected. 94% Confidence.
-                  </h3>
-                  <p style={{ fontSize: 14, color: '#667085', lineHeight: 1.6, margin: '0 0 20px 0' }}>
-                    Applying on Google Forms, Superset, Taleo, or Workday? The OppTrack Chrome Extension extracts all questions, retrieves your academic scores and projects from your encrypted vault, and autofills every field in 1 click.
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {[
-                      { label: 'Full Name & Contact', conf: '100%', status: 'high' },
-                      { label: 'B.Tech CGPA (8.72) & Engineering College', conf: '98%', status: 'high' },
-                      { label: 'GitHub & Portfolio URL', conf: '95%', status: 'high' },
-                      { label: 'Key Technical Skills & Projects', conf: '88%', status: 'med' },
-                    ].map((row, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FFFFFF', padding: '10px 14px', borderRadius: 8, border: '1px solid #E5EAF0' }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#172033' }}>{row.label}</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: row.status === 'high' ? '#16A34A' : '#F59E0B', fontFamily: 'monospace' }}>
-                          ✓ {row.conf} Match
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#18B7A0', animation: 'pulse 1.5s infinite' }} />
+                  Placement Season, Simplified
                 </div>
 
-                {/* Simulated Extension Card */}
-                <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 22, boxShadow: '0 8px 24px rgba(11,31,58,0.06)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #E5EAF0', paddingBottom: 12, marginBottom: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <img src={logoImg} alt="OppTrack" style={{ width: 24, height: 24 }} />
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}>OppTrack Autofill</span>
-                    </div>
-                    <span style={{ background: '#EAF8EF', color: '#16A34A', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12 }}>
-                      Ready
-                    </span>
-                  </div>
+                {/* Hero Title */}
+                <h1
+                  style={{
+                    fontSize: 'clamp(2.5rem, 5vw, 3.6rem)',
+                    fontWeight: 800,
+                    color: '#0B1F3A',
+                    lineHeight: 1.12,
+                    letterSpacing: '-0.03em',
+                    margin: 0,
+                  }}
+                >
+                  Stop retyping the <span style={{ color: '#18B7A0', position: 'relative' }}>same form.</span>
+                </h1>
 
-                  <div style={{ background: '#F8FAFD', borderRadius: 8, padding: 14, marginBottom: 16, border: '1px solid #E5EAF0' }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase', marginBottom: 4 }}>
-                      Form Detected
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}>
-                      Google Form — Campus Recruitment Drive 2026
-                    </div>
-                    <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>
-                      18 questions mapped to your Profile Vault
-                    </div>
-                  </div>
+                {/* Hero Subhead */}
+                <p style={{ fontSize: '1.25rem', fontWeight: 600, color: '#3B5E97', margin: 0, lineHeight: 1.4 }}>
+                  Track every opportunity, deadline, and application in one intelligent workspace.
+                </p>
 
-                  <button
+                <p style={{ fontSize: '1rem', color: '#475569', margin: 0, lineHeight: 1.6, maxWidth: 520 }}>
+                  Built for engineering and B.Tech students juggling circular emails, repetitive Google Forms, company career portals, and last-minute online assessments.
+                </p>
+
+                {/* Hero Buttons */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14, paddingTop: 8 }}>
+                  <Link
+                    to="/register"
                     style={{
-                      width: '100%',
                       background: '#18B7A0',
                       color: '#FFFFFF',
-                      border: 'none',
-                      padding: '11px',
-                      borderRadius: 6,
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
+                      padding: '13px 26px',
+                      borderRadius: 8,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
                       gap: 8,
-                      boxShadow: '0 2px 8px rgba(24, 183, 160, 0.3)'
+                      boxShadow: '0 4px 14px rgba(24, 183, 160, 0.35)',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <Sparkles size={15} /> Autofill 18 Fields Now
-                  </button>
+                    <span>Get Started Free</span>
+                    <ArrowRight size={16} />
+                  </Link>
+
+                  <a
+                    href="#how-it-works"
+                    style={{
+                      color: '#3B5E97',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      padding: '12px 18px',
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}
+                  >
+                    <span>See how it works</span>
+                    <ArrowDown size={15} />
+                  </a>
                 </div>
+
+                {/* Trust Badges */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, paddingTop: 10, fontSize: 12.5, color: '#475569', fontWeight: 500 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <CheckCircle2 size={16} color="#18B7A0" />
+                    <span>100% Student Free</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Zap size={16} color="#18B7A0" />
+                    <span>Chrome Extension</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Shield size={16} color="#18B7A0" />
+                    <span>Encrypted Profile Vault</span>
+                  </div>
+                </div>
+
               </div>
-            )}
 
-            {activeTab === 'gmail' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, alignItems: 'center' }}>
-                <div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#E8F8F5', color: '#087F71', padding: '3px 9px', borderRadius: 4, fontSize: 11, fontWeight: 700, marginBottom: 12 }}>
-                    <Mail size={13} color="#18B7A0" /> Zero Scraping • Official Gmail API
-                  </div>
-                  <h3 style={{ fontSize: 24, fontWeight: 800, color: '#0B1F3A', margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>
-                    TPO Emails Parsed into Opportunities.
-                  </h3>
-                  <p style={{ fontSize: 14, color: '#667085', lineHeight: 1.6, margin: '0 0 16px 0' }}>
-                    Connect college TPO senders (like <code>srawandale@gmail.com</code>). OppTrack continuously queries for new recruitment drives, extracts company name, stipend, CTC, eligibility criteria, and deadlines into a Pending Review queue.
-                  </p>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033' }}>
-                      <Check size={16} color="#18B7A0" /> Strict sender whitelist: only reads placement emails
-                    </li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033' }}>
-                      <Check size={16} color="#18B7A0" /> Smart duplicate checking & eligibility verification
-                    </li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#18B7A0' }}>
-                      <Check size={16} color="#18B7A0" /> Human-in-the-loop review before adding to your pipeline
-                    </li>
-                  </ul>
-                </div>
-
-                <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 18, boxShadow: '0 8px 24px rgba(11,31,58,0.06)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#087F71', textTransform: 'uppercase', marginBottom: 8 }}>
-                    Pending Review Queue
-                  </div>
-                  <div style={{ border: '1px solid #E5EAF0', borderRadius: 8, padding: 14, background: '#F8FAFD' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}>Accenture India</span>
-                      <span style={{ background: '#EAF8EF', color: '#16A34A', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4 }}>Eligible (8.72 CGPA)</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: '#667085', marginBottom: 10 }}>
-                      Role: Associate Software Engineer • Package: 4.5 – 6.5 LPA
-                    </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button style={{ flex: 1, background: '#0B1F3A', color: '#fff', border: 'none', padding: '6px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>Confirm & Track</button>
-                      <button style={{ background: '#FEF0F0', color: '#DC3545', border: '1px solid #FCA5A5', padding: '6px 12px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>Ignore</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'calendar' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, alignItems: 'center' }}>
-                <div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#E8F8F5', color: '#087F71', padding: '3px 9px', borderRadius: 4, fontSize: 11, fontWeight: 700, marginBottom: 12 }}>
-                    <Calendar size={13} color="#18B7A0" /> Real-time Google Calendar Integration
-                  </div>
-                  <h3 style={{ fontSize: 24, fontWeight: 800, color: '#0B1F3A', margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>
-                    Never Miss an OA or Interview.
-                  </h3>
-                  <p style={{ fontSize: 14, color: '#667085', lineHeight: 1.6, margin: '0 0 16px 0' }}>
-                    Every confirmed opportunity deadline syncs directly to your primary Google Calendar. Automated notification popups trigger 24 hours and 1 hour prior, keeping you prepared on mobile and desktop.
-                  </p>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033' }}>
-                      <Check size={16} color="#18B7A0" /> Dual-view: OppTrack internal view or Embedded Google Calendar
-                    </li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#18B7A0' }}>
-                      <Check size={16} color="#18B7A0" /> Automatic event updates when interview rounds reschedule
-                    </li>
-                    <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#18B7A0' }}>
-                      <Check size={16} color="#18B7A0" /> One-click batch sync for your entire opportunity history
-                    </li>
-                  </ul>
-                </div>
-
-                <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 18, boxShadow: '0 8px 24px rgba(11,31,58,0.06)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>Upcoming Calendar Events</span>
-                    <span style={{ fontSize: 11, color: '#22C55E', fontWeight: 700 }}>● Live Synced</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {[
-                      { title: 'TCS Digital OA Assessment', time: 'Tomorrow, 10:00 AM', tag: 'OA' },
-                      { title: 'Microsoft SDE Interview Round 1', time: 'Friday, 2:30 PM', tag: 'Interview' },
-                      { title: 'Barclays Registration Deadline', time: 'Sunday, 11:59 PM', tag: 'Deadline' },
-                    ].map((item, i) => (
-                      <div key={i} style={{ padding: '10px 12px', background: '#F8FAFD', borderRadius: 6, borderLeft: '3px solid #18B7A0', border: '1px solid #E5EAF0' }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0B1F3A' }}>{item.title}</div>
-                        <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{item.time}</div>
+              {/* Hero Mockup (Right Column) */}
+              <div style={{ position: 'relative' }}>
+                
+                {/* Main Product Workspace Card */}
+                <div
+                  style={{
+                    background: '#FFFFFF',
+                    borderRadius: 18,
+                    padding: 24,
+                    boxShadow: '0 16px 40px -8px rgba(11, 31, 58, 0.12), 0 0 0 1px #E5EAF0',
+                    position: 'relative',
+                    zIndex: 10
+                  }}
+                >
+                  {/* Card App Bar */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16, marginBottom: 16, borderBottom: '1px solid #E5EAF0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 8, background: '#0B1F3A', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13 }}>
+                        OP
                       </div>
-                    ))}
+                      <div>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>OppTrack Workspace</div>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>PCCOE, Pune • Batch 2026 • CSE</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 14, background: '#F1F5F9', fontSize: 11.5, color: '#334155', fontWeight: 600 }}>
+                      <span>Rahul Sharma 👋</span>
+                    </div>
+                  </div>
+
+                  {/* Metrics Row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
+                    <div style={{ padding: '12px 14px', borderRadius: 10, background: '#F8FAFD', border: '1px solid #E5EAF0' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>Active</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
+                        <span style={{ fontSize: 22, fontWeight: 800, color: '#0B1F3A' }}>12</span>
+                        <span style={{ fontSize: 10.5, color: '#087F71', fontWeight: 700 }}>In pipeline</span>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '12px 14px', borderRadius: 10, background: '#F8FAFD', border: '1px solid #E5EAF0' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>Applied</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
+                        <span style={{ fontSize: 22, fontWeight: 800, color: '#0B1F3A' }}>24</span>
+                        <span style={{ fontSize: 10.5, color: '#3B5E97', fontWeight: 700 }}>Season total</span>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '12px 14px', borderRadius: 10, background: '#FFF4F2', border: '1px solid #FECACA' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#DC2626', textTransform: 'uppercase' }}>Deadlines</span>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#DC2626', animation: 'ping 1.5s infinite' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
+                        <span style={{ fontSize: 22, fontWeight: 800, color: '#DC2626' }}>5</span>
+                        <span style={{ fontSize: 10.5, color: '#DC2626', fontWeight: 700 }}>&lt; 72 hrs</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Opportunities in Motion List */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', padding: '0 4px' }}>
+                      <span>OPPORTUNITIES IN MOTION</span>
+                      <span style={{ color: '#2563EB', cursor: 'pointer' }}>View pipeline →</span>
+                    </div>
+
+                    {/* Opportunity Item 1 */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 8, background: '#F8FAFD', border: '1px solid #E5EAF0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 6, background: '#FEF2F2', color: '#DC2626', fontWeight: 800, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          G
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>Google India</div>
+                          <div style={{ fontSize: 11, color: '#64748B' }}>Software Engineer • CTC 32 LPA</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 12, background: '#E8F8F5', color: '#087F71' }}>
+                        OA on Sep 28
+                      </span>
+                    </div>
+
+                    {/* Opportunity Item 2 */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 8, background: '#F8FAFD', border: '1px solid #E5EAF0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 6, background: '#EFF6FF', color: '#2563EB', fontWeight: 800, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          MS
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>Microsoft</div>
+                          <div style={{ fontSize: 11, color: '#64748B' }}>SDE Intern • Final Shortlist</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 12, background: '#DBEAFE', color: '#1E40AF' }}>
+                        Interview Sep 26
+                      </span>
+                    </div>
+
+                    {/* Urgent Alert Callout */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 8, background: '#FFF8E6', border: '1px solid #FCD34D', marginTop: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <AlertTriangle size={15} color="#D97706" />
+                        <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>
+                          Barclays Campus Form closes in <strong>18 hours</strong>
+                        </span>
+                      </div>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, color: '#D97706', cursor: 'pointer' }}>Submit Links →</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating AI Smart Paste Card */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: -24,
+                    right: -14,
+                    width: 300,
+                    background: '#FFFFFF',
+                    borderRadius: 14,
+                    padding: 16,
+                    boxShadow: '0 20px 40px rgba(11, 31, 58, 0.16), 0 0 0 1px #E5EAF0',
+                    zIndex: 20
+                  }}
+                  className="floating-ai-card"
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 8, marginBottom: 8, borderBottom: '1px solid #F0F4F8' }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: '#E8F8F5', color: '#087F71' }}>
+                      ✦ AI Email Sync
+                    </span>
+                    <span style={{ fontSize: 10.5, color: '#64748B' }}>Gmail Ingestion</span>
+                  </div>
+
+                  <p style={{ margin: '0 0 8px 0', fontSize: 12, fontWeight: 700, color: '#0B1F3A' }}>
+                    Placement email detected
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748B' }}>Company</span>
+                      <span style={{ fontWeight: 600, color: '#0B1F3A' }}>Google India</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748B' }}>Deadline</span>
+                      <span style={{ fontWeight: 700, color: '#DC2626' }}>Sep 25 • 23:59</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748B' }}>Eligibility</span>
+                      <span style={{ fontWeight: 700, color: '#087F71' }}>CGPA 7.5+ (Eligible)</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: '1px solid #F0F4F8', fontSize: 10.5 }}>
+                    <span style={{ color: '#087F71', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <CheckCircle2 size={13} /> Extracted & synced
+                    </span>
+                    <span style={{ color: '#64748B', fontFamily: 'monospace' }}>0.42s</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ── THE PROBLEM SECTION ── */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        <section style={{ background: '#FFFFFF', padding: '80px 24px', borderBottom: '1px solid #E5EAF0' }}>
+          <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+            <div style={{ maxWidth: 640, margin: '0 auto 56px', textAlign: 'center' }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#64748B' }}>
+                THE REALITY OF CAMPUS RECRUITMENT
+              </span>
+              <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em', margin: '8px 0 12px' }}>
+                Placement season shouldn't feel this messy.
+              </h2>
+              <p style={{ fontSize: 15, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                Too many Google Forms, college circulars, company portals, and hidden deadlines. OppTrack organizes them into one unified flow.
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+              
+              {/* Card 1 */}
+              <div style={{ background: '#F8FAFD', borderRadius: 16, padding: 32, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: '#FFFFFF', border: '1px solid #E5EAF0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, color: '#0B1F3A' }}>
+                    <FileText size={24} />
+                  </div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0B1F3A', margin: '0 0 10px' }}>
+                    Same form, different day
+                  </h3>
+                  <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    Re-entering CGPA, resume drive links, PRN, branch percentages, and 10th/12th marks from scratch for every single campus drive.
+                  </p>
+                </div>
+                <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #E5EAF0', fontSize: 12, color: '#64748B' }}>
+                  Average time wasted: <strong style={{ color: '#0B1F3A' }}>4.5 hours / week</strong>
+                </div>
+              </div>
+
+              {/* Card 2 */}
+              <div style={{ background: '#F8FAFD', borderRadius: 16, padding: 32, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: '#FFFFFF', border: '1px solid #E5EAF0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, color: '#0B1F3A' }}>
+                    <ExternalLink size={24} />
+                  </div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0B1F3A', margin: '0 0 10px' }}>
+                    Two links, one deadline
+                  </h3>
+                  <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    Juggling company career portals, internal college Google Sheets, Superset accounts, and unofficial WhatsApp group confirmation forms.
+                  </p>
+                </div>
+                <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #E5EAF0', fontSize: 12, color: '#DC2626', fontWeight: 600 }}>
+                  Missed steps lead to permanent disqualification
+                </div>
+              </div>
+
+              {/* Card 3 */}
+              <div style={{ background: '#F8FAFD', borderRadius: 16, padding: 32, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: '#FFFFFF', border: '1px solid #E5EAF0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, color: '#0B1F3A' }}>
+                    <Mail size={24} />
+                  </div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0B1F3A', margin: '0 0 10px' }}>
+                    Buried in Gmail
+                  </h3>
+                  <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    Digging through 140+ unread placement cell circulars just to confirm whether you meet the 60% criteria or finding the OA test link 5 minutes late.
+                  </p>
+                </div>
+                <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #E5EAF0', fontSize: 12, color: '#64748B' }}>
+                  Critical dates get lost in inbox clutter
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ── CORE SYSTEM MODULES (6 CAPABILITIES) ── */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        <section style={{ background: '#F7F9FC', padding: '80px 24px', borderBottom: '1px solid #E5EAF0' }} id="features">
+          <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+            <div style={{ maxWidth: 640, margin: '0 auto 56px', textAlign: 'center' }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#087F71' }}>
+                PRECISION ARCHITECTURE
+              </span>
+              <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em', margin: '8px 0 12px' }}>
+                Everything you need for placement season.
+              </h2>
+              <p style={{ fontSize: 15, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                One verified student profile. One automated tracker. Zero repetitive copy-paste.
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
+              
+              {/* Module 1: Profile Vault */}
+              <div style={{ background: '#FFFFFF', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', boxShadow: '0 2px 8px rgba(11,31,58,0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EAF2FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FolderShared size={20} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', fontFamily: 'monospace' }}>01 // VAULT</span>
+                  </div>
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>
+                    Full CRUD Student Profile Vault
+                  </h3>
+                  <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 20px' }}>
+                    Store academics, CGPA, backlogs, certificates, coding profiles (LeetCode, CodeChef), and custom fields with quick-edit and deletion tracking.
+                  </p>
+                </div>
+                
+                <div style={{ background: '#F8FAFD', borderRadius: 10, padding: 14, border: '1px solid #E5EAF0', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748B' }}>CGPA (Engineering)</span>
+                    <span style={{ fontWeight: 700, color: '#0B1F3A', fontFamily: 'monospace' }}>8.84 / 10.0</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748B' }}>10th / 12th Percentage</span>
+                    <span style={{ fontWeight: 700, color: '#0B1F3A', fontFamily: 'monospace' }}>92.4% • 89.2%</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, paddingTop: 6, borderTop: '1px solid #E5EAF0' }}>
+                    <span style={{ padding: '2px 6px', borderRadius: 4, background: '#FFFFFF', border: '1px solid #CBD5E1', fontSize: 10.5 }}>leetcode.com/user</span>
+                    <span style={{ padding: '2px 6px', borderRadius: 4, background: '#FFFFFF', border: '1px solid #CBD5E1', fontSize: 10.5 }}>github.com/profile</span>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-      </section>
 
-      {/* ── Feature Pillars Grid ───────────────────────────────────── */}
-      <section id="features" style={{ maxWidth: 1200, margin: '0 auto 80px', padding: '0 24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em', margin: '0 0 10px 0' }}>
-            Built Specifically for Campus Recruitment
-          </h2>
-          <p style={{ fontSize: 15, color: '#667085', maxWidth: 600, margin: '0 auto' }}>
-            Everything you need to eliminate repetitive form filling, track ongoing drives, and stay ahead of deadlines.
-          </p>
-        </div>
+              {/* Module 2: AI Email Circular Ingestion */}
+              <div style={{ background: '#FFFFFF', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', boxShadow: '0 2px 8px rgba(11,31,58,0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#E8F8F5', color: '#087F71', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Sparkles size={20} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#087F71', fontFamily: 'monospace' }}>02 // AI SYNC</span>
+                  </div>
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>
+                    Automated Placement Email Extraction
+                  </h3>
+                  <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 20px' }}>
+                    AI extracts company names, packages (CTC/stipend), allowed branches, deadlines, and registration links from unread college placement circulars.
+                  </p>
+                </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-          {/* Feature 1 */}
-          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 26, boxShadow: '0 2px 8px rgba(11,31,58,0.03)' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: '#E8F8F5', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <Puzzle size={22} color="#18B7A0" />
+                <div style={{ background: '#F8FAFD', borderRadius: 10, padding: 14, border: '1px solid #E5EAF0', fontSize: 11.5, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748B' }}>Extracted Company</span>
+                    <span style={{ fontWeight: 700, color: '#0B1F3A' }}>Google India</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748B' }}>Allowed Branches</span>
+                    <span style={{ fontWeight: 700, color: '#2563EB' }}>CS, IT, ENTC</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748B' }}>Package</span>
+                    <span style={{ fontWeight: 700, color: '#16A34A' }}>CTC 32 LPA (PPO)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Module 3: Tracked Opportunities Pipeline */}
+              <div style={{ background: '#FFFFFF', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', boxShadow: '0 2px 8px rgba(11,31,58,0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Kanban size={20} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', fontFamily: 'monospace' }}>03 // PIPELINE</span>
+                  </div>
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>
+                    End-to-End Opportunity Pipeline
+                  </h3>
+                  <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 20px' }}>
+                    Track status transitions from Not Applied $\rightarrow$ Applied $\rightarrow$ Online Assessment $\rightarrow$ Interview $\rightarrow$ HR $\rightarrow$ Offer.
+                  </p>
+                </div>
+
+                <div style={{ background: '#F8FAFD', borderRadius: 10, padding: 14, border: '1px solid #E5EAF0' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, textAlign: 'center', fontSize: 11, fontWeight: 700, marginBottom: 8 }}>
+                    <span style={{ color: '#64748B' }}>Applied</span>
+                    <span style={{ color: '#2563EB' }}>OA</span>
+                    <span style={{ color: '#0B1F3A' }}>Interview</span>
+                    <span style={{ color: '#087F71' }}>Offer</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: 20, right: 20, height: 2, background: '#E2E8F0', zIndex: 0 }} />
+                    <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#CBD5E1', color: '#1E293B', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>12</span>
+                    <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#BFDBFE', color: '#1E40AF', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>7</span>
+                    <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#0B1F3A', color: '#FFF', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>4</span>
+                    <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#A3E5D9', color: '#087F71', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>2</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Module 4: Google Calendar & Notifications */}
+              <div style={{ background: '#FFFFFF', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', boxShadow: '0 2px 8px rgba(11,31,58,0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EDE9FE', color: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Calendar size={20} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', fontFamily: 'monospace' }}>04 // CALENDAR</span>
+                  </div>
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>
+                    Google Calendar & Deadline Alerts
+                  </h3>
+                  <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 20px' }}>
+                    Automatically creates events on Google Calendar for test dates and application deadlines. Sends email reminders 24h & 2h prior.
+                  </p>
+                </div>
+
+                <div style={{ background: '#F8FAFD', borderRadius: 10, padding: 12, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 600, color: '#0B1F3A' }}>Google Calendar 2-Way Sync</span>
+                    <span style={{ color: '#16A34A', fontWeight: 700 }}>● Active</span>
+                  </div>
+                  <div style={{ color: '#64748B', fontSize: 11 }}>
+                    Synced 14 placement deadlines & test schedules directly to phone.
+                  </div>
+                </div>
+              </div>
+
+              {/* Module 5: Automated Updates on Existing Jobs */}
+              <div style={{ background: '#FFFFFF', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', boxShadow: '0 2px 8px rgba(11,31,58,0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Bell size={20} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', fontFamily: 'monospace' }}>05 // AUTO-UPDATE</span>
+                  </div>
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>
+                    Shortlist & Round 2 Detection
+                  </h3>
+                  <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 20px' }}>
+                    When new circulars arrive with shortlisted students, revised dates, or second round links, AI detects existing jobs and updates them automatically.
+                  </p>
+                </div>
+
+                <div style={{ background: '#F8FAFD', borderRadius: 10, padding: 12, border: '1px solid #E5EAF0', fontSize: 11.5, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 600, color: '#0B1F3A' }}>Drive Update Detected</span>
+                    <span style={{ color: '#2563EB', fontWeight: 700 }}>Round 2 Date</span>
+                  </div>
+                  <div style={{ color: '#64748B', fontSize: 11 }}>
+                    Auto-appended shortlist status to Microsoft application card.
+                  </div>
+                </div>
+              </div>
+
+              {/* Module 6: Chrome Extension Autofill */}
+              <div style={{ background: '#FFFFFF', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', boxShadow: '0 2px 8px rgba(11,31,58,0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#E8F8F5', color: '#087F71', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Puzzle size={20} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#087F71', fontFamily: 'monospace' }}>06 // EXTENSION</span>
+                  </div>
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>
+                    1-Click Form Autofill Extension
+                  </h3>
+                  <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 20px' }}>
+                    Autofills complex Google Forms and company portals with one click. Staged data review prevents accidental profile overwrites.
+                  </p>
+                </div>
+
+                <div style={{ background: '#F8FAFD', borderRadius: 10, padding: 12, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, fontWeight: 700 }}>
+                    <span style={{ color: '#0B1F3A' }}>Google Form Detected</span>
+                    <span style={{ color: '#087F71' }}>18 Fields Matched</span>
+                  </div>
+                  <div style={{ height: 4, background: '#E2E8F0', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ width: '92%', height: '100%', background: '#18B7A0' }} />
+                  </div>
+                </div>
+              </div>
+
             </div>
-            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px 0' }}>
-              AI Form Autofill Extension
-            </h3>
-            <p style={{ fontSize: 13.5, color: '#667085', lineHeight: 1.55, margin: 0 }}>
-              Seamlessly fills job portals, Google Forms, and career pages with precision match scoring and human confirmation.
-            </p>
           </div>
+        </section>
 
-          {/* Feature 2 */}
-          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 26, boxShadow: '0 2px 8px rgba(11,31,58,0.03)' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: '#EAF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <Mail size={22} color="#2563EB" />
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ── HOW IT WORKS SECTION (4 STEPS) ── */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        <section style={{ background: '#FFFFFF', padding: '80px 24px', borderBottom: '1px solid #E5EAF0' }} id="how-it-works">
+          <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+            <div style={{ maxWidth: 640, margin: '0 auto 56px', textAlign: 'center' }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#087F71' }}>
+                STREAMLINED WORKFLOW
+              </span>
+              <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em', margin: '8px 0 12px' }}>
+                From placement circular to application in minutes.
+              </h2>
+              <p style={{ fontSize: 15, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                Four straightforward steps designed around your daily campus routine.
+              </p>
             </div>
-            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px 0' }}>
-              Gmail Auto-Fetch Pipeline
-            </h3>
-            <p style={{ fontSize: 13.5, color: '#667085', lineHeight: 1.55, margin: 0 }}>
-              Only inspects trusted college TPO senders. Automatically extracts criteria, packages, and application links with AI.
-            </p>
-          </div>
 
-          {/* Feature 3 */}
-          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 26, boxShadow: '0 2px 8px rgba(11,31,58,0.03)' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: '#FFF7E6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <Calendar size={22} color="#F59E0B" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
+              
+              {/* Step 1 */}
+              <div style={{ background: '#F8FAFD', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <span style={{ fontSize: 32, fontWeight: 900, color: 'rgba(24, 183, 160, 0.35)', fontFamily: 'monospace' }}>01</span>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#FFFFFF', border: '1px solid #E5EAF0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1F3A' }}>
+                      <User size={18} />
+                    </div>
+                  </div>
+                  <h4 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>Create profile once</h4>
+                  <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    Add your academic marks, personal credentials, resume versions, portfolio URLs, and certifications once into the Profile Vault.
+                  </p>
+                </div>
+                <div style={{ marginTop: 24, fontSize: 11, fontWeight: 700, color: '#087F71', fontFamily: 'monospace' }}>
+                  STEP 01 // SETUP
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div style={{ background: '#F8FAFD', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <span style={{ fontSize: 32, fontWeight: 900, color: 'rgba(24, 183, 160, 0.35)', fontFamily: 'monospace' }}>02</span>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#FFFFFF', border: '1px solid #E5EAF0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1F3A' }}>
+                      <Mail size={18} />
+                    </div>
+                  </div>
+                  <h4 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>Paste or sync email</h4>
+                  <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    Copy-paste college circular text or let automatic Gmail sync ingest drive announcements directly from placement coordinators.
+                  </p>
+                </div>
+                <div style={{ marginTop: 24, fontSize: 11, fontWeight: 700, color: '#087F71', fontFamily: 'monospace' }}>
+                  STEP 02 // INGEST
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div style={{ background: '#F8FAFD', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <span style={{ fontSize: 32, fontWeight: 900, color: 'rgba(24, 183, 160, 0.35)', fontFamily: 'monospace' }}>03</span>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#FFFFFF', border: '1px solid #E5EAF0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1F3A' }}>
+                      <CheckCircle2 size={18} />
+                    </div>
+                  </div>
+                  <h4 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>Review AI extraction</h4>
+                  <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    AI extracts company, CTC, eligibility criteria, and deadlines. Duplicate detection flags if the company was already tracked.
+                  </p>
+                </div>
+                <div style={{ marginTop: 24, fontSize: 11, fontWeight: 700, color: '#087F71', fontFamily: 'monospace' }}>
+                  STEP 03 // VERIFY
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div style={{ background: '#F8FAFD', borderRadius: 16, padding: 28, border: '1px solid #E5EAF0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <span style={{ fontSize: 32, fontWeight: 900, color: 'rgba(24, 183, 160, 0.35)', fontFamily: 'monospace' }}>04</span>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#FFFFFF', border: '1px solid #E5EAF0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1F3A' }}>
+                      <Zap size={18} />
+                    </div>
+                  </div>
+                  <h4 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>Track & autofill forms</h4>
+                  <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    Use the Chrome extension to autofill application forms in seconds, while Google Calendar alerts you before deadlines expire.
+                  </p>
+                </div>
+                <div style={{ marginTop: 24, fontSize: 11, fontWeight: 700, color: '#087F71', fontFamily: 'monospace' }}>
+                  STEP 04 // EXECUTE
+                </div>
+              </div>
+
             </div>
-            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px 0' }}>
-              Google Calendar Deadlines
-            </h3>
-            <p style={{ fontSize: 13.5, color: '#667085', lineHeight: 1.55, margin: 0 }}>
-              Synchronizes assessment dates and interview slots to your phone with automated 24h & 1h notification popups.
-            </p>
           </div>
+        </section>
 
-          {/* Feature 4 */}
-          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 26, boxShadow: '0 2px 8px rgba(11,31,58,0.03)' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: '#EAF8EF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <Shield size={22} color="#16A34A" />
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ── CHROME EXTENSION CALLOUT SECTION ── */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        <section style={{ background: '#F7F9FC', padding: '80px 24px', borderBottom: '1px solid #E5EAF0' }} id="extension">
+          <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+            <div
+              style={{
+                background: '#0B1F3A',
+                borderRadius: 24,
+                padding: '48px 40px',
+                color: '#FFFFFF',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: 40,
+                alignItems: 'center',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 14, background: 'rgba(24, 183, 160, 0.2)', color: '#72F8DF', fontSize: 12, fontWeight: 700, marginBottom: 14 }}>
+                  <Puzzle size={14} /> OppTrack Chrome Extension v1.2
+                </div>
+                <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 14px', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
+                  Autofill company forms in one click.
+                </h2>
+                <p style={{ fontSize: 14.5, color: '#94A3B8', lineHeight: 1.6, margin: '0 0 24px' }}>
+                  Install the free OppTrack extension to eliminate manual copy-paste across Google Forms, company portals, and placement registration links.
+                </p>
+                
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                  <a
+                    href={EXTENSION_DOWNLOAD_URL}
+                    download
+                    style={{
+                      background: '#18B7A0',
+                      color: '#FFFFFF',
+                      fontSize: 13.5,
+                      fontWeight: 700,
+                      padding: '12px 22px',
+                      borderRadius: 8,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      boxShadow: '0 4px 14px rgba(24, 183, 160, 0.4)'
+                    }}
+                  >
+                    <Download size={16} /> Download Extension (.zip)
+                  </a>
+
+                  <Link
+                    to="/help"
+                    style={{
+                      background: 'rgba(255,255,255,0.1)',
+                      color: '#FFFFFF',
+                      fontSize: 13.5,
+                      fontWeight: 600,
+                      padding: '12px 18px',
+                      borderRadius: 8,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}
+                  >
+                    <span>Installation Guide</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Extension Visual Card */}
+              <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 24, border: '1px solid rgba(255,255,255,0.12)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#72F8DF', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Check size={14} /> Quick Installation (30 Seconds):
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12.5, color: '#E2E8F0' }}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <span style={{ fontWeight: 700, color: '#18B7A0' }}>1.</span>
+                    <span>Download and unzip <code>OppTrack.AutoFill.Extension.zip</code></span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <span style={{ fontWeight: 700, color: '#18B7A0' }}>2.</span>
+                    <span>Open <code>chrome://extensions</code> and enable <strong>Developer mode</strong></span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <span style={{ fontWeight: 700, color: '#18B7A0' }}>3.</span>
+                    <span>Click <strong>Load unpacked</strong> and select the extension folder</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px 0' }}>
-              Encrypted Profile Vault
-            </h3>
-            <p style={{ fontSize: 13.5, color: '#667085', lineHeight: 1.55, margin: 0 }}>
-              One single place for SGPA, CGPA, semester breakdowns, live portfolio URLs, projects, and certifications.
-            </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── How It Works ───────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ background: '#FFFFFF', borderTop: '1px solid #E5EAF0', borderBottom: '1px solid #E5EAF0', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <h2 style={{ fontSize: 32, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em', margin: '0 0 10px 0' }}>
-              How OppTrack Accelerates Your Placement
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* ── FINAL CALL TO ACTION ── */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        <section style={{ background: '#FFFFFF', padding: '90px 24px', textAlign: 'center' }}>
+          <div style={{ maxWidth: 680, margin: '0 auto' }}>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em', margin: '0 0 14px' }}>
+              Ready to automate your placement season?
             </h2>
-            <p style={{ fontSize: 15, color: '#667085', maxWidth: 600, margin: '0 auto' }}>
-              From receiving the college announcement to getting hired in 3 easy steps.
+            <p style={{ fontSize: 16, color: '#475569', lineHeight: 1.6, margin: '0 0 32px' }}>
+              Join engineering students from PCCOE, Pune and top colleges tracking opportunities with zero missed deadlines.
             </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32 }}>
-            <div style={{ position: 'relative' }}>
-              <div style={{ fontSize: 36, fontWeight: 800, color: '#E8F8F5', lineHeight: 1, marginBottom: 12 }}>
-                01
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0B1F3A', marginBottom: 8 }}>
-                Build Your Profile Vault
-              </h3>
-              <p style={{ fontSize: 14, color: '#667085', lineHeight: 1.6 }}>
-                Add your degree details, marks across all semesters, technical stack, resume links, and achievements once.
-              </p>
-            </div>
-
-            <div style={{ position: 'relative' }}>
-              <div style={{ fontSize: 36, fontWeight: 800, color: '#E8F8F5', lineHeight: 1, marginBottom: 12 }}>
-                02
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0B1F3A', marginBottom: 8 }}>
-                Connect Gmail & Calendar
-              </h3>
-              <p style={{ fontSize: 14, color: '#667085', lineHeight: 1.6 }}>
-                Link your Google account in Settings. OppTrack monitors your placement cell announcements and schedules alerts.
-              </p>
-            </div>
-
-            <div style={{ position: 'relative' }}>
-              <div style={{ fontSize: 36, fontWeight: 800, color: '#E8F8F5', lineHeight: 1, marginBottom: 12 }}>
-                03
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0B1F3A', marginBottom: 8 }}>
-                Autofill Forms in 1 Click
-              </h3>
-              <p style={{ fontSize: 14, color: '#667085', lineHeight: 1.6 }}>
-                Open any company application form, click the OppTrack Chrome Extension, and let AI fill all 20+ fields error-free.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Call to Action Banner ──────────────────────────────────── */}
-      <section style={{ maxWidth: 1100, margin: '80px auto', padding: '0 24px' }}>
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #0B1F3A 0%, #123C73 100%)',
-            borderRadius: 20,
-            padding: '56px 40px',
-            textAlign: 'center',
-            color: '#FFFFFF',
-            boxShadow: '0 20px 48px rgba(11, 31, 58, 0.2)'
-          }}
-        >
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 14px 0' }}>
-            Ready to Take Control of Your Placements?
-          </h2>
-          <p style={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.8)', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
-            Join ambitious engineering students who spend less time filling forms and more time preparing for technical interviews.
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
             <Link
               to="/register"
               style={{
-                background: '#18B7A0',
+                background: '#0B1F3A',
                 color: '#FFFFFF',
-                padding: '12px 28px',
-                borderRadius: 8,
                 fontSize: 15,
                 fontWeight: 700,
-                textDecoration: 'none',
-                boxShadow: '0 4px 14px rgba(24, 183, 160, 0.4)'
-              }}
-            >
-              Create Free Account →
-            </Link>
-            <a
-              href={EXTENSION_DOWNLOAD_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#FFFFFF',
-                padding: '12px 22px',
+                padding: '14px 32px',
                 borderRadius: 8,
-                fontSize: 15,
-                fontWeight: 600,
                 textDecoration: 'none',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                boxShadow: '0 4px 16px rgba(11, 31, 58, 0.25)'
               }}
             >
-              Download Extension .zip
-            </a>
+              <span>Get Started Free</span>
+              <ArrowRight size={17} />
+            </Link>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Footer ─────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: '1px solid #E5EAF0', padding: '36px 24px', background: '#FFFFFF' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+      </main>
+
+      {/* ── FOOTER ── */}
+      <footer style={{ background: '#0B1F3A', color: '#94A3B8', padding: '48px 24px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, borderRadius: 6 }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#0B1F3A' }}>OppTrack</span>
-            <span style={{ fontSize: 12, color: '#667085' }}>— Track Today. Place Tomorrow.</span>
+            <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
+            <span style={{ fontSize: 17, fontWeight: 800, color: '#FFFFFF' }}>OppTrack</span>
+            <span style={{ fontSize: 12, color: '#64748B' }}>• Placement Productivity Platform</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, fontSize: 13, color: '#667085' }}>
-            <a href={GITHUB_URL} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-              GitHub Repository
-            </a>
-            <Link to="/login" style={{ color: 'inherit', textDecoration: 'none' }}>
-              Sign In
-            </Link>
-            <Link to="/register" style={{ color: 'inherit', textDecoration: 'none' }}>
-              Register
-            </Link>
+          <div style={{ display: 'flex', gap: 24, fontSize: 13 }}>
+            <Link to="/login" style={{ color: '#CBD5E1', textDecoration: 'none' }}>Student Login</Link>
+            <Link to="/register" style={{ color: '#CBD5E1', textDecoration: 'none' }}>Register</Link>
+            <Link to="/help" style={{ color: '#CBD5E1', textDecoration: 'none' }}>Help Guide</Link>
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer" style={{ color: '#CBD5E1', textDecoration: 'none' }}>GitHub</a>
+          </div>
+
+          <div style={{ fontSize: 12, color: '#64748B' }}>
+            © {new Date().getFullYear()} OppTrack. Engineered for high-velocity student placement teams.
           </div>
         </div>
       </footer>
+
     </div>
   );
 }
