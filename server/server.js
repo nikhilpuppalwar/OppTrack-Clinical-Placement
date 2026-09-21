@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const reminderService = require('./services/reminder.service');
+const gmailCron = require('./services/gmailCron.service');
 
 // Connect to database
 connectDB();
@@ -30,6 +31,9 @@ app.use('/api/history', require('./routes/history'));
 app.use('/api/form-history', require('./routes/formHistory'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/google', require('./routes/google'));
+app.use('/api/gmail', require('./routes/gmail'));
+app.use('/api/calendar', require('./routes/calendar'));
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ message: `Route ${req.method} ${req.path} not found` }));
@@ -37,8 +41,9 @@ app.use((req, res) => res.status(404).json({ message: `Route ${req.method} ${req
 // Error handler
 app.use(errorHandler);
 
-// Start cron job for reminders
+// Start cron jobs
 reminderService.startCronJob();
+gmailCron.startCronJob();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`OppTrack server running on port ${PORT}`));

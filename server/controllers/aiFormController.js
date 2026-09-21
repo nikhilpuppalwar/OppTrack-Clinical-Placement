@@ -546,88 +546,31 @@ INSTRUCTIONS:
 const syncNewData = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { fieldsToSave = [] } = req.body;
+    const { fieldsToSave = [], formUrl = '', formTitle = '' } = req.body;
 
-    const profile = await Profile.findOne({ userId });
-    if (!profile) {
-      return res.status(404).json({ message: 'Profile not found.' });
+    if (!fieldsToSave.length) {
+      return res.json({ ok: true, message: 'No fields provided.' });
     }
 
-    const stdKeys = [
-      'candidateName',
-      'prn',
-      'collegeEmail',
-      'personalEmail',
-      'phone',
-      'gender',
-      'collegeName',
-      'stream',
-      'branch',
-      'passingYear',
-      'hobby',
-      'cgpa',
-      'tenthPercent',
-      'twelfthPercent',
-      'technicalCertifications',
-      'previousInternships',
-      'projectTitle',
-      'projectDetails',
-      'codechefRating',
-      'codechefLink',
-      'hackerrankRating',
-      'hackerrankLink',
-      'leetcodeScore',
-      'leetcodeLink',
-      'resumeLink',
-    ];
-
-    let fieldsArray = profile.fields || [];
-
-    for (const item of fieldsToSave) {
-      if (!item.label || item.value === undefined) continue;
-
-      // Check if it matches a standard top-level property
-      const matchedStdKey = stdKeys.find(
-        (k) => k.toLowerCase() === item.id?.toLowerCase() || k.toLowerCase() === item.label?.toLowerCase().replace(/[^a-z0-9]/g, '')
-      );
-
-      if (matchedStdKey) {
-        profile[matchedStdKey] = String(item.value);
-      }
-
-      // Also ensure it is present in dynamic fields array so it shows in the builder
-      const existingFieldIndex = fieldsArray.findIndex(
-        (f) => f.id === item.id || f.label.toLowerCase() === item.label.toLowerCase()
-      );
-
-      if (existingFieldIndex >= 0) {
-        fieldsArray[existingFieldIndex].value = String(item.value);
-      } else {
-        fieldsArray.push({
-          id: item.id || `field_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-          section: item.section || 'personal',
-          label: item.label,
-          fieldType: item.fieldType || 'short_text',
-          options: item.options || [],
-          value: String(item.value),
-          hidden: false,
-          isCustom: true,
-          sensitive: false,
-        });
-      }
-    }
-
-    profile.fields = fieldsArray;
-    await profile.save();
+    const { stageExtensionData } = require('./extensionSyncController');
+    const staged = await stageExtensionData({
+      userId,
+      fieldsToSave,
+      formUrl,
+      formTitle,
+      source: 'Chrome Extension',
+    });
 
     res.json({
       ok: true,
-      message: `Successfully saved ${fieldsToSave.length} new/updated field(s) to your database profile!`,
-      profile,
+      staged: true,
+      syncId: staged._id,
+      message: `Candidate data safely sent to your OppTrack Profile Vault! Please open OppTrack to review and verify the AI merge recommendations before saving.`,
+      analysisCount: staged.analysis.length,
     });
   } catch (err) {
     console.error('Sync New Data Error:', err);
-    res.status(500).json({ ok: false, message: err.message || 'Failed to save new data to profile.' });
+    res.status(500).json({ ok: false, message: err.message || 'Failed to stage new data.' });
   }
 };
 

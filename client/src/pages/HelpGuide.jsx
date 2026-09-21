@@ -8,19 +8,19 @@ export default function HelpGuide() {
   const [activeTab, setActiveTab] = useState('extension');
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', paddingBottom: 60, fontFamily: 'Manrope, sans-serif' }}>
+    <div style={{ maxWidth: 960, margin: '0 auto', paddingBottom: 60 }}>
       {/* Header */}
-      <header style={{ borderBottom: '1px solid #2A302B', paddingBottom: 24, marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+      <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 20, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#b7e34a', background: 'rgba(183,227,74,0.1)', padding: '2px 8px', borderRadius: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#087F71', background: '#E8F8F5', border: '1px solid #A3E5D9', padding: '3px 8px', borderRadius: 4 }}>
               User Guide & Documentation
             </span>
           </div>
-          <h1 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 400, fontFamily: 'Instrument Serif, serif', color: '#F2F3ED', margin: 0, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0B1F3A', margin: 0, letterSpacing: '-0.02em' }}>
             Help & Extension Guide
           </h1>
-          <p style={{ margin: '6px 0 0', fontSize: 15, color: 'rgba(242,243,237,0.6)' }}>
+          <p style={{ margin: '6px 0 0', fontSize: 14, color: '#667085' }}>
             Everything you need to set up the Chrome extension, configure AI models, and master OppTrack.
           </p>
         </div>
@@ -31,31 +31,32 @@ export default function HelpGuide() {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              background: '#b7e34a',
-              color: '#0f1210',
+              background: '#0B1F3A',
+              color: '#FFFFFF',
               padding: '10px 18px',
               borderRadius: 8,
               fontSize: 13,
-              fontWeight: 700,
+              fontWeight: 600,
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              transition: 'opacity 0.15s'
+              boxShadow: '0 2px 4px rgba(11,31,58,0.15)',
+              transition: 'all 0.15s ease'
             }}
           >
-            <Download size={16} /> Download Extension (.zip)
+            <Download size={15} /> Download Extension (.zip)
           </a>
         </div>
       </header>
 
       {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #2A302B', marginBottom: 32, overflowX: 'auto', paddingBottom: 2 }}>
+      <div style={{ display: 'flex', gap: 6, background: '#F0F4F8', border: '1px solid #E5EAF0', borderRadius: 10, padding: 5, marginBottom: 28, overflowX: 'auto' }}>
         {[
-          { id: 'extension', label: '🧩 Chrome Extension Setup', icon: Puzzle },
-          { id: 'about', label: '🌐 About OppTrack', icon: BookOpen },
-          { id: 'ai', label: '🤖 AI & API Keys Guide', icon: Key },
-          { id: 'faq', label: '💡 Troubleshooting & FAQ', icon: HelpCircle },
+          { id: 'extension', label: 'Chrome Extension Setup', icon: Puzzle },
+          { id: 'about', label: 'About OppTrack', icon: BookOpen },
+          { id: 'ai', label: 'AI & API Keys Guide', icon: Key },
+          { id: 'faq', label: 'Troubleshooting & FAQ', icon: HelpCircle },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -67,20 +68,20 @@ export default function HelpGuide() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                padding: '10px 18px',
-                borderRadius: '8px 8px 0 0',
+                padding: '8px 16px',
+                borderRadius: 7,
                 border: 'none',
-                borderBottom: isActive ? '3px solid #b7e34a' : '3px solid transparent',
-                background: isActive ? '#171B18' : 'transparent',
-                color: isActive ? '#F2F3ED' : 'rgba(242,243,237,0.6)',
+                background: isActive ? '#FFFFFF' : 'transparent',
+                color: isActive ? '#0B1F3A' : '#667085',
                 fontSize: 13,
-                fontWeight: isActive ? 600 : 500,
+                fontWeight: 600,
                 cursor: 'pointer',
+                boxShadow: isActive ? '0 1px 3px rgba(11,31,58,0.08)' : 'none',
                 transition: 'all 0.15s ease',
                 whiteSpace: 'nowrap'
               }}
             >
-              <Icon size={16} color={isActive ? '#b7e34a' : 'rgba(242,243,237,0.4)'} />
+              <Icon size={15} color={isActive ? '#087F71' : '#667085'} />
               <span>{tab.label}</span>
             </button>
           );
@@ -89,14 +90,14 @@ export default function HelpGuide() {
 
       {/* Tab 1: Extension Setup */}
       {activeTab === 'extension' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Quick Banner */}
-          <div style={{ background: '#171B18', border: '1px solid #2A302B', borderRadius: 16, padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 14, padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
             <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: 18, color: '#F2F3ED', fontFamily: 'Instrument Serif, serif' }}>
+              <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: '#0B1F3A' }}>
                 OppTrack AI Autofill Extension v1.0
               </h3>
-              <p style={{ margin: 0, fontSize: 13, color: 'rgba(242,243,237,0.6)' }}>
+              <p style={{ margin: 0, fontSize: 13, color: '#667085' }}>
                 Autofills Google Forms using your Profile Vault data powered by LLM vector matching.
               </p>
             </div>
@@ -105,29 +106,31 @@ export default function HelpGuide() {
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                background: '#b7e34a',
-                color: '#0f1210',
-                padding: '10px 20px',
+                background: '#E8F8F5',
+                color: '#087F71',
+                border: '1px solid #A3E5D9',
+                padding: '8px 16px',
                 borderRadius: 8,
-                fontWeight: 700,
+                fontWeight: 600,
                 fontSize: 13,
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 8
+                gap: 8,
+                transition: 'all 0.15s ease'
               }}
             >
-              <Download size={15} /> Download ZIP
+              <Download size={14} /> Download ZIP
             </a>
           </div>
 
           {/* Installation Steps */}
-          <div style={{ background: '#171B18', border: '1px solid #2A302B', borderRadius: 16, padding: 32 }}>
-            <h2 style={{ fontSize: 22, fontFamily: 'Instrument Serif, serif', color: '#F2F3ED', margin: '0 0 20px', paddingBottom: 16, borderBottom: '1px solid #2A302B' }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 14, padding: 28, boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 20px', paddingBottom: 14, borderBottom: '1px solid #F0F4F8' }}>
               How to Install the Extension in Google Chrome
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
                 {
                   step: '01',
@@ -160,13 +163,13 @@ export default function HelpGuide() {
                   desc: 'Pin the OppTrack extension to your Chrome toolbar. Click the extension icon and log in with your OppTrack account credentials!',
                 },
               ].map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: 16, background: '#121413', padding: 16, borderRadius: 10, border: '1px solid #2A302B' }}>
-                  <div style={{ background: 'rgba(183,227,74,0.12)', color: '#b7e34a', border: '1px solid rgba(183,227,74,0.3)', width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+                <div key={idx} style={{ display: 'flex', gap: 14, background: '#F8FAFD', padding: 14, borderRadius: 10, border: '1px solid #E5EAF0' }}>
+                  <div style={{ background: '#E8F8F5', color: '#087F71', border: '1px solid #A3E5D9', width: 34, height: 34, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
                     {item.step}
                   </div>
                   <div>
-                    <h4 style={{ margin: '0 0 4px', fontSize: 15, color: '#F2F3ED', fontWeight: 600 }}>{item.title}</h4>
-                    <p style={{ margin: 0, fontSize: 13, color: 'rgba(242,243,237,0.6)', lineHeight: 1.5 }}>{item.desc}</p>
+                    <h4 style={{ margin: '0 0 3px', fontSize: 14, color: '#0B1F3A', fontWeight: 600 }}>{item.title}</h4>
+                    <p style={{ margin: 0, fontSize: 13, color: '#667085', lineHeight: 1.5 }}>{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -178,11 +181,11 @@ export default function HelpGuide() {
       {/* Tab 2: About OppTrack */}
       {activeTab === 'about' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ background: '#171B18', border: '1px solid #2A302B', borderRadius: 16, padding: 32 }}>
-            <h2 style={{ fontSize: 24, fontFamily: 'Instrument Serif, serif', color: '#F2F3ED', margin: '0 0 12px' }}>
-              About OppTrack — Clinical Placement Platform
+          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 16, padding: 32, boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#0B1F3A', margin: '0 0 12px' }}>
+              About OppTrack — Placement & Clinical Application Assistant
             </h2>
-            <p style={{ fontSize: 14, color: 'rgba(242,243,237,0.7)', lineHeight: 1.7, margin: '0 0 24px' }}>
+            <p style={{ fontSize: 14, color: '#667085', lineHeight: 1.7, margin: '0 0 24px' }}>
               OppTrack is a centralized platform designed to streamline student placement applications, track recruitment deadlines, maintain a reusable candidate Profile Vault, and automate form filling with cutting-edge AI vector matching.
             </p>
 
@@ -193,9 +196,9 @@ export default function HelpGuide() {
                 { title: '🧩 Smart Extension', desc: 'Autofill Google placement forms automatically with high confidence scores.' },
                 { title: '🤖 Multi-LLM AI Engine', desc: 'Supports Groq Cloud, Google Gemini, OpenAI, OpenRouter, and Anthropic.' },
               ].map((card, i) => (
-                <div key={i} style={{ background: '#121413', border: '1px solid #2A302B', borderRadius: 12, padding: 20 }}>
-                  <h4 style={{ margin: '0 0 8px', color: '#b7e34a', fontSize: 15, fontWeight: 700 }}>{card.title}</h4>
-                  <p style={{ margin: 0, fontSize: 13, color: 'rgba(242,243,237,0.6)', lineHeight: 1.5 }}>{card.desc}</p>
+                <div key={i} style={{ background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 12, padding: 20 }}>
+                  <h4 style={{ margin: '0 0 8px', color: '#123C73', fontSize: 15, fontWeight: 700 }}>{card.title}</h4>
+                  <p style={{ margin: 0, fontSize: 13, color: '#667085', lineHeight: 1.5 }}>{card.desc}</p>
                 </div>
               ))}
             </div>
@@ -206,11 +209,11 @@ export default function HelpGuide() {
       {/* Tab 3: AI & API Keys */}
       {activeTab === 'ai' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ background: '#171B18', border: '1px solid #2A302B', borderRadius: 16, padding: 32 }}>
-            <h2 style={{ fontSize: 22, fontFamily: 'Instrument Serif, serif', color: '#F2F3ED', margin: '0 0 8px' }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 16, padding: 32, boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0B1F3A', margin: '0 0 8px' }}>
               Supported AI Providers & Free Key Setup
             </h2>
-            <p style={{ fontSize: 13, color: 'rgba(242,243,237,0.6)', margin: '0 0 24px' }}>
+            <p style={{ fontSize: 13, color: '#667085', margin: '0 0 24px' }}>
               Configure your preferred LLM provider in Settings. Your key is securely stored per account and automatically synced with your Chrome Extension.
             </p>
 
@@ -245,31 +248,32 @@ export default function HelpGuide() {
                   prefix: 'sk-or-...',
                 },
               ].map((prov, i) => (
-                <div key={i} style={{ background: '#121413', border: '1px solid #2A302B', borderRadius: 12, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                <div key={i} style={{ background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 12, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: '#F2F3ED' }}>{prov.name}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#b7e34a', background: 'rgba(183,227,74,0.1)', padding: '2px 6px', borderRadius: 4 }}>{prov.badge}</span>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A' }}>{prov.name}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#0D7A6B', background: '#E8F8F5', border: '1px solid rgba(24,183,160,0.3)', padding: '2px 8px', borderRadius: 6 }}>{prov.badge}</span>
                     </div>
-                    <p style={{ margin: '0 0 6px', fontSize: 13, color: 'rgba(242,243,237,0.6)' }}>{prov.desc}</p>
-                    <span style={{ fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'rgba(242,243,237,0.4)' }}>Key prefix: {prov.prefix}</span>
+                    <p style={{ margin: '0 0 6px', fontSize: 13, color: '#667085' }}>{prov.desc}</p>
+                    <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#8896AB' }}>Key prefix: {prov.prefix}</span>
                   </div>
                   <a
                     href={prov.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      background: 'transparent',
-                      border: '1px solid #2A302B',
-                      color: '#b7e34a',
+                      background: '#FFFFFF',
+                      border: '1px solid #E5EAF0',
+                      color: '#123C73',
                       padding: '8px 14px',
-                      borderRadius: 6,
+                      borderRadius: 8,
                       fontSize: 12,
                       fontWeight: 600,
                       textDecoration: 'none',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 4
+                      gap: 6,
+                      boxShadow: '0 1px 2px rgba(11,31,58,0.04)'
                     }}
                   >
                     Get API Key <ExternalLink size={12} />
@@ -284,8 +288,8 @@ export default function HelpGuide() {
       {/* Tab 4: FAQ */}
       {activeTab === 'faq' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ background: '#171B18', border: '1px solid #2A302B', borderRadius: 16, padding: 32 }}>
-            <h2 style={{ fontSize: 22, fontFamily: 'Instrument Serif, serif', color: '#F2F3ED', margin: '0 0 20px' }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 16, padding: 32, boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0B1F3A', margin: '0 0 20px' }}>
               Frequently Asked Questions & Troubleshooting
             </h2>
 
@@ -308,9 +312,9 @@ export default function HelpGuide() {
                   a: `You can view and star the repository at ${GITHUB_URL}.`,
                 },
               ].map((faq, i) => (
-                <div key={i} style={{ background: '#121413', border: '1px solid #2A302B', borderRadius: 10, padding: 18 }}>
-                  <h4 style={{ margin: '0 0 6px', fontSize: 14, color: '#b7e34a', fontWeight: 600 }}>Q: {faq.q}</h4>
-                  <p style={{ margin: 0, fontSize: 13, color: 'rgba(242,243,237,0.7)', lineHeight: 1.5 }}>{faq.a}</p>
+                <div key={i} style={{ background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 10, padding: 18 }}>
+                  <h4 style={{ margin: '0 0 6px', fontSize: 14, color: '#0B1F3A', fontWeight: 600 }}>Q: {faq.q}</h4>
+                  <p style={{ margin: 0, fontSize: 13, color: '#667085', lineHeight: 1.6 }}>{faq.a}</p>
                 </div>
               ))}
             </div>

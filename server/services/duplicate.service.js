@@ -34,4 +34,4 @@ const check = async (userId, company, role, deadline) => {
   return { isDuplicate: false };
 };
 
-module.exports = { check };
+module.exports = { check, similarity, normalize };

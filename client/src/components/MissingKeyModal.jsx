@@ -7,10 +7,9 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
   if (!isOpen) return null;
 
   const isAi = keyType === 'AI';
-  const accentColor = isAi ? '#9A8CFF' : '#B7E34A';
   const modalTitle = title || (isAi ? 'AI API Key Required' : 'Email Credentials Required');
   const modalMessage = message || (isAi 
-    ? 'To use AI Smart Paste and automatic email parsing, you need to add your LLM API Key (Groq, OpenAI, Anthropic, etc.) in Settings.'
+    ? 'To use AI Smart Paste and automatic email parsing, you need to add your LLM API Key (Groq, OpenAI, Gemini, etc.) in Settings.'
     : 'To send test emails or automated deadline reminders, please configure your SMTP Email & App Password in Settings.'
   );
 
@@ -27,23 +26,23 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'rgba(10, 12, 11, 0.82)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(11, 31, 58, 0.45)',
+      backdropFilter: 'blur(4px)',
       padding: 16,
       animation: 'fadeIn 0.2s ease-out',
     }}>
       <div style={{
         width: '100%',
         maxWidth: 460,
-        background: '#171B18',
-        border: `1px solid ${accentColor}50`,
-        borderTop: `4px solid ${accentColor}`,
-        borderRadius: 16,
+        background: '#FFFFFF',
+        border: '1px solid #E5EAF0',
+        borderTop: '4px solid #18B7A0',
+        borderRadius: 14,
         padding: 28,
-        boxShadow: `0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px ${accentColor}15`,
+        boxShadow: '0 20px 40px rgba(11, 31, 58, 0.15)',
         position: 'relative',
-        color: '#F2F3ED',
-        fontFamily: 'Manrope, sans-serif',
+        color: '#172033',
+        fontFamily: 'inherit',
       }}>
         {/* Close Button */}
         <button
@@ -54,7 +53,7 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
             right: 18,
             background: 'transparent',
             border: 'none',
-            color: 'rgba(242, 243, 237, 0.4)',
+            color: '#667085',
             cursor: 'pointer',
             padding: 4,
             borderRadius: 6,
@@ -63,34 +62,34 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
             justifyContent: 'center',
             transition: 'color 0.15s ease',
           }}
-          onMouseEnter={e => e.currentTarget.style.color = '#F2F3ED'}
-          onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 243, 237, 0.4)'}
+          onMouseEnter={e => e.currentTarget.style.color = '#172033'}
+          onMouseLeave={e => e.currentTarget.style.color = '#667085'}
         >
           <X size={18} />
         </button>
 
         {/* Header Icon */}
         <div style={{
-          width: 52,
-          height: 52,
-          borderRadius: 12,
-          background: `${accentColor}15`,
-          border: `1px solid ${accentColor}30`,
+          width: 48,
+          height: 48,
+          borderRadius: 10,
+          background: '#E8F8F5',
+          border: '1px solid #A3E5D9',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 20,
-          color: accentColor,
+          marginBottom: 18,
+          color: '#087F71',
         }}>
-          {isAi ? <Sparkles size={26} /> : <Mail size={26} />}
+          {isAi ? <Sparkles size={24} /> : <Mail size={24} />}
         </div>
 
         {/* Title */}
         <h3 style={{
-          fontSize: 20,
+          fontSize: 18,
           fontWeight: 700,
-          margin: '0 0 10px 0',
-          color: '#F2F3ED',
+          margin: '0 0 8px 0',
+          color: '#0B1F3A',
           letterSpacing: '-0.01em',
         }}>
           {modalTitle}
@@ -99,17 +98,17 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
         {/* Message */}
         <p style={{
           fontSize: 14,
-          color: 'rgba(242, 243, 237, 0.65)',
-          lineHeight: 1.6,
-          margin: '0 0 24px 0',
+          color: '#667085',
+          lineHeight: 1.5,
+          margin: '0 0 20px 0',
         }}>
           {modalMessage}
         </p>
 
         {/* Key Info Banner */}
         <div style={{
-          background: '#121413',
-          border: '1px solid #2A302B',
+          background: '#F8FAFD',
+          border: '1px solid #E5EAF0',
           borderRadius: 8,
           padding: '10px 14px',
           marginBottom: 24,
@@ -117,26 +116,26 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
           alignItems: 'center',
           gap: 10,
           fontSize: 12,
-          color: 'rgba(242, 243, 237, 0.5)',
+          color: '#667085',
         }}>
-          <KeyRound size={16} color={accentColor} style={{ flexShrink: 0 }} />
+          <KeyRound size={16} color="#18B7A0" style={{ flexShrink: 0 }} />
           <span>Your keys are stored securely per account and used exclusively for your requests.</span>
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button
             onClick={onClose}
             style={{
-              padding: '10px 18px',
+              padding: '8px 16px',
               borderRadius: 6,
               fontSize: 13,
               fontWeight: 600,
-              background: 'transparent',
-              border: '1px solid #2A302B',
-              color: 'rgba(242, 243, 237, 0.7)',
+              background: '#FFFFFF',
+              border: '1px solid #E5EAF0',
+              color: '#667085',
               cursor: 'pointer',
-              transition: 'background 0.15s ease',
+              transition: 'all 0.15s ease',
             }}
           >
             Cancel
@@ -144,24 +143,22 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
           <button
             onClick={handleGoToSettings}
             style={{
-              padding: '10px 22px',
+              padding: '8px 20px',
               borderRadius: 6,
               fontSize: 13,
-              fontWeight: 700,
-              background: accentColor,
+              fontWeight: 600,
+              background: '#0B1F3A',
               border: 'none',
-              color: '#101311',
+              color: '#FFFFFF',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              boxShadow: `0 4px 12px ${accentColor}30`,
-              transition: 'transform 0.15s ease, opacity 0.15s ease',
+              boxShadow: '0 2px 4px rgba(11, 31, 58, 0.1)',
+              transition: 'all 0.15s ease',
             }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
-            <Settings size={15} /> Configure in Settings
+            <Settings size={14} /> Configure in Settings
           </button>
         </div>
       </div>

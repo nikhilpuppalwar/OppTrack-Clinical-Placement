@@ -1,10 +1,16 @@
-// OppTrack Sidebar Component
-import { NavLink } from 'react-router-dom';
+// OppTrack Professional SaaS Sidebar Component
+import { useEffect, useState } from 'react';
+import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 import {
   LayoutDashboard, Briefcase, Calendar, History,
-  User, Settings, LogOut, Puzzle, HelpCircle
+  User, Settings, LogOut, Puzzle, HelpCircle, ExternalLink,
+  Bell, X, Clock, Send, Sparkles, AlertTriangle
 } from 'lucide-react';
+import { settingsAPI } from '../api';
+import { sendDesktopNotification, requestNotificationPermission } from '../utils/notifications';
+import toast from 'react-hot-toast';
 
 const NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -21,14 +27,58 @@ const EXTENSION_DOWNLOAD_URL = 'https://github.com/nikhilpuppalwar/OppTrack-Clin
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const [upcomingReminders, setUpcomingReminders] = useState([]);
+  const [showRemindersModal, setShowRemindersModal] = useState(false);
+  const [testingNotification, setTestingNotification] = useState(false);
+
+  const fetchReminders = async () => {
+    try {
+      const { data } = await settingsAPI.getUpcomingReminders();
+      setUpcomingReminders(data?.reminders || []);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    fetchReminders();
+    const interval = setInterval(fetchReminders, 2 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleQuickTestNotification = async () => {
+    setTestingNotification(true);
+    const toastId = toast.loading('Triggering test reminder notification...');
+    try {
+      await requestNotificationPermission();
+      const { data } = await settingsAPI.testNotification({ milestoneType: 'test' });
+
+      // Trigger desktop notification
+      sendDesktopNotification({
+        title: data?.notification?.title || '🎯 Test Reminder: Google Online Assessment',
+        body: data?.notification?.body || 'Upcoming assessment alert test.',
+      });
+
+      toast.success(
+        data?.notification?.emailSent
+          ? 'Notification popped + email sent via SMTP!'
+          : 'Desktop notification sent! (Configure SMTP in Settings for email alerts)',
+        { id: toastId }
+      );
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send test notification', { id: toastId });
+    } finally {
+      setTestingNotification(false);
+    }
+  };
 
   return (
     <aside
       style={{
-        width: 240,
-        minWidth: 240,
-        background: '#171B18',
-        borderRight: '1px solid #2A302B',
+        width: 250,
+        minWidth: 250,
+        background: '#FFFFFF',
+        borderRight: '1px solid #E5EAF0',
         padding: '24px 16px',
         display: 'flex',
         flexDirection: 'column',
@@ -36,7 +86,7 @@ export default function Sidebar() {
         height: '100vh',
         overflowY: 'auto',
         zIndex: 100,
-        fontFamily: 'Manrope, sans-serif'
+        boxShadow: '1px 0 4px rgba(11, 31, 58, 0.02)'
       }}
     >
       {/* Brand Logo Header */}
@@ -45,29 +95,60 @@ export default function Sidebar() {
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          padding: '0 8px 24px 8px',
-          borderBottom: '1px solid #2A302B',
-          marginBottom: 24
+          padding: '0 8px 20px 8px',
+          borderBottom: '1px solid #E5EAF0',
+          marginBottom: 20
         }}
       >
-        <img src="/logo.svg" alt="OppTrack Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+        <img
+          src={logoImg}
+          alt="OppTrack Logo"
+          style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }}
+        />
         <div>
-          <h1 style={{ fontFamily: 'Instrument Serif, serif', fontSize: 22, fontWeight: 400, color: '#F2F3ED', margin: 0, lineHeight: 1, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0B1F3A', margin: 0, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
             OppTrack
           </h1>
-          <p style={{ margin: '3px 0 0 0', fontSize: 10, fontFamily: 'DM Mono, monospace', color: 'rgba(242,243,237,0.45)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-            Clinical Placement
+          <p style={{ margin: '3px 0 0 0', fontSize: 11, fontWeight: 600, color: '#667085', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Career OS
           </p>
         </div>
       </div>
 
-      {/* Nav Label */}
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(242,243,237,0.4)', padding: '0 8px', marginBottom: 12 }}>
-        Main Menu
+      {/* Nav Label & Notification Bell */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px', marginBottom: 8 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94A3B8' }}>
+          Main Menu
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            fetchReminders();
+            setShowRemindersModal(true);
+          }}
+          title="Placement Milestone Alerts & Upcoming Tests"
+          style={{
+            background: upcomingReminders.some(r => r.isUrgent) ? '#FEF3C7' : '#F1F5F9',
+            border: `1px solid ${upcomingReminders.some(r => r.isUrgent) ? '#FCD34D' : '#E2E8F0'}`,
+            color: upcomingReminders.some(r => r.isUrgent) ? '#B45309' : '#475569',
+            borderRadius: 6,
+            padding: '3px 8px',
+            fontSize: 11,
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Bell size={12} color={upcomingReminders.some(r => r.isUrgent) ? '#D97706' : '#64748B'} />
+          <span>{upcomingReminders.length > 0 ? `${upcomingReminders.length} Due` : 'Alerts'}</span>
+        </button>
       </div>
 
       {/* Navigation Links */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1 }}>
         {NAV.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -76,21 +157,20 @@ export default function Sidebar() {
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
-              padding: '10px 14px',
+              gap: 11,
+              padding: '9px 12px',
               borderRadius: 8,
-              fontSize: 13,
+              fontSize: 13.5,
               fontWeight: isActive ? 600 : 500,
-              color: isActive ? '#F2F3ED' : 'rgba(242,243,237,0.65)',
-              background: isActive ? '#121413' : 'transparent',
-              borderLeft: isActive ? '3px solid #b7e34a' : '3px solid transparent',
+              color: isActive ? '#087F71' : '#667085',
+              background: isActive ? '#E8F8F5' : 'transparent',
               textDecoration: 'none',
               transition: 'all 0.15s ease'
             })}
           >
             {({ isActive }) => (
               <>
-                <Icon size={17} color={isActive ? '#b7e34a' : 'rgba(242,243,237,0.5)'} />
+                <Icon size={17} color={isActive ? '#18B7A0' : '#667085'} />
                 <span>{label}</span>
               </>
             )}
@@ -98,57 +178,41 @@ export default function Sidebar() {
         ))}
       </div>
 
-      {/* Extension + GitHub Promo */}
-      <div style={{ margin: '16px 0 12px', padding: '12px', background: '#121413', borderRadius: 8, border: '1px solid #2A302B' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#b7e34a', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
-          🧩 Chrome Extension
+      {/* Chrome Extension Card */}
+      <div style={{ margin: '16px 0 14px', padding: '14px', background: '#F8FAFD', borderRadius: 10, border: '1px solid #E5EAF0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#087F71', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+          <Puzzle size={13} color="#18B7A0" /> Chrome Extension
         </div>
-        <p style={{ margin: '0 0 8px', fontSize: 11, color: 'rgba(242,243,237,0.5)', lineHeight: 1.5 }}>
-          Autofill any form with AI using your profile data.
+        <p style={{ margin: '0 0 10px', fontSize: 12, color: '#667085', lineHeight: 1.45 }}>
+          Autofill company placement forms in 1 click with AI.
         </p>
         <a
           href={EXTENSION_DOWNLOAD_URL}
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-            background: '#b7e34a', color: '#0f1210',
-            borderRadius: 5, padding: '6px 10px',
-            fontSize: 11, fontWeight: 700, textDecoration: 'none',
-            transition: 'opacity 0.15s'
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            background: '#18B7A0', color: '#FFFFFF',
+            borderRadius: 6, padding: '7px 10px',
+            fontSize: 12, fontWeight: 700, textDecoration: 'none',
+            boxShadow: '0 1px 3px rgba(24, 183, 160, 0.25)',
+            transition: 'background 0.15s ease'
           }}
-          onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          onMouseEnter={e => e.currentTarget.style.background = '#22C7AE'}
+          onMouseLeave={e => e.currentTarget.style.background = '#18B7A0'}
         >
-          <Puzzle size={12} /> Download Extension
-        </a>
-        <a
-          href={GITHUB_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-            color: 'rgba(242,243,237,0.4)', marginTop: 6,
-            fontSize: 10, textDecoration: 'none',
-          }}
-          onMouseEnter={e => e.currentTarget.style.color = '#F2F3ED'}
-          onMouseLeave={e => e.currentTarget.style.color = 'rgba(242,243,237,0.4)'}
-        >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-          </svg>
-          GitHub Repo ↗
+          Download Extension
         </a>
       </div>
 
-      {/* Sidebar Footer */}
-      <div style={{ borderTop: '1px solid #2A302B', paddingTop: 20 }}>
-        <div style={{ padding: '0 8px 14px 8px' }}>
-          <div style={{ fontFamily: 'Instrument Serif, serif', fontSize: 18, color: '#F2F3ED', lineHeight: 1.2 }}>
+      {/* Sidebar Footer / User Profile */}
+      <div style={{ borderTop: '1px solid #E5EAF0', paddingTop: 16 }}>
+        <div style={{ padding: '0 6px 12px 6px' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A', lineHeight: 1.2 }}>
             {user?.name || 'Student'}
           </div>
-          <div style={{ fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'rgba(242,243,237,0.45)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {user?.email || 'user@opptrack.io'}
+          <div style={{ fontSize: 12, color: '#667085', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {user?.email || 'student@opptrack.io'}
           </div>
         </div>
 
@@ -156,24 +220,205 @@ export default function Sidebar() {
           onClick={logout}
           style={{
             width: '100%',
-            background: '#121413',
-            border: '1px solid #2A302B',
+            background: '#FFFFFF',
+            border: '1px solid #E5EAF0',
             borderRadius: 6,
-            color: '#ffb4ab',
-            padding: '8px 12px',
-            fontSize: 12,
+            color: '#DC3545',
+            padding: '7px 12px',
+            fontSize: 12.5,
             fontWeight: 600,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 8,
-            transition: 'background 0.15s ease'
+            gap: 7,
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = '#FEF0F0';
+            e.currentTarget.style.borderColor = '#FCA5A5';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = '#FFFFFF';
+            e.currentTarget.style.borderColor = '#E5EAF0';
           }}
         >
           <LogOut size={14} /> Logout
         </button>
       </div>
+
+      {/* ── UPCOMING MILESTONE REMINDERS MODAL ── */}
+      {showRemindersModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(11, 31, 58, 0.45)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={() => setShowRemindersModal(false)}
+        >
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: 14,
+              width: '100%',
+              maxWidth: 520,
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 40px rgba(11, 31, 58, 0.2)',
+              border: '1px solid #E5EAF0',
+              overflow: 'hidden',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ padding: '18px 22px', borderBottom: '1px solid #E5EAF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 8, background: '#EAF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+                  <Bell size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0B1F3A' }}>
+                    Milestone Reminders & Tests
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, color: '#667085' }}>
+                    {upcomingReminders.length} upcoming tests, drives, and deadlines
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRemindersModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer', padding: 4 }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Quick Actions Bar */}
+            <div style={{ padding: '10px 22px', background: '#F8FAFD', borderBottom: '1px solid #E5EAF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <button
+                type="button"
+                onClick={handleQuickTestNotification}
+                disabled={testingNotification}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #BFDBFE',
+                  color: '#2563EB',
+                  padding: '5px 12px',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <Send size={12} /> {testingNotification ? 'Dispatching…' : 'Send Test Notification'}
+              </button>
+
+              <Link
+                to="/settings"
+                onClick={() => setShowRemindersModal(false)}
+                style={{ fontSize: 12, fontWeight: 600, color: '#087F71', textDecoration: 'none' }}
+              >
+                Reminder Settings →
+              </Link>
+            </div>
+
+            {/* Reminders List */}
+            <div style={{ padding: '16px 22px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {upcomingReminders.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '36px 16px', color: '#667085' }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+                  <strong style={{ display: 'block', fontSize: 14, color: '#0B1F3A', marginBottom: 4 }}>
+                    No upcoming tests or deadlines due!
+                  </strong>
+                  <p style={{ margin: 0, fontSize: 12 }}>
+                    When new online assessments or campus drives are extracted from your emails, automatic alerts will appear here.
+                  </p>
+                </div>
+              ) : (
+                upcomingReminders.map(rem => (
+                  <div
+                    key={rem.id}
+                    style={{
+                      background: rem.isUrgent ? '#FFFBEB' : '#FFFFFF',
+                      border: `1px solid ${rem.isUrgent ? '#FDE68A' : '#E5EAF0'}`,
+                      borderRadius: 10,
+                      padding: '12px 14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <span style={{ fontSize: 18 }}>{rem.icon}</span>
+                        <div>
+                          <strong style={{ fontSize: 13, color: '#0B1F3A' }}>{rem.company}</strong>
+                          <span style={{ fontSize: 12, color: '#667085', marginLeft: 6 }}>— {rem.role}</span>
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          background: rem.isUrgent ? '#FEF0F0' : '#EAF2FF',
+                          color: rem.isUrgent ? '#DC2626' : '#2563EB',
+                          border: `1px solid ${rem.isUrgent ? '#FCA5A5' : '#BFDBFE'}`,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {rem.hoursLeft > 0 ? `In ${rem.hoursLeft}h` : 'Due today'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#475569', marginTop: 2 }}>
+                      <div>
+                        <strong>{rem.milestoneLabel}: </strong>
+                        <span>{new Date(rem.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                      </div>
+                      {rem.package && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#087F71' }}>
+                          {rem.package}
+                        </span>
+                      )}
+                    </div>
+
+                    {rem.shortlistInfo && (
+                      <div style={{ fontSize: 11, color: '#B45309', background: '#FEF3C7', padding: '4px 8px', borderRadius: 4, marginTop: 4 }}>
+                        Update: {rem.shortlistInfo}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                      <Link
+                        to={`/opportunities/${rem.opportunityId}`}
+                        onClick={() => setShowRemindersModal(false)}
+                        style={{ fontSize: 11, fontWeight: 700, color: '#2563EB', textDecoration: 'none' }}
+                      >
+                        View Opportunity Details →
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

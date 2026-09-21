@@ -35,39 +35,129 @@ const getTransporter = (user) => {
 };
 
 const scheduleReminder = async (opportunity, user) => {
-  if (!opportunity.deadline) return;
   const leadHours = user.settings?.reminderLeadHours ?? 24;
-  const remindAt = new Date(new Date(opportunity.deadline).getTime() - leadHours * 60 * 60 * 1000);
-  if (remindAt <= new Date()) return; // Already past, skip
+  const channel = user.settings?.notificationChannel ?? 'browser';
 
-  await Reminder.create({
-    userId: user._id,
-    opportunityId: opportunity._id,
-    remindAt,
-    channel: user.settings?.notificationChannel ?? 'email',
-  });
+  const milestones = [
+    {
+      type: 'test',
+      date: opportunity.testDate,
+      enabled: user.settings?.notifyTests !== false,
+      title: `Online Assessment / Test: ${opportunity.company}`,
+    },
+    {
+      type: 'deadline',
+      date: opportunity.deadline,
+      enabled: user.settings?.notifyDeadlines !== false,
+      title: `Application Deadline: ${opportunity.company}`,
+    },
+    {
+      type: 'drive',
+      date: opportunity.driveDate,
+      enabled: user.settings?.notifyDrives !== false,
+      title: `Campus Drive: ${opportunity.company}`,
+    },
+    {
+      type: 'interview',
+      date: opportunity.interviewDate,
+      enabled: user.settings?.notifyInterviews !== false,
+      title: `Interview Round: ${opportunity.company}`,
+    },
+  ];
+
+  for (const m of milestones) {
+    if (!m.date || !m.enabled) continue;
+    const targetDate = new Date(m.date);
+    if (isNaN(targetDate.getTime())) continue;
+
+    const remindAt = new Date(targetDate.getTime() - leadHours * 60 * 60 * 1000);
+    if (remindAt <= new Date()) continue; // Already passed
+
+    // Upsert reminder record
+    await Reminder.findOneAndUpdate(
+      {
+        userId: user._id,
+        opportunityId: opportunity._id,
+        milestoneType: m.type,
+      },
+      {
+        userId: user._id,
+        opportunityId: opportunity._id,
+        remindAt,
+        channel,
+        milestoneType: m.type,
+        title: m.title,
+        sent: false,
+      },
+      { upsert: true, new: true }
+    );
+  }
 };
 
-const sendReminderEmail = async (user, opportunity) => {
+const sendReminderEmail = async (user, opportunity, milestoneType = 'deadline') => {
   const { transporter, fromEmail } = getTransporter(user);
-  const deadline = new Date(opportunity.deadline).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+  let milestoneLabel = 'Application Deadline';
+  let dateVal = opportunity.deadline;
+  let icon = '⏰';
+
+  if (milestoneType === 'test') {
+    milestoneLabel = 'Online Assessment / Test Date';
+    dateVal = opportunity.testDate;
+    icon = '🎯';
+  } else if (milestoneType === 'drive') {
+    milestoneLabel = 'Campus Placement Drive';
+    dateVal = opportunity.driveDate;
+    icon = '🏢';
+  } else if (milestoneType === 'interview') {
+    milestoneLabel = 'Interview / Selection Round';
+    dateVal = opportunity.interviewDate;
+    icon = '💼';
+  }
+
+  const formattedDate = dateVal
+    ? new Date(dateVal).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+    : 'Upcoming Soon';
 
   await transporter.sendMail({
-    from: `"OppTrack" <${fromEmail}>`,
+    from: `"OppTrack Notifications" <${fromEmail}>`,
     to: user.email,
-    subject: `⏰ Deadline Reminder: ${opportunity.company} — ${opportunity.role}`,
+    subject: `${icon} ${milestoneLabel} Reminder: ${opportunity.company} — ${opportunity.role}`,
     html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-        <h2 style="color:#6366f1;">⏰ Deadline Reminder</h2>
-        <p>Your deadline for <strong>${opportunity.company} — ${opportunity.role}</strong> is approaching!</p>
-        <p><strong>Deadline:</strong> ${deadline}</p>
-        <p><strong>Status:</strong> ${opportunity.status.replace('_', ' ').toUpperCase()}</p>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #E5EAF0; border-radius: 12px; background: #ffffff;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+          <span style="font-size: 28px;">${icon}</span>
+          <div>
+            <h2 style="color: #0B1F3A; margin: 0; font-size: 18px;">${milestoneLabel} Reminder</h2>
+            <p style="color: #667085; margin: 2px 0 0 0; font-size: 13px;">OppTrack Milestone Alert</p>
+          </div>
+        </div>
+
+        <div style="background: #F8FAFD; border: 1px solid #E5EAF0; border-radius: 10px; padding: 16px; margin: 16px 0;">
+          <div style="font-size: 18px; font-weight: 700; color: #0B1F3A; margin-bottom: 4px;">
+            ${opportunity.company}
+          </div>
+          <div style="font-size: 14px; color: #667085; margin-bottom: 12px;">
+            ${opportunity.role || 'Opportunity'}
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 13px;">
+            <div><strong>${milestoneLabel}:</strong> <span style="color: #2563EB; font-weight: 600;">${formattedDate}</span></div>
+            ${opportunity.package ? `<div><strong>Compensation:</strong> ${opportunity.package}</div>` : ''}
+            ${opportunity.shortlistInfo ? `<div><strong>Shortlist / Update:</strong> ${opportunity.shortlistInfo}</div>` : ''}
+            <div><strong>Status:</strong> ${opportunity.status?.replace('_', ' ').toUpperCase()}</div>
+          </div>
+        </div>
+
         <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/opportunities/${opportunity._id}" 
-           style="display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;margin-top:16px;">
-          View Opportunity
+           style="display: block; text-align: center; padding: 11px 20px; background: #18B7A0; color: #ffffff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; margin-top: 18px;">
+          View Opportunity & Prep Materials →
         </a>
-        <hr style="margin:24px 0;opacity:0.2"/>
-        <small style="color:#888">OppTrack — Your personal placement tracker</small>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #E5EAF0;" />
+        <small style="color: #94A3B8; font-size: 11px; display: block; text-align: center;">
+          OppTrack — Placement & Clinical Career Intelligence OS
+        </small>
       </div>
     `,
   });
@@ -81,7 +171,7 @@ const sendTestEmail = async (user) => {
     subject: `✅ OppTrack SMTP Email Configuration Test`,
     html: `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px;">
-        <h2 style="color: #6366f1; margin-top:0;">✅ OppTrack Email Setup Verified!</h2>
+        <h2 style="color: #18B7A0; margin-top:0;">✅ OppTrack Email Setup Verified!</h2>
         <p>Hello <strong>${user.name || 'Student'}</strong>,</p>
         <p>Your SMTP Email settings have been configured successfully!</p>
         <div style="background: #f1f5f9; padding: 12px; border-radius: 8px; font-size: 13px; margin: 16px 0;">
@@ -89,12 +179,127 @@ const sendTestEmail = async (user) => {
           <strong>Target Email:</strong> ${user.email}<br/>
           <strong>Status:</strong> Connected & Operational
         </div>
-        <p>You will now receive automatic email reminders for all upcoming placement & internship deadlines.</p>
+        <p>You will now receive automatic email reminders for all upcoming placement & internship milestones (Assessment Tests, Campus Drives, Interviews, and Deadlines).</p>
         <hr style="margin: 20px 0; opacity: 0.2;" />
         <small style="color: #888;">OppTrack Placement Tracker</small>
       </div>
     `,
   });
+};
+
+// Dispatch a live test notification (both email if configured, plus payload for browser)
+const sendTestNotification = async (user, data = {}) => {
+  const milestoneType = data.milestoneType || 'test';
+  const company = data.company || 'Google';
+  const role = data.role || 'Software Development Engineer';
+
+  let title = `🎯 Test Reminder: ${company} Online Assessment`;
+  let body = `${company} OA / Test scheduled in 24 hours. Check syllabus and coding IDE setup!`;
+
+  if (milestoneType === 'deadline') {
+    title = `⏳ Deadline Reminder: ${company} Application`;
+    body = `Applications for ${company} — ${role} close tonight at 11:59 PM. Submit your form!`;
+  } else if (milestoneType === 'drive') {
+    title = `🏢 Drive Reminder: ${company} Campus Drive`;
+    body = `${company} on-campus placement drive scheduled tomorrow at 9:00 AM. Bring ID card & copies of resume.`;
+  } else if (milestoneType === 'interview') {
+    title = `💼 Interview Reminder: ${company} Round 2`;
+    body = `Interview round scheduled for ${company} — ${role}. Review technical projects and STAR stories.`;
+  }
+
+  let emailSent = false;
+  let emailError = null;
+
+  // Try sending email if user has SMTP configured and channel is email or both
+  const userChannel = user?.settings?.notificationChannel || 'browser';
+  if ((userChannel === 'email' || userChannel === 'both') && user?.settings?.smtpUser && user?.settings?.smtpPass) {
+    try {
+      const mockOpp = {
+        _id: 'test',
+        company,
+        role,
+        status: 'applied',
+        package: '24 LPA (PPO)',
+        testDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        deadline: new Date(Date.now() + 12 * 60 * 60 * 1000),
+        driveDate: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        interviewDate: new Date(Date.now() + 72 * 60 * 60 * 1000),
+      };
+      await sendReminderEmail(user, mockOpp, milestoneType);
+      emailSent = true;
+    } catch (err) {
+      emailError = err.message;
+    }
+  }
+
+  return {
+    success: true,
+    notification: {
+      title,
+      body,
+      milestoneType,
+      company,
+      role,
+      timestamp: new Date().toISOString(),
+      channel: userChannel,
+      emailSent,
+      emailError,
+    },
+  };
+};
+
+// Retrieve all upcoming milestone events across all active user opportunities
+const getUpcomingReminders = async (userId) => {
+  const opportunities = await Opportunity.find({
+    userId,
+    status: { $nin: ['rejected'] },
+  }).sort({ updatedAt: -1 });
+
+  const now = new Date();
+  const cutoff = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // Next 14 days
+  const pastCutoff = new Date(now.getTime() - 2 * 60 * 60 * 1000); // Past 2 hours
+
+  const reminders = [];
+
+  for (const opp of opportunities) {
+    const checkDate = (dateVal, type, label, icon) => {
+      if (!dateVal) return;
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return;
+      if (d >= pastCutoff && d <= cutoff) {
+        const diffMs = d.getTime() - now.getTime();
+        const hoursLeft = Math.round(diffMs / (1000 * 60 * 60));
+        const isUrgent = hoursLeft <= 24;
+
+        reminders.push({
+          id: `${opp._id}_${type}`,
+          opportunityId: opp._id,
+          company: opp.company,
+          role: opp.role,
+          package: opp.package,
+          type: opp.type,
+          milestoneType: type,
+          milestoneLabel: label,
+          icon,
+          date: d.toISOString(),
+          hoursLeft,
+          isUrgent,
+          status: opp.status,
+          shortlistInfo: opp.shortlistInfo,
+        });
+      }
+    };
+
+    checkDate(opp.testDate, 'test', 'Online Assessment / Test', '🎯');
+    checkDate(opp.deadline, 'deadline', 'Application Deadline', '⏳');
+    checkDate(opp.driveDate, 'drive', 'Campus Drive Date', '🏢');
+    checkDate(opp.interviewDate, 'interview', 'Interview Round', '💼');
+  }
+
+  // Sort by date ascending
+  reminders.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  return reminders;
 };
 
 const startCronJob = () => {
@@ -113,7 +318,9 @@ const startCronJob = () => {
           continue;
         }
         try {
-          await sendReminderEmail(user, opportunity);
+          if (reminder.channel === 'email' || reminder.channel === 'both') {
+            await sendReminderEmail(user, opportunity, reminder.milestoneType);
+          }
           reminder.sent = true;
           await reminder.save();
 
@@ -121,7 +328,7 @@ const startCronJob = () => {
             userId: reminder.userId,
             opportunityId: reminder.opportunityId,
             eventType: 'reminder_sent',
-            description: `Reminder sent for ${opportunity.company} — ${opportunity.role}`,
+            description: `Reminder sent for ${opportunity.company} — ${opportunity.role} (${reminder.milestoneType || 'deadline'})`,
           });
         } catch (emailErr) {
           console.error('Failed to send reminder email:', emailErr.message);
@@ -134,4 +341,10 @@ const startCronJob = () => {
   console.log(`Reminder cron job started (every ${interval} min)`);
 };
 
-module.exports = { scheduleReminder, sendTestEmail, startCronJob };
+module.exports = {
+  scheduleReminder,
+  sendTestEmail,
+  sendTestNotification,
+  getUpcomingReminders,
+  startCronJob,
+};

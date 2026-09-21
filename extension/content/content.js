@@ -47,12 +47,12 @@ function injectGlobalStyles() {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: rgba(18, 18, 28, 0.95);
+      background: #0B1F3A;
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(183, 227, 74, 0.3);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid rgba(24, 183, 160, 0.4);
+      box-shadow: 0 10px 30px rgba(11, 31, 58, 0.35);
       border-radius: 30px;
-      padding: 6px 12px;
+      padding: 6px 14px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -60,8 +60,8 @@ function injectGlobalStyles() {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .${NS}-btn {
-      background: #b7e34a;
-      color: #0f1210;
+      background: #18B7A0;
+      color: #FFFFFF;
       border: none;
       padding: 8px 14px;
       border-radius: 20px;
@@ -74,17 +74,17 @@ function injectGlobalStyles() {
       transition: all 0.2s ease;
     }
     .${NS}-btn:hover {
-      background: #c5ee58;
+      background: #149D89;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(183,227,74,0.3);
+      box-shadow: 0 4px 12px rgba(24, 183, 160, 0.35);
     }
     .${NS}-btn-secondary {
-      background: rgba(255,255,255,0.08);
-      color: #f2f3ed;
-      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.25);
     }
     .${NS}-btn-secondary:hover {
-      background: rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.22);
     }
 
     /* Confidence Dot */
@@ -107,30 +107,30 @@ function injectGlobalStyles() {
       cursor: help;
       z-index: 9999;
       flex-shrink: 0;
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.3);
+      box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.15);
       transition: transform 0.15s;
     }
     .${NS}-dot:hover { transform: translateY(-50%) scale(1.4); }
-    .${NS}-dot.high   { background: #4ade80; }
-    .${NS}-dot.medium { background: #fbbf24; }
-    .${NS}-dot.manual { background: #60a5fa; }
+    .${NS}-dot.high   { background: #18B7A0; }
+    .${NS}-dot.medium { background: #F59E0B; }
+    .${NS}-dot.manual { background: #2563EB; }
 
     /* Tooltip */
     .${NS}-tooltip {
       position: absolute;
       bottom: calc(100% + 8px);
       right: -8px;
-      background: #121420;
-      color: #f2f3ed;
+      background: #0B1F3A;
+      color: #FFFFFF;
       font-size: 11px;
       font-family: 'Inter', system-ui, sans-serif;
       padding: 6px 10px;
       border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(24, 183, 160, 0.3);
       white-space: max-content;
       max-width: 280px;
       pointer-events: none;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 16px rgba(11, 31, 58, 0.3);
       z-index: 100000;
       opacity: 0;
       transition: opacity 0.15s;
@@ -142,7 +142,7 @@ function injectGlobalStyles() {
     .${NS}-sensitive-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(15, 18, 16, 0.88);
+      background: rgba(11, 31, 58, 0.9);
       backdrop-filter: blur(6px);
       border-radius: 4px;
       display: flex;
@@ -154,9 +154,9 @@ function injectGlobalStyles() {
       transition: background 0.2s;
       font-family: 'Inter', system-ui, sans-serif;
     }
-    .${NS}-sensitive-overlay:hover { background: rgba(15, 18, 16, 0.75); }
+    .${NS}-sensitive-overlay:hover { background: rgba(11, 31, 58, 0.8); }
     .${NS}-sensitive-text {
-      color: rgba(242,243,237,0.85);
+      color: #FFFFFF;
       font-size: 12px;
       font-weight: 500;
     }
@@ -165,7 +165,7 @@ function injectGlobalStyles() {
     .${NS}-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(11, 31, 58, 0.6);
       backdrop-filter: blur(8px);
       z-index: 1000000;
       display: flex;
@@ -175,21 +175,21 @@ function injectGlobalStyles() {
       font-family: 'Inter', system-ui, sans-serif;
     }
     .${NS}-modal-card {
-      background: #141722;
-      border: 1px solid rgba(183, 227, 74, 0.3);
+      background: #FFFFFF;
+      border: 1px solid #E5EAF0;
       border-radius: 16px;
       width: 100%;
       max-width: 540px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-      color: #f2f3ed;
+      box-shadow: 0 20px 50px rgba(11, 31, 58, 0.2);
+      color: #172033;
       overflow: hidden;
     }
     .${NS}-modal-header {
       padding: 16px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid #E5EAF0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -197,7 +197,7 @@ function injectGlobalStyles() {
     .${NS}-modal-title {
       font-size: 16px;
       font-weight: 700;
-      color: #b7e34a;
+      color: #0B1F3A;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -208,8 +208,8 @@ function injectGlobalStyles() {
       flex: 1;
     }
     .${NS}-item-row {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: #F8FAFD;
+      border: 1px solid #E5EAF0;
       border-radius: 8px;
       padding: 10px 14px;
       margin-bottom: 10px;
@@ -218,16 +218,16 @@ function injectGlobalStyles() {
       gap: 12px;
     }
     .${NS}-item-info { flex: 1; }
-    .${NS}-item-label { font-size: 13px; font-weight: 600; color: #f2f3ed; }
-    .${NS}-item-val { font-size: 12px; color: #b7e34a; font-family: monospace; margin-top: 2px; }
-    .${NS}-item-reason { font-size: 11px; color: rgba(242,243,237,0.5); margin-top: 4px; }
+    .${NS}-item-label { font-size: 13px; font-weight: 600; color: #0B1F3A; }
+    .${NS}-item-val { font-size: 12px; color: #123C73; font-family: monospace; margin-top: 2px; font-weight: 600; }
+    .${NS}-item-reason { font-size: 11px; color: #667085; margin-top: 4px; }
     .${NS}-modal-footer {
       padding: 14px 20px;
-      border-top: 1px solid rgba(255,255,255,0.1);
+      border-top: 1px solid #E5EAF0;
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      background: rgba(0,0,0,0.2);
+      background: #F8FAFD;
     }
   `;
   document.head.appendChild(style);
@@ -631,10 +631,10 @@ function showNewDataModal(items) {
     <div class="${NS}-modal-card">
       <div class="${NS}-modal-header">
         <div class="${NS}-modal-title">🔍 New Candidate Data Detected</div>
-        <button id="${NS}-close-modal" style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;">✕</button>
+        <button id="${NS}-close-modal" style="background:none;border:none;color:#667085;font-size:18px;cursor:pointer;line-height:1;">✕</button>
       </div>
       <div class="${NS}-modal-body">
-        <p style="font-size:12px;color:rgba(242,243,237,0.7);margin-bottom:14px;">
+        <p style="font-size:12px;color:#667085;margin-bottom:14px;">
           The AI scanned this form and found <strong>${items.length}</strong> new/updated detail(s) missing from your database profile:
         </p>
         <div id="${NS}-items-container">
@@ -642,7 +642,7 @@ function showNewDataModal(items) {
             .map(
               (item) => `
             <div class="${NS}-item-row">
-              <input type="checkbox" id="chk_${item.id}" data-id="${item.id}" checked style="margin-top:3px;accent-color:#b7e34a;cursor:pointer;" />
+              <input type="checkbox" id="chk_${item.id}" data-id="${item.id}" checked style="margin-top:3px;accent-color:#18B7A0;cursor:pointer;" />
               <div class="${NS}-item-info">
                 <div class="${NS}-item-label">${item.label}</div>
                 <div class="${NS}-item-val">${item.value}</div>
@@ -655,8 +655,8 @@ function showNewDataModal(items) {
         </div>
       </div>
       <div class="${NS}-modal-footer">
-        <button id="${NS}-cancel-btn" class="${NS}-btn ${NS}-btn-secondary">Cancel</button>
-        <button id="${NS}-save-db-btn" class="${NS}-btn">💾 Save Selected to Database</button>
+        <button id="${NS}-cancel-btn" class="${NS}-btn" style="background:#FFFFFF;border:1px solid #E5EAF0;color:#667085;">Cancel</button>
+        <button id="${NS}-save-db-btn" class="${NS}-btn" style="background:#0B1F3A;color:#FFFFFF;">💾 Save Selected to Database</button>
       </div>
     </div>
   `;
@@ -683,11 +683,18 @@ function showNewDataModal(items) {
       return;
     }
 
-    const syncRes = await msg('SYNC_NEW_DATA', { fieldsToSave });
+    const syncRes = await msg('SYNC_NEW_DATA', {
+      fieldsToSave,
+      formUrl: window.location.href,
+      formTitle: document.title,
+    });
     overlay.remove();
 
     if (syncRes.ok) {
-      alert(`Success! ${syncRes.data?.message || 'Database Profile updated successfully!'}`);
+      alert(
+        syncRes.data?.message ||
+          'Candidate data sent to your OppTrack Profile Vault! Please open OppTrack to review and verify the AI merge recommendations before saving.'
+      );
     } else {
       alert(`Failed to save: ${syncRes.data?.message || syncRes.error}`);
     }
@@ -704,7 +711,7 @@ function injectFloatingToolbar() {
   bar.className = `${NS}-floating-bar`;
 
   bar.innerHTML = `
-    <span style="font-weight:700;font-size:12px;color:#b7e34a;">OppTrack AI</span>
+    <span style="font-weight:700;font-size:12px;color:#FFFFFF;display:flex;align-items:center;gap:6px;"><span style="width:7px;height:7px;border-radius:50%;background:#18B7A0;display:inline-block;box-shadow:0 0 6px #18B7A0;"></span> OppTrack AI</span>
     <button id="${NS}-float-autofill" class="${NS}-btn">✨ AI Autofill</button>
     <button id="${NS}-float-analyze" class="${NS}-btn ${NS}-btn-secondary">🔍 Save New Data</button>
   `;

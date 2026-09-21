@@ -12,7 +12,11 @@ const userSchema = new mongoose.Schema(
     // Settings
     settings: {
       reminderLeadHours: { type: Number, default: 24 },
-      notificationChannel: { type: String, enum: ['email', 'browser'], default: 'email' },
+      notificationChannel: { type: String, enum: ['email', 'browser', 'both'], default: 'browser' },
+      notifyTests: { type: Boolean, default: true },
+      notifyDeadlines: { type: Boolean, default: true },
+      notifyDrives: { type: Boolean, default: true },
+      notifyInterviews: { type: Boolean, default: true },
       llmProvider: { type: String, default: 'groq' },
       llmApiKey: { type: String, default: '' },
       llmModel: { type: String, default: 'openai/gpt-oss-120b' },
@@ -22,6 +26,15 @@ const userSchema = new mongoose.Schema(
       smtpPort: { type: Number, default: 587 },
       smtpUser: { type: String, default: '' },
       smtpPass: { type: String, default: '' },
+    },
+    // Google OAuth & Sync Settings
+    googleAuth: {
+      refreshToken: { type: String, default: null }, // AES-256-GCM encrypted
+      connectedAt: { type: Date, default: null },
+      googleEmail: { type: String, default: null },
+      gmailSyncEnabled: { type: Boolean, default: false },
+      calendarSyncEnabled: { type: Boolean, default: false },
+      lastGmailSyncAt: { type: Date, default: null },
     },
   },
   { timestamps: true }

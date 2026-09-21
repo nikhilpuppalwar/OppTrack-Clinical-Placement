@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedLayout from './components/ProtectedLayout';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -14,6 +15,13 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import HelpGuide from './pages/HelpGuide';
 
+function HomeRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="loading-center"><div className="spinner" /></div>;
+  if (!user) return <Landing />;
+  return <ProtectedLayout><Dashboard /></ProtectedLayout>;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -21,15 +29,25 @@ export default function App() {
         <Toaster
           position="top-right"
           toastOptions={{
-            style: { background: '#1e1e32', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.08)' },
-            success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } },
-            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+            style: {
+              background: '#FFFFFF',
+              color: '#172033',
+              border: '1px solid #E5EAF0',
+              boxShadow: '0 8px 24px rgba(11, 31, 58, 0.08)',
+              fontSize: '13.5px',
+              fontWeight: 500,
+              fontFamily: 'Inter, sans-serif'
+            },
+            success: { iconTheme: { primary: '#16A34A', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#DC3545', secondary: '#fff' } },
           }}
         />
         <Routes>
+          <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
+          <Route path="/" element={<HomeRoute />} />
+          <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
           <Route path="/opportunities" element={<ProtectedLayout><Opportunities /></ProtectedLayout>} />
           <Route path="/opportunities/new" element={<ProtectedLayout><NewOpportunity /></ProtectedLayout>} />
           <Route path="/opportunities/:id" element={<ProtectedLayout><OpportunityDetail /></ProtectedLayout>} />

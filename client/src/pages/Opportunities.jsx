@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { opportunityAPI } from '../api';
+import { opportunityAPI, gmailAPI } from '../api';
 import DeadlineBadge from '../components/DeadlineBadge';
-import { Plus, Search, Trash2, Eye, Sparkles, Wand2, CalendarDays, X, Filter } from 'lucide-react';
+import { 
+  Plus, Search, Trash2, Eye, Sparkles, Wand2, CalendarDays, X, Filter, 
+  Mail, Check, ExternalLink, RefreshCw, AlertTriangle, Clock, CheckCircle2, 
+  ChevronDown, ChevronUp, Edit3, Building2, Briefcase, GraduationCap, Zap, ArrowRight
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import MissingKeyModal from '../components/MissingKeyModal';
@@ -15,11 +19,59 @@ const EMP_TYPES = [
   { key: 'off-campus', label: 'Off-Campus' },
 ];
 
+const PENDING_DATE_FILTERS = [
+  { key: 'all', label: 'All Dates' },
+  { key: 'today', label: 'Today' },
+  { key: 'yesterday', label: 'Yesterday' },
+  { key: 'week', label: 'This Week' },
+];
+
+const BRANCH_FILTERS = [
+  { key: '', label: 'All Branches' },
+  { key: 'cs_it', label: 'CS / IT / AI-DS' },
+  { key: 'entc', label: 'E&TC / Electronics' },
+  { key: 'mech', label: 'Mechanical' },
+  { key: 'electrical', label: 'Electrical' },
+  { key: 'civil', label: 'Civil' },
+];
+
+const parseBranches = (raw) => {
+  if (Array.isArray(raw)) return raw.map(b => String(b).trim()).filter(Boolean);
+  if (typeof raw === 'string') {
+    return raw.split(/[,;/|\n]+/).map(s => s.trim()).filter(Boolean);
+  }
+  return [];
+};
+
+const parseLinks = (raw) => {
+  if (Array.isArray(raw)) return raw.filter(l => l && (l.url || typeof l === 'string')).map(l => typeof l === 'string' ? { url: l, label: 'Registration Link' } : l);
+  if (typeof raw === 'string' && raw.trim()) return [{ url: raw.trim(), label: 'Registration Link' }];
+  return [];
+};
+
 export default function Opportunities() {
   const [opps, setOpps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ search: '', status: '', employmentType: '', sortBy: 'newest' });
   const navigate = useNavigate();
+
+  // Primary view tab: 'tracked' or 'pending'
+  const [viewTab, setViewTab] = useState('tracked');
+  const [pendingItems, setPendingItems] = useState([]);
+  const [autoUpdates, setAutoUpdates] = useState([]);
+  const [loadingPending, setLoadingPending] = useState(false);
+  const [syncingGmail, setSyncingGmail] = useState(false);
+  const [confirmingId, setConfirmingId] = useState(null);
+  const [ignoringId, setIgnoringId] = useState(null);
+  const [reExtractingId, setReExtractingId] = useState(null);
+  const [expandedReviewId, setExpandedReviewId] = useState(null);
+  const [showAutoUpdates, setShowAutoUpdates] = useState(true);
+  const [pendingEdits, setPendingEdits] = useState({});
+
+  // Pending Review Filters
+  const [pendingDateFilter, setPendingDateFilter] = useState('all');
+  const [pendingTypeFilter, setPendingTypeFilter] = useState('');
+  const [pendingBranchFilter, setPendingBranchFilter] = useState('');
 
   // AI Follow-up Update modal state
   const [activeAiOpp, setActiveAiOpp] = useState(null);
@@ -51,9 +103,159 @@ export default function Opportunities() {
     }
   };
 
+  const fetchPending = async () => {
+    setLoadingPending(true);
+    try {
+      const [pendingRes, updatesRes] = await Promise.all([
+        gmailAPI.getPending(),
+        gmailAPI.getAutoUpdates().catch(() => ({ data: [] })),
+      ]);
+      setPendingItems(pendingRes.data || []);
+      setAutoUpdates(updatesRes.data || []);
+
+      // Initialize edit fields
+      const edits = {};
+      (pendingRes.data || []).forEach(item => {
+        const ext = item.extractionResult?.extractedFields || {};
+        edits[item._id] = {
+          company: ext.company || '',
+          role: ext.role || '',
+          ctc: ext.ctc || '',
+          stipend: ext.stipend || '',
+          ppo: ext.ppo || '',
+          employmentType: ext.employmentType || 'placement',
+          location: ext.location || '',
+          deadline: ext.deadline ? ext.deadline.substring(0, 16) : '',
+          testDate: ext.testDate ? ext.testDate.substring(0, 16) : '',
+          allowedBranches: Array.isArray(ext.eligibility?.allowedBranches)
+            ? ext.eligibility.allowedBranches.join(', ')
+            : (typeof ext.eligibility?.allowedBranches === 'string' ? ext.eligibility.allowedBranches : ''),
+        };
+      });
+      setPendingEdits(edits);
+    } catch (err) {
+      console.warn('Failed to load pending reviews:', err);
+    } finally {
+      setLoadingPending(false);
+    }
+  };
+
   useEffect(() => {
     fetchOpps();
+    fetchPending();
   }, [filters]);
+
+  const handleSyncGmail = async () => {
+    setSyncingGmail(true);
+    const toastId = toast.loading('Fetching placement emails from trusted senders…');
+    try {
+      const { data } = await gmailAPI.sync();
+      toast.success(data.message || 'Gmail sync complete!', { id: toastId });
+      await fetchPending();
+      await fetchOpps(); // In case some existing jobs were auto-updated!
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Sync failed. Connect Google Account in Settings.', { id: toastId });
+    } finally {
+      setSyncingGmail(false);
+    }
+  };
+
+  const handleReExtract = async (id) => {
+    setReExtractingId(id);
+    const toastId = toast.loading('AI extracting full details from email…');
+    try {
+      const { data } = await gmailAPI.reExtractPending(id);
+      toast.success('Extracted details updated!', { id: toastId });
+      setPendingItems(prev => prev.map(p => p._id === id ? data : p));
+      const ext = data.extractionResult?.extractedFields || {};
+      setPendingEdits(pe => ({
+        ...pe,
+        [id]: {
+          company: ext.company || '',
+          role: ext.role || '',
+          ctc: ext.ctc || '',
+          stipend: ext.stipend || '',
+          ppo: ext.ppo || '',
+          employmentType: ext.employmentType || 'placement',
+          location: ext.location || '',
+          deadline: ext.deadline ? ext.deadline.substring(0, 16) : '',
+          testDate: ext.testDate ? ext.testDate.substring(0, 16) : '',
+          allowedBranches: Array.isArray(ext.eligibility?.allowedBranches)
+            ? ext.eligibility.allowedBranches.join(', ')
+            : (typeof ext.eligibility?.allowedBranches === 'string' ? ext.eligibility.allowedBranches : ''),
+        }
+      }));
+    } catch (err) {
+      if (err.response?.data?.isKeyMissing) {
+        toast.dismiss(toastId);
+        setKeyModal({
+          isOpen: true,
+          keyType: 'AI',
+          message: err.response.data.message || 'Configure your AI API Key in Settings to extract details.',
+        });
+      } else {
+        toast.error(err.response?.data?.message || 'AI extraction failed', { id: toastId });
+      }
+    } finally {
+      setReExtractingId(null);
+    }
+  };
+
+  const handleConfirmPending = async (item) => {
+    setConfirmingId(item._id);
+    const toastId = toast.loading('Confirming opportunity & syncing to Google Calendar…');
+    try {
+      const ext = item.extractionResult?.extractedFields || {};
+      const editData = pendingEdits[item._id] || {};
+
+      let branchesArr = ext.eligibility?.allowedBranches || [];
+      if (editData.allowedBranches) {
+        branchesArr = editData.allowedBranches.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
+      const payload = {
+        company: editData.company || ext.company,
+        role: editData.role || ext.role,
+        ctc: editData.ctc || ext.ctc,
+        stipend: editData.stipend || ext.stipend,
+        ppo: editData.ppo || ext.ppo,
+        employmentType: editData.employmentType || ext.employmentType || 'placement',
+        location: editData.location || ext.location,
+        deadline: editData.deadline || ext.deadline,
+        testDate: editData.testDate || ext.testDate,
+        driveDate: editData.driveDate || ext.driveDate,
+        links: ext.links || [],
+        eligibility: {
+          ...(ext.eligibility || {}),
+          allowedBranches: branchesArr,
+        },
+        allowedBranches: branchesArr,
+        customFields: ext.sections?.flatMap(s => s.fields || []) || [],
+      };
+
+      const { data } = await gmailAPI.confirmPending(item._id, payload);
+      toast.success('✅ Opportunity added and synced to Google Calendar!', { id: toastId });
+      setPendingItems(prev => prev.filter(p => p._id !== item._id));
+      fetchOpps();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to confirm opportunity', { id: toastId });
+    } finally {
+      setConfirmingId(null);
+    }
+  };
+
+  const handleIgnorePending = async (id) => {
+    setIgnoringId(id);
+    try {
+      await gmailAPI.ignorePending(id);
+      toast.success('Email ignored and dismissed.');
+      setPendingItems(prev => prev.filter(p => p._id !== id));
+    } catch (err) {
+      toast.error('Failed to ignore item');
+    } finally {
+      setIgnoringId(null);
+    }
+  };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this opportunity? This cannot be undone.')) return;
@@ -135,313 +337,936 @@ export default function Opportunities() {
   };
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60, fontFamily: 'Manrope, sans-serif' }}>
+    <div style={{ maxWidth: 1160, margin: '0 auto', paddingBottom: 60 }}>
       {/* Header */}
-      <header style={{ borderBottom: '1px solid #2A302B', paddingBottom: 24, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+      <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 24, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 400, fontFamily: 'serif', color: '#F2F3ED', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0B1F3A', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
             Opportunities
           </h1>
-          <p style={{ margin: 0, fontSize: 13, fontFamily: 'DM Mono, monospace', color: 'rgba(242,243,237,0.5)' }}>
-            {opps.length} placement & internship records tracked
+          <p style={{ margin: 0, fontSize: 13.5, color: '#667085' }}>
+            {opps.length} placement & internship opportunities tracked
           </p>
         </div>
 
         <Link
           to="/opportunities/new"
           style={{
-            background: '#b7e34a',
-            color: '#101311',
-            fontSize: 13,
-            fontWeight: 700,
-            padding: '10px 20px',
+            background: '#0B1F3A',
+            color: '#FFFFFF',
+            fontSize: 13.5,
+            fontWeight: 600,
+            padding: '9px 18px',
             textDecoration: 'none',
             borderRadius: 6,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
-            transition: 'transform 0.15s ease'
+            gap: 7,
+            boxShadow: '0 2px 6px rgba(11, 31, 58, 0.12)',
+            transition: 'background 0.15s ease'
           }}
         >
           <Plus size={16} /> Add Opportunity
         </Link>
       </header>
 
-      {/* Segmented Category Filter Bar & Search */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
-        {/* Top bar: Category tabs + Search */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          {/* Category Segmented Control */}
-          <div style={{ display: 'flex', background: '#171B18', border: '1px solid #2A302B', borderRadius: 8, padding: 4, gap: 4 }}>
-            {EMP_TYPES.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setFilters(f => ({ ...f, employmentType: t.key }))}
-                style={{
-                  background: filters.employmentType === t.key ? '#121413' : 'transparent',
-                  color: filters.employmentType === t.key ? '#F2F3ED' : 'rgba(242,243,237,0.6)',
-                  border: filters.employmentType === t.key ? '1px solid #2A302B' : '1px solid transparent',
-                  borderBottom: filters.employmentType === t.key ? '2px solid #b7e34a' : '1px solid transparent',
-                  padding: '6px 16px',
-                  borderRadius: 6,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+      {/* Primary View Switcher: Tracked Opportunities vs Pending Review */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 28, borderBottom: '1px solid #E5EAF0', paddingBottom: 16, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={() => setViewTab('tracked')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              background: viewTab === 'tracked' ? '#E8F8F5' : 'transparent',
+              color: viewTab === 'tracked' ? '#087F71' : '#667085',
+              border: viewTab === 'tracked' ? '1px solid rgba(24, 183, 160, 0.3)' : '1px solid transparent',
+              cursor: 'pointer'
+            }}
+          >
+            <CalendarDays size={15} color={viewTab === 'tracked' ? '#18B7A0' : 'currentColor'} />
+            Tracked Opportunities ({opps.length})
+          </button>
 
-          {/* Search box */}
-          <div style={{ position: 'relative', width: 280 }}>
-            <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(242,243,237,0.4)' }} />
-            <input
-              type="text"
-              placeholder="Search company or role..."
-              value={filters.search}
-              onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
-              style={{
-                width: '100%',
-                background: '#171B18',
-                color: '#F2F3ED',
-                border: '1px solid #2A302B',
-                borderRadius: 6,
-                paddingLeft: 34,
-                paddingRight: 12,
-                paddingTop: 8,
-                paddingBottom: 8,
-                fontSize: 13,
-                outline: 'none',
-                fontFamily: 'DM Mono, monospace'
-              }}
-            />
-          </div>
+          <button
+            onClick={() => setViewTab('pending')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              background: viewTab === 'pending' ? '#FEF0F0' : 'transparent',
+              color: viewTab === 'pending' ? '#DC3545' : '#667085',
+              border: viewTab === 'pending' ? '1px solid rgba(220, 53, 69, 0.3)' : '1px solid transparent',
+              cursor: 'pointer'
+            }}
+          >
+            <Mail size={15} color={viewTab === 'pending' ? '#DC3545' : 'currentColor'} />
+            Pending Review (Gmail)
+            {pendingItems.length > 0 && (
+              <span style={{
+                background: '#DC3545', color: '#fff', fontSize: 11, fontWeight: 800,
+                padding: '2px 8px', borderRadius: 10, marginLeft: 4
+              }}>
+                {pendingItems.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Secondary Filter Row: Status & Sort */}
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#171B18', border: '1px solid #2A302B', borderRadius: 6, padding: '6px 12px' }}>
-            <Filter size={14} color="rgba(242,243,237,0.4)" />
-            <select
-              value={filters.status}
-              onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
-              style={{ background: 'transparent', border: 'none', color: '#F2F3ED', fontSize: 12, outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="" style={{ background: '#171B18' }}>Status: All Stages</option>
-              {STATUSES.filter(Boolean).map(s => (
-                <option key={s} value={s} style={{ background: '#171B18' }}>{s.replace('_', ' ').toUpperCase()}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#171B18', border: '1px solid #2A302B', borderRadius: 6, padding: '6px 12px' }}>
-            <select
-              value={filters.sortBy}
-              onChange={e => setFilters(f => ({ ...f, sortBy: e.target.value }))}
-              style={{ background: 'transparent', border: 'none', color: '#F2F3ED', fontSize: 12, outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="newest" style={{ background: '#171B18' }}>Sort: Newest First</option>
-              <option value="company" style={{ background: '#171B18' }}>Sort: Company Name</option>
-              <option value="deadline" style={{ background: '#171B18' }}>Sort: Deadline Date</option>
-            </select>
-          </div>
-        </div>
+        {viewTab === 'pending' && (
+          <button
+            onClick={handleSyncGmail}
+            disabled={syncingGmail}
+            style={{
+              background: '#FEF0F0', border: '1px solid rgba(220, 53, 69, 0.25)',
+              color: '#DC3545', padding: '7px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
+            }}
+          >
+            <RefreshCw size={13} className={syncingGmail ? 'spin' : ''} />
+            {syncingGmail ? 'Checking Gmail…' : 'Sync Gmail Now'}
+          </button>
+        )}
       </div>
 
-      {/* Main Table */}
-      {loading ? (
-        <div className="loading-center" style={{ minHeight: '40vh' }}><div className="spinner" /></div>
-      ) : opps.length === 0 ? (
-        <div style={{ background: '#171B18', border: '1px solid #2A302B', borderRadius: 16, padding: 60, textAlign: 'center', color: 'rgba(242,243,237,0.5)' }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>💼</div>
-          <h3 style={{ fontSize: 18, color: '#F2F3ED', margin: '0 0 6px 0', fontFamily: 'serif' }}>No placement records found</h3>
-          <p style={{ fontSize: 13, margin: '0 0 20px 0' }}>Add an opportunity manually or paste a placement email with AI Smart Paste.</p>
-          <Link to="/opportunities/new" style={{ background: '#b7e34a', color: '#101311', padding: '10px 20px', borderRadius: 6, textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
-            + Add First Opportunity
-          </Link>
-        </div>
-      ) : (
-        <div style={{ background: '#171B18', border: '1px solid #2A302B', borderRadius: 16, overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #2A302B', background: '#121413' }}>
-                  <th style={{ padding: '16px 20px', fontSize: 11, fontWeight: 700, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Company</th>
-                  <th style={{ padding: '16px 20px', fontSize: 11, fontWeight: 700, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Role</th>
-                  <th style={{ padding: '16px 20px', fontSize: 11, fontWeight: 700, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Compensation</th>
-                  <th style={{ padding: '16px 20px', fontSize: 11, fontWeight: 700, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Type</th>
-                  <th style={{ padding: '16px 20px', fontSize: 11, fontWeight: 700, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Deadline</th>
-                  <th style={{ padding: '16px 20px', fontSize: 11, fontWeight: 700, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Status</th>
-                  <th style={{ padding: '16px 20px', fontSize: 11, fontWeight: 700, color: 'rgba(242,243,237,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {opps.map(opp => {
-                  const pay = getOppPay(opp);
-                  const deadline = getOppDeadline(opp);
-                  const typeLabel = (opp.employmentType || 'placement').replace('-', ' ');
-                  const initials = getCompanyInitials(opp.company);
+      {viewTab === 'pending' ? (
+        <div style={{ marginBottom: 40 }}>
+          {/* Top Control & Filter Bar for Pending Review */}
+          <div style={{
+            background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 10,
+            padding: 16, marginBottom: 20, boxShadow: '0 1px 3px rgba(11, 31, 58, 0.03)',
+            display: 'flex', flexDirection: 'column', gap: 14
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>
+                  Filter & Categorize Incoming Emails
+                </span>
+                <span style={{ fontSize: 12, color: '#667085', marginLeft: 8 }}>
+                  ({pendingItems.length} pending review)
+                </span>
+              </div>
 
-                  return (
-                    <tr
-                      key={opp._id}
-                      style={{ borderBottom: '1px solid #2A302B', transition: 'background 0.15s ease' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#121413'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      {/* Company Name & AI Tag */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div
-                            style={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: '50%',
-                              background: '#121413',
-                              border: '1px solid #2A302B',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: 11,
-                              fontFamily: 'DM Mono, monospace',
-                              fontWeight: 700,
-                              color: '#F2F3ED'
-                            }}
-                          >
-                            {initials}
+              {/* Date Filter Pills */}
+              <div style={{ display: 'flex', background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: 3, gap: 3 }}>
+                {PENDING_DATE_FILTERS.map(df => (
+                  <button
+                    key={df.key}
+                    type="button"
+                    onClick={() => setPendingDateFilter(df.key)}
+                    style={{
+                      background: pendingDateFilter === df.key ? '#FFFFFF' : 'transparent',
+                      color: pendingDateFilter === df.key ? '#0B1F3A' : '#667085',
+                      border: pendingDateFilter === df.key ? '1px solid #E5EAF0' : 'none',
+                      padding: '4px 10px',
+                      borderRadius: 4,
+                      fontSize: 12,
+                      fontWeight: pendingDateFilter === df.key ? 700 : 500,
+                      cursor: 'pointer',
+                      boxShadow: pendingDateFilter === df.key ? '0 1px 2px rgba(11, 31, 58, 0.04)' : 'none'
+                    }}
+                  >
+                    {df.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category & Branch Selectors */}
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: '5px 10px' }}>
+                <Briefcase size={13} color="#667085" />
+                <select
+                  value={pendingTypeFilter}
+                  onChange={e => setPendingTypeFilter(e.target.value)}
+                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  <option value="">All Opportunity Types</option>
+                  <option value="placement">Placements Only</option>
+                  <option value="internship">Internships Only</option>
+                  <option value="internship+ppo">Internship + PPO</option>
+                  <option value="off-campus">Off-Campus</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: '5px 10px' }}>
+                <GraduationCap size={13} color="#667085" />
+                <select
+                  value={pendingBranchFilter}
+                  onChange={e => setPendingBranchFilter(e.target.value)}
+                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  {BRANCH_FILTERS.map(bf => (
+                    <option key={bf.key} value={bf.key}>{bf.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {(pendingDateFilter !== 'all' || pendingTypeFilter || pendingBranchFilter) && (
+                <button
+                  type="button"
+                  onClick={() => { setPendingDateFilter('all'); setPendingTypeFilter(''); setPendingBranchFilter(''); }}
+                  style={{ background: 'transparent', border: 'none', color: '#DC3545', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '4px 8px' }}
+                >
+                  Reset Filters
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Automatic Updates from Gmail Section */}
+          {autoUpdates.length > 0 && (
+            <div style={{
+              background: '#FFFFFF',
+              border: '1px solid #E5EAF0',
+              borderLeft: '4px solid #10B981',
+              borderRadius: 10,
+              padding: '16px 20px',
+              marginBottom: 20,
+              boxShadow: '0 1px 4px rgba(16, 185, 129, 0.08)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: showAutoUpdates ? 12 : 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ background: '#ECFDF5', color: '#059669', width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Zap size={14} />
+                  </span>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}>
+                      Auto-Updated Jobs from Gmail ({autoUpdates.length})
+                    </h4>
+                    <span style={{ fontSize: 11.5, color: '#667085' }}>
+                      Shortlists, drive dates, and test schedules merged directly into your database
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAutoUpdates(!showAutoUpdates)}
+                  style={{ background: 'transparent', border: 'none', color: '#059669', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  {showAutoUpdates ? 'Hide Auto-Updates' : 'Show Auto-Updates'}
+                  {showAutoUpdates ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
+              </div>
+
+              {showAutoUpdates && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+                  {autoUpdates.map(u => {
+                    const opp = u.opportunityId || {};
+                    const details = u.autoUpdateDetails || {};
+                    const changes = details.changesSummary || [];
+
+                    return (
+                      <div
+                        key={u._id}
+                        style={{
+                          background: '#F9FAFB', border: '1px solid #E5EAF0', borderRadius: 8,
+                          padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          flexWrap: 'wrap', gap: 10
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 260 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                            <strong style={{ fontSize: 13.5, color: '#0B1F3A' }}>
+                              {details.existingCompany || opp.company || 'Job Record'}
+                            </strong>
+                            {opp.role && <span style={{ fontSize: 12, color: '#667085' }}>• {opp.role}</span>}
+                            <span style={{ fontSize: 11, background: '#ECFDF5', color: '#059669', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>
+                              Updated
+                            </span>
                           </div>
-                          <div>
+                          <div style={{ fontSize: 12, color: '#374151' }}>
+                            {changes.length > 0 ? changes.join(' | ') : 'Drive/Shortlist details synchronized'}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 11, color: '#9CA3AF' }}>
+                            {new Date(u.receivedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {opp._id && (
                             <Link
                               to={`/opportunities/${opp._id}`}
-                              style={{ fontWeight: 600, color: '#F2F3ED', textDecoration: 'none', fontSize: 14, display: 'block' }}
+                              style={{
+                                background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#1F2937',
+                                padding: '5px 11px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
+                                textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4
+                              }}
                             >
-                              {opp.company}
+                              View Opportunity <ArrowRight size={12} />
                             </Link>
-                            {opp.source?.extractedViaAI && (
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: 4,
-                                  marginTop: 3,
-                                  borderLeft: '2px solid #9A8CFF',
-                                  paddingLeft: 6,
-                                  paddingRight: 6,
-                                  color: '#9A8CFF',
-                                  fontFamily: 'DM Mono, monospace',
-                                  fontSize: 10,
-                                  textTransform: 'uppercase',
-                                  background: 'rgba(154,140,255,0.08)'
-                                }}
-                              >
-                                AI Extracted
-                              </span>
-                            )}
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Pending Items List */}
+          {loadingPending ? (
+            <div className="loading-center" style={{ minHeight: 200 }}><div className="spinner" /></div>
+          ) : pendingItems.length === 0 ? (
+            <div style={{
+              background: '#FFFFFF', border: '1px dashed #E5EAF0', borderRadius: 12,
+              padding: 48, textAlign: 'center'
+            }}>
+              <Mail size={36} color="#DC3545" style={{ marginBottom: 14, opacity: 0.8 }} />
+              <h3 style={{ margin: '0 0 6px 0', fontSize: 18, color: '#0B1F3A', fontWeight: 700 }}>No Pending Emails to Review</h3>
+              <p style={{ margin: '0 auto 20px auto', fontSize: 13.5, color: '#667085', maxWidth: 460, lineHeight: 1.5 }}>
+                When your trusted placement senders email you about new drives or internships, they will be automatically fetched, parsed via AI, and queued here for your confirmation.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                <button
+                  onClick={handleSyncGmail}
+                  disabled={syncingGmail}
+                  style={{
+                    background: '#0B1F3A', color: '#fff', border: 'none', padding: '9px 18px',
+                    borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: 6
+                  }}
+                >
+                  <RefreshCw size={14} className={syncingGmail ? 'spin' : ''} /> Check Gmail Now
+                </button>
+                <Link
+                  to="/settings"
+                  style={{
+                    background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033',
+                    padding: '9px 16px', borderRadius: 6, fontSize: 13, textDecoration: 'none', fontWeight: 500
+                  }}
+                >
+                  Manage Trusted Senders
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {pendingItems
+                .filter(item => {
+                  const ext = item.extractionResult?.extractedFields || {};
+                  const edits = pendingEdits[item._id] || {};
+                  const empType = (edits.employmentType || ext.employmentType || 'placement').toLowerCase();
+
+                  // Type filter
+                  if (pendingTypeFilter && !empType.includes(pendingTypeFilter)) return false;
+
+                  // Branch filter
+                  if (pendingBranchFilter) {
+                    const branches = parseBranches(ext.eligibility?.allowedBranches).map(b => b.toLowerCase());
+                    const branchRaw = (ext.eligibility?.rawText || '').toLowerCase();
+                    const checkBranch = (terms) => terms.some(t => branches.some(b => b.includes(t)) || branchRaw.includes(t));
+
+                    if (pendingBranchFilter === 'cs_it' && !checkBranch(['cs', 'it', 'comp', 'aiml', 'data science', 'software'])) return false;
+                    if (pendingBranchFilter === 'entc' && !checkBranch(['entc', 'etc', 'ece', 'electronics', 'telecom'])) return false;
+                    if (pendingBranchFilter === 'mech' && !checkBranch(['mech', 'automobile', 'production'])) return false;
+                    if (pendingBranchFilter === 'electrical' && !checkBranch(['elect', 'eee'])) return false;
+                    if (pendingBranchFilter === 'civil' && !checkBranch(['civil'])) return false;
+                  }
+
+                  // Date filter
+                  if (pendingDateFilter !== 'all') {
+                    const recDate = new Date(item.receivedAt);
+                    const now = new Date();
+                    const isToday = recDate.toDateString() === now.toDateString();
+                    const yesterday = new Date();
+                    yesterday.setDate(now.getDate() - 1);
+                    const isYesterday = recDate.toDateString() === yesterday.toDateString();
+                    const diffDays = (now - recDate) / (1000 * 60 * 60 * 24);
+
+                    if (pendingDateFilter === 'today' && !isToday) return false;
+                    if (pendingDateFilter === 'yesterday' && !isYesterday) return false;
+                    if (pendingDateFilter === 'week' && diffDays > 7) return false;
+                  }
+
+                  return true;
+                })
+                .map(item => {
+                  const ext = item.extractionResult?.extractedFields || {};
+                  const dup = item.extractionResult?.duplicateWarning;
+                  const elig = item.extractionResult?.eligibilityCheckResult;
+                  const edits = pendingEdits[item._id] || {};
+                  const isExpanded = expandedReviewId === item._id;
+
+                  const branches = parseBranches(ext.eligibility?.allowedBranches);
+                  const empTypeStr = (edits.employmentType || ext.employmentType || 'placement').replace('-', ' ');
+                  const payStr = edits.ctc || edits.stipend || edits.ppo || ext.ctc || ext.stipend || ext.ppo || 'Package Disclosed Soon';
+
+                  return (
+                    <div
+                      key={item._id}
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E5EAF0',
+                        borderLeft: dup?.isDuplicate ? '4px solid #F59E0B' : '4px solid #DC3545',
+                        borderRadius: 12,
+                        padding: 24,
+                        boxShadow: '0 2px 8px rgba(11, 31, 58, 0.04)'
+                      }}
+                    >
+                      {/* Top Bar: Sender, Received Date, Type Badge & Duplicate status */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 11.5, background: '#FEF0F0', color: '#DC3545', border: '1px solid rgba(220, 53, 69, 0.25)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                              From: {item.from || 'Placement Cell'}
+                            </span>
+                            <span style={{ fontSize: 11.5, color: '#667085', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <Clock size={12} /> {new Date(item.receivedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                            </span>
+                            <span style={{
+                              fontSize: 11, fontWeight: 800, textTransform: 'uppercase',
+                              background: empTypeStr.includes('intern') ? '#E8F8F5' : '#EAF2FF',
+                              color: empTypeStr.includes('intern') ? '#087F71' : '#2563EB',
+                              border: empTypeStr.includes('intern') ? '1px solid rgba(8, 127, 113, 0.25)' : '1px solid rgba(37, 99, 235, 0.25)',
+                              padding: '2px 7px', borderRadius: 4
+                            }}>
+                              {empTypeStr}
+                            </span>
+                          </div>
+                          <h3 style={{ fontSize: 16.5, fontWeight: 700, color: '#0B1F3A', margin: 0, lineHeight: 1.4 }}>
+                            {item.subject}
+                          </h3>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                          {dup?.isDuplicate && (
+                            <span style={{
+                              display: 'flex', alignItems: 'center', gap: 4,
+                              fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+                              background: '#FFF7E6', color: '#B7791F', border: '1px solid rgba(245, 158, 11, 0.3)'
+                            }}>
+                              <AlertTriangle size={12} /> Duplicate: {dup.existingCompany}
+                            </span>
+                          )}
+
+                          {elig && (
+                            <span style={{
+                              display: 'flex', alignItems: 'center', gap: 4,
+                              fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
+                              background: elig.status === 'eligible' ? '#EAF8EF' : elig.status === 'not_eligible' ? '#FEF0F0' : '#FFF7E6',
+                              color: elig.status === 'eligible' ? '#16A34A' : elig.status === 'not_eligible' ? '#DC3545' : '#B7791F',
+                              border: `1px solid ${elig.status === 'eligible' ? 'rgba(22, 163, 74, 0.25)' : elig.status === 'not_eligible' ? 'rgba(220, 53, 69, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`
+                            }}>
+                              {elig.status === 'eligible' ? 'Eligible' : elig.status === 'not_eligible' ? 'Not Eligible' : 'Needs Review'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Main Details Grid: Company, Role, Package, Deadline */}
+                      <div style={{
+                        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+                        gap: 12, background: '#F8FAFD', padding: 14, borderRadius: 8, border: '1px solid #E5EAF0',
+                        marginBottom: 14
+                      }}>
+                        <div>
+                          <span style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>Company</span>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A', marginTop: 2 }}>
+                            {edits.company || ext.company || '—'}
                           </div>
                         </div>
-                      </td>
 
-                      {/* Role */}
-                      <td style={{ padding: '16px 20px', fontWeight: 600, color: '#F2F3ED', fontSize: 14 }}>
-                        {opp.role}
-                      </td>
+                        <div>
+                          <span style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>Role</span>
+                          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#172033', marginTop: 2 }}>
+                            {edits.role || ext.role || '—'}
+                          </div>
+                        </div>
 
-                      {/* Compensation */}
-                      <td style={{ padding: '16px 20px', fontFamily: 'DM Mono, monospace', fontSize: 13, color: 'rgba(242,243,237,0.8)' }}>
-                        {pay ? pay : <span style={{ color: 'rgba(242,243,237,0.3)', fontStyle: 'italic' }}>Not specified</span>}
-                      </td>
+                        <div>
+                          <span style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>Package / Stipend</span>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: '#16A34A', marginTop: 2 }}>
+                            {payStr}
+                          </div>
+                        </div>
 
-                      {/* Type */}
-                      <td style={{ padding: '16px 20px', fontSize: 12, color: 'rgba(242,243,237,0.7)', textTransform: 'capitalize' }}>
-                        {typeLabel}
-                      </td>
+                        <div>
+                          <span style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>Deadline</span>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#0B1F3A', marginTop: 2 }}>
+                            {edits.deadline ? new Date(edits.deadline).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : ext.deadline ? new Date(ext.deadline).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'No deadline stated'}
+                          </div>
+                        </div>
+                      </div>
 
-                      {/* Deadline */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <DeadlineBadge deadline={deadline} />
-                      </td>
+                      {/* Allowed Branches & Eligibility Badges Row */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+                        <span style={{ fontSize: 11.5, color: '#4B5563', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <GraduationCap size={13} color="#2563EB" /> Allowed Branches:
+                        </span>
+                        {branches.length > 0 ? (
+                          branches.map((b, bIdx) => (
+                            <span
+                              key={bIdx}
+                              style={{
+                                background: '#EFF6FF', border: '1px solid rgba(37, 99, 235, 0.25)',
+                                color: '#1D4ED8', padding: '2px 8px', borderRadius: 4,
+                                fontSize: 11, fontWeight: 700, textTransform: 'uppercase'
+                              }}
+                            >
+                              {b}
+                            </span>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: 11.5, color: '#9CA3AF', fontStyle: 'italic' }}>
+                            All branches eligible / Not restricted
+                          </span>
+                        )}
 
-                      {/* Status Selector */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div
-                            style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              background: opp.status === 'offer' ? '#22c55e' : opp.status === 'rejected' ? '#ffb4ab' : opp.status === 'oa' || opp.status === 'interview' ? '#f59e0b' : '#b7e34a'
-                            }}
-                          />
-                          <select
-                            value={opp.status || 'not_applied'}
-                            onChange={(e) => handleStatusChange(opp._id, e.target.value)}
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              color: 'rgba(242,243,237,0.8)',
-                              fontSize: 12,
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              outline: 'none',
-                              fontFamily: 'Manrope, sans-serif'
-                            }}
-                          >
-                            <option value={opp.status} style={{ background: '#171B18' }}>
-                              {opp.status ? opp.status.replace('_', ' ').toUpperCase() : 'NOT APPLIED'}
-                            </option>
-                            {STATUSES.filter(Boolean).filter(s => s !== opp.status).map(s => (
-                              <option key={s} value={s} style={{ background: '#171B18' }}>
-                                {s.replace('_', ' ').toUpperCase()}
-                              </option>
+                        {ext.eligibility?.minCGPA && (
+                          <span style={{ fontSize: 11, background: '#F3F4F6', color: '#374151', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
+                            Min CGPA: {ext.eligibility.minCGPA}
+                          </span>
+                        )}
+
+                        {ext.testDate && (
+                          <span style={{ fontSize: 11, background: '#FEF3C7', color: '#92400E', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                            OA Date: {new Date(ext.testDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+
+                        {ext.driveDate && (
+                          <span style={{ fontSize: 11, background: '#EDE9FE', color: '#5B21B6', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                            Drive Date: {new Date(ext.driveDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Links Row */}
+                      {(() => {
+                        const links = parseLinks(ext.links);
+                        if (links.length === 0) return null;
+                        return (
+                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+                            {links.map((l, idx) => (
+                              <a
+                                key={idx}
+                                href={l.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                                  fontSize: 12, color: '#2563EB', textDecoration: 'none',
+                                  background: 'rgba(37, 99, 235, 0.08)', padding: '4px 10px',
+                                  borderRadius: 6, border: '1px solid rgba(37, 99, 235, 0.2)',
+                                  fontWeight: 600
+                                }}
+                              >
+                                <ExternalLink size={12} /> {l.label || 'Registration Link'}
+                              </a>
                             ))}
-                          </select>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Expanded Edit Form */}
+                      {isExpanded && (
+                        <div style={{
+                          background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 8,
+                          padding: 16, marginBottom: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12
+                        }}>
+                          <div>
+                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Company Name</label>
+                            <input
+                              type="text"
+                              value={edits.company}
+                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], company: e.target.value } }))}
+                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Role</label>
+                            <input
+                              type="text"
+                              value={edits.role}
+                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], role: e.target.value } }))}
+                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>CTC / Package</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 8.5 LPA"
+                              value={edits.ctc}
+                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], ctc: e.target.value } }))}
+                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Stipend / PPO</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 25,000 / month"
+                              value={edits.stipend || edits.ppo}
+                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], stipend: e.target.value } }))}
+                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Allowed Branches (comma separated)</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. CS, IT, ENTC, Mech"
+                              value={edits.allowedBranches}
+                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], allowedBranches: e.target.value } }))}
+                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Deadline Date & Time</label>
+                            <input
+                              type="datetime-local"
+                              value={edits.deadline}
+                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], deadline: e.target.value } }))}
+                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                            />
+                          </div>
                         </div>
-                      </td>
+                      )}
 
-                      {/* Action Icons */}
-                      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
+                      {/* Footer Actions: Re-extract, Edit toggle, Ignore, Confirm */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                           <button
-                            onClick={() => { setActiveAiOpp(opp); setChangesSummary(null); setFollowUpText(''); }}
-                            title="AI Merge Follow-up Email"
-                            style={{ background: 'transparent', border: 'none', color: '#9A8CFF', cursor: 'pointer', padding: 4 }}
+                            type="button"
+                            onClick={() => setExpandedReviewId(isExpanded ? null : item._id)}
+                            style={{
+                              background: 'transparent', border: 'none', color: '#18B7A0',
+                              fontSize: 12.5, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                            }}
                           >
-                            <Sparkles size={16} />
+                            <Edit3 size={13} /> {isExpanded ? 'Hide Edit Fields' : 'Review & Edit Details'}
+                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                           </button>
 
                           <button
-                            onClick={() => navigate(`/opportunities/${opp._id}`)}
-                            title="View Record Specs"
-                            style={{ background: 'transparent', border: 'none', color: 'rgba(242,243,237,0.6)', cursor: 'pointer', padding: 4 }}
+                            type="button"
+                            onClick={() => handleReExtract(item._id)}
+                            disabled={reExtractingId === item._id}
+                            style={{
+                              background: '#F0FDF4', border: '1px solid rgba(22, 163, 74, 0.25)', color: '#16A34A',
+                              padding: '5px 11px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                              display: 'inline-flex', alignItems: 'center', gap: 5
+                            }}
                           >
-                            <Eye size={16} />
-                          </button>
-
-                          <button
-                            onClick={() => handleDelete(opp._id)}
-                            title="Delete Record"
-                            style={{ background: 'transparent', border: 'none', color: '#ffb4ab', cursor: 'pointer', padding: 4 }}
-                          >
-                            <Trash2 size={16} />
+                            <Sparkles size={12} className={reExtractingId === item._id ? 'spin' : ''} />
+                            {reExtractingId === item._id ? 'Re-extracting…' : 'Re-extract with AI'}
                           </button>
                         </div>
-                      </td>
-                    </tr>
+
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <button
+                            type="button"
+                            onClick={() => handleIgnorePending(item._id)}
+                            disabled={ignoringId === item._id}
+                            style={{
+                              background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#667085',
+                              padding: '8px 16px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                            }}
+                          >
+                            {ignoringId === item._id ? 'Ignoring…' : 'Ignore'}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleConfirmPending(item)}
+                            disabled={confirmingId === item._id}
+                            style={{
+                              background: '#0B1F3A', color: '#FFFFFF', border: 'none',
+                              padding: '8px 20px', borderRadius: 6, fontSize: 12.5, fontWeight: 700,
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                              boxShadow: '0 2px 6px rgba(11, 31, 58, 0.15)'
+                            }}
+                          >
+                            <Check size={15} /> {confirmingId === item._id ? 'Saving & Syncing…' : 'Confirm & Add Opportunity'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Segmented Category Filter Bar & Search */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
+            {/* Top bar: Category tabs + Search */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+              {/* Category Segmented Control */}
+              <div style={{ display: 'flex', background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 8, padding: 3, gap: 3, boxShadow: '0 1px 3px rgba(11, 31, 58, 0.03)' }}>
+                {EMP_TYPES.map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setFilters(f => ({ ...f, employmentType: t.key }))}
+                    style={{
+                      background: filters.employmentType === t.key ? '#E8F8F5' : 'transparent',
+                      color: filters.employmentType === t.key ? '#087F71' : '#667085',
+                      border: 'none',
+                      padding: '6px 14px',
+                      borderRadius: 6,
+                      fontSize: 13,
+                      fontWeight: filters.employmentType === t.key ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search box */}
+              <div style={{ position: 'relative', width: 280 }}>
+                <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <input
+                  type="text"
+                  placeholder="Search company or role..."
+                  value={filters.search}
+                  onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    background: '#FFFFFF',
+                    color: '#172033',
+                    border: '1px solid #E5EAF0',
+                    borderRadius: 6,
+                    paddingLeft: 34,
+                    paddingRight: 12,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    fontSize: 13,
+                    outline: 'none',
+                    boxShadow: '0 1px 3px rgba(11, 31, 58, 0.02)'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Secondary Filter Row: Status & Sort */}
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 6, padding: '6px 12px' }}>
+                <Filter size={14} color="#667085" />
+                <select
+                  value={filters.status}
+                  onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
+                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+                >
+                  <option value="">Status: All Stages</option>
+                  {STATUSES.filter(Boolean).map(s => (
+                    <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 6, padding: '6px 12px' }}>
+                <select
+                  value={filters.sortBy}
+                  onChange={e => setFilters(f => ({ ...f, sortBy: e.target.value }))}
+                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+                >
+                  <option value="newest">Sort: Newest First</option>
+                  <option value="company">Sort: Company Name</option>
+                  <option value="deadline">Sort: Deadline Date</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          {/* Table Footer */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: '#121413', borderTop: '1px solid #2A302B', fontFamily: 'DM Mono, monospace', fontSize: 12, color: 'rgba(242,243,237,0.45)' }}>
-            <span>Showing {opps.length} placement & internship records</span>
-            <span style={{ color: '#b7e34a', fontWeight: 600 }}>✦ OppTrack System</span>
-          </div>
-        </div>
+          {/* Main Table */}
+          {loading ? (
+            <div className="loading-center" style={{ minHeight: '40vh' }}><div className="spinner" /></div>
+          ) : opps.length === 0 ? (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 60, textAlign: 'center', color: '#667085' }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>💼</div>
+              <h3 style={{ fontSize: 18, color: '#0B1F3A', margin: '0 0 6px 0', fontWeight: 700 }}>No placement records found</h3>
+              <p style={{ fontSize: 13.5, margin: '0 0 20px 0' }}>Add an opportunity manually or auto-fetch incoming recruitment emails with Gmail.</p>
+              <Link to="/opportunities/new" style={{ background: '#0B1F3A', color: '#FFFFFF', padding: '9px 20px', borderRadius: 6, textDecoration: 'none', fontWeight: 600, fontSize: 13 }}>
+                + Add First Opportunity
+              </Link>
+            </div>
+          ) : (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(11, 31, 58, 0.04)' }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #E5EAF0', background: '#F8FAFD' }}>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Company</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Compensation</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deadline</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {opps.map(opp => {
+                      const pay = getOppPay(opp);
+                      const deadline = getOppDeadline(opp);
+                      const typeLabel = (opp.employmentType || 'placement').replace('-', ' ');
+                      const initials = getCompanyInitials(opp.company);
+
+                      return (
+                        <tr
+                          key={opp._id}
+                          style={{ borderBottom: '1px solid #E5EAF0', transition: 'background 0.15s ease' }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#F8FAFD'}
+                          onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+                        >
+                          {/* Company Name & AI Tag */}
+                          <td style={{ padding: '14px 18px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                              <div
+                                style={{
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: 8,
+                                  background: '#E8F8F5',
+                                  border: '1px solid rgba(24, 183, 160, 0.25)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: 11,
+                                  fontFamily: 'JetBrains Mono, monospace',
+                                  fontWeight: 700,
+                                  color: '#087F71'
+                                }}
+                              >
+                                {initials}
+                              </div>
+                              <div>
+                                <Link
+                                  to={`/opportunities/${opp._id}`}
+                                  style={{ fontWeight: 600, color: '#0B1F3A', textDecoration: 'none', fontSize: 13.5, display: 'block' }}
+                                >
+                                  {opp.company}
+                                </Link>
+                                {opp.source?.extractedViaAI && (
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 4,
+                                      marginTop: 2,
+                                      padding: '1px 6px',
+                                      color: '#087F71',
+                                      fontFamily: 'JetBrains Mono, monospace',
+                                      fontSize: 10,
+                                      fontWeight: 600,
+                                      textTransform: 'uppercase',
+                                      background: '#E8F8F5',
+                                      borderRadius: 4
+                                    }}
+                                  >
+                                    AI Extracted
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Role */}
+                          <td style={{ padding: '14px 18px', fontWeight: 500, color: '#172033', fontSize: 13.5 }}>
+                            {opp.role}
+                          </td>
+
+                          {/* Compensation */}
+                          <td style={{ padding: '14px 18px', fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: pay ? '#16A34A' : '#94A3B8', fontWeight: pay ? 600 : 400 }}>
+                            {pay ? pay : <span>—</span>}
+                          </td>
+
+                          {/* Type */}
+                          <td style={{ padding: '14px 18px', fontSize: 12.5, color: '#667085', textTransform: 'capitalize' }}>
+                            {typeLabel}
+                          </td>
+
+                          {/* Deadline */}
+                          <td style={{ padding: '14px 18px' }}>
+                            <DeadlineBadge deadline={deadline} />
+                          </td>
+
+                          {/* Status Selector */}
+                          <td style={{ padding: '14px 18px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <select
+                                value={opp.status || 'not_applied'}
+                                onChange={(e) => handleStatusChange(opp._id, e.target.value)}
+                                style={{
+                                  background: '#F8FAFD',
+                                  border: '1px solid #E5EAF0',
+                                  borderRadius: 4,
+                                  padding: '4px 8px',
+                                  color: '#172033',
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  outline: 'none',
+                                  fontFamily: 'Inter, sans-serif'
+                                }}
+                              >
+                                <option value={opp.status}>
+                                  {opp.status ? opp.status.replace('_', ' ').toUpperCase() : 'NOT APPLIED'}
+                                </option>
+                                {STATUSES.filter(Boolean).filter(s => s !== opp.status).map(s => (
+                                  <option key={s} value={s}>
+                                    {s.replace('_', ' ').toUpperCase()}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </td>
+
+                          {/* Action Icons */}
+                          <td style={{ padding: '14px 18px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'center' }}>
+                              <button
+                                onClick={() => { setActiveAiOpp(opp); setChangesSummary(null); setFollowUpText(''); }}
+                                title="AI Merge Follow-up Email"
+                                style={{ background: 'transparent', border: 'none', color: '#18B7A0', cursor: 'pointer', padding: 4 }}
+                              >
+                                <Sparkles size={16} />
+                              </button>
+
+                              <button
+                                onClick={() => navigate(`/opportunities/${opp._id}`)}
+                                title="View Details"
+                                style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer', padding: 4 }}
+                              >
+                                <Eye size={16} />
+                              </button>
+
+                              <button
+                                onClick={() => handleDelete(opp._id)}
+                                title="Delete Record"
+                                style={{ background: 'transparent', border: 'none', color: '#DC3545', cursor: 'pointer', padding: 4 }}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Table Footer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', background: '#F8FAFD', borderTop: '1px solid #E5EAF0', fontSize: 12, color: '#667085' }}>
+                <span>Showing {opps.length} placement & internship records</span>
+                <span style={{ color: '#087F71', fontWeight: 600 }}>✦ OppTrack SaaS</span>
+              </div>
+            </div>
+          )}
+      </>
       )}
 
       {/* AI Merge Modal */}

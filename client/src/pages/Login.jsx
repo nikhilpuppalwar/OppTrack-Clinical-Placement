@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Lock, Mail, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import logoImg from '../assets/logo.png';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -28,55 +29,55 @@ export default function Login() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#101311',
-        color: '#F2F3ED',
+        background: '#F7F9FC',
+        color: '#172033',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
-        fontFamily: 'Manrope, sans-serif'
+        fontFamily: 'Inter, sans-serif'
       }}
     >
       <div
         style={{
           width: '100%',
           maxWidth: 440,
-          background: '#171B18',
-          border: '1px solid #2A302B',
+          background: '#FFFFFF',
+          border: '1px solid #E5EAF0',
           borderRadius: 16,
           padding: 40,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+          boxShadow: '0 8px 32px rgba(11, 31, 58, 0.08)'
         }}
       >
         {/* Brand Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
-          <img src="/logo.svg" alt="OppTrack" style={{ width: 36, height: 36 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+          <img src={logoImg} alt="OppTrack" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
           <div>
-            <h1 style={{ fontSize: 24, fontFamily: 'serif', color: '#F2F3ED', margin: 0, lineHeight: 1 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0B1F3A', margin: 0, lineHeight: 1 }}>
               OppTrack
             </h1>
-            <p style={{ margin: '2px 0 0 0', fontSize: 11, fontFamily: 'DM Mono, monospace', color: 'rgba(242,243,237,0.5)', letterSpacing: '0.04em' }}>
-              Clinical Placement
+            <p style={{ margin: '2px 0 0 0', fontSize: 11, fontWeight: 600, color: '#667085', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Career OS
             </p>
           </div>
         </div>
 
         {/* Page Title */}
-        <h2 style={{ fontSize: 32, fontFamily: 'serif', color: '#F2F3ED', margin: '0 0 6px 0', fontWeight: 400 }}>
+        <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0B1F3A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
           Welcome back
         </h2>
-        <p style={{ fontSize: 14, color: 'rgba(242,243,237,0.6)', margin: '0 0 28px 0' }}>
+        <p style={{ fontSize: 14, color: '#667085', margin: '0 0 28px 0' }}>
           Sign in to your placement tracker
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* Email */}
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#F2F3ED', marginBottom: 6 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#172033', marginBottom: 6 }}>
               Email Address
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', background: '#121413', border: '1px solid #2A302B', borderRadius: 6, overflow: 'hidden' }}>
-              <span style={{ padding: '0 12px', color: 'rgba(242,243,237,0.4)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 8, overflow: 'hidden' }}>
+              <span style={{ padding: '0 12px', color: '#94A3B8', display: 'flex', alignItems: 'center' }}>
                 <Mail size={16} />
               </span>
               <input
@@ -87,7 +88,7 @@ export default function Login() {
                 required
                 style={{
                   flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                  color: '#F2F3ED', fontSize: 14, padding: '12px 12px 12px 0', fontFamily: 'DM Mono, monospace'
+                  color: '#172033', fontSize: 14, padding: '11px 12px 11px 0', fontFamily: 'inherit'
                 }}
               />
             </div>
@@ -95,11 +96,11 @@ export default function Login() {
 
           {/* Password */}
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#F2F3ED', marginBottom: 6 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#172033', marginBottom: 6 }}>
               Password
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', background: '#121413', border: '1px solid #2A302B', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
-              <span style={{ padding: '0 12px', color: 'rgba(242,243,237,0.4)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 8, overflow: 'hidden', position: 'relative' }}>
+              <span style={{ padding: '0 12px', color: '#94A3B8', display: 'flex', alignItems: 'center' }}>
                 <Lock size={16} />
               </span>
               <input
@@ -110,13 +111,13 @@ export default function Login() {
                 required
                 style={{
                   flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                  color: '#F2F3ED', fontSize: 14, padding: '12px 40px 12px 0', fontFamily: 'DM Mono, monospace'
+                  color: '#172033', fontSize: 14, padding: '11px 40px 11px 0', fontFamily: 'inherit'
                 }}
               />
               <button
                 type="button"
                 onClick={() => setShowPw(p => !p)}
-                style={{ position: 'absolute', right: 12, background: 'transparent', border: 'none', color: 'rgba(242,243,237,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                style={{ position: 'absolute', right: 12, background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
               >
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -128,33 +129,33 @@ export default function Login() {
             type="submit"
             disabled={loading}
             style={{
-              background: '#b7e34a',
-              color: '#101311',
+              background: '#0B1F3A',
+              color: '#FFFFFF',
               border: 'none',
-              borderRadius: 6,
+              borderRadius: 8,
               padding: '12px 20px',
               fontSize: 14,
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: loading ? 'default' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
-              marginTop: 8,
-              transition: 'all 0.15s ease'
+              marginTop: 6,
+              boxShadow: '0 2px 6px rgba(11, 31, 58, 0.15)',
+              transition: 'background 0.15s ease'
             }}
           >
-            {loading ? 'Signing in…' : 'Sign In'} <ArrowRight size={16} />
+            {loading ? 'Signing in…' : <>Sign In <ArrowRight size={16} /></>}
           </button>
         </form>
 
-        {/* Footer Link */}
-        <p style={{ textAlign: 'center', marginTop: 28, fontSize: 13, color: 'rgba(242,243,237,0.6)', margin: '28px 0 0 0' }}>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: '#667085' }}>
           Don't have an account?{' '}
-          <Link to="/register" style={{ color: '#b7e34a', fontWeight: 600, textDecoration: 'none' }}>
-            Register
+          <Link to="/register" style={{ color: '#087F71', fontWeight: 600, textDecoration: 'none' }}>
+            Create one free
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

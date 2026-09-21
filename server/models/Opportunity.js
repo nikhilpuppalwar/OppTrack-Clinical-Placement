@@ -53,6 +53,10 @@ const opportunitySchema = new mongoose.Schema(
     },
 
     deadline: Date,
+    driveDate: { type: Date, default: null },
+    testDate: { type: Date, default: null },
+    interviewDate: { type: Date, default: null },
+    shortlistInfo: { type: String, default: null },
 
     status: {
       type: String,
@@ -89,6 +93,14 @@ const opportunitySchema = new mongoose.Schema(
         eligibility: Boolean,
         links: Boolean,
       },
+    },
+
+    googleCalendarEventId: { type: String, default: null },
+    googleCalendarEventIds: {
+      deadline: { type: String, default: null },
+      test: { type: String, default: null },
+      drive: { type: String, default: null },
+      interview: { type: String, default: null },
     },
   },
   { timestamps: true }

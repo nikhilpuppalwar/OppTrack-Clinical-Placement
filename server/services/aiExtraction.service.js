@@ -147,6 +147,9 @@ JSON Schema:
   "applicationNo": "string | null",
   "contactPerson": { "name": "string | null", "phone": "string | null" },
   "deadline": "ISO 8601 date string | null",
+  "testDate": "ISO 8601 date string | null (OA or online test date if mentioned)",
+  "driveDate": "ISO 8601 date string | null (Placement drive date if mentioned)",
+  "interviewDate": "ISO 8601 date string | null (Interview / Round 2 date if mentioned)",
   "pipelineStages": ["OA", "GD", "Tech Interview", "HR"],
   "notes": "string | null",
   "confidenceFlags": {
@@ -608,7 +611,12 @@ Your goal:
 
 Return ONLY a valid JSON object matching this schema:
 {
-  "updatedDeadline": "ISO 8601 date string | null (only if a new date/deadline/test date is explicitly mentioned)",
+  "updatedDeadline": "ISO 8601 date string | null (application closing deadline)",
+  "updatedTestDate": "ISO 8601 date string | null (if OA / assessment test date is announced or updated)",
+  "updatedDriveDate": "ISO 8601 date string | null (if campus placement drive date is announced)",
+  "updatedInterviewDate": "ISO 8601 date string | null (if interview / round 2 date is announced)",
+  "shortlistInfo": "string | null (brief summary of shortlist, e.g. 'Round 1 results declared - 14 students shortlisted for Technical Interview' or specific instructions)",
+  "newStatus": "oa | interview | offer | null (if email indicates progression to OA or Interview stage)",
   "updatedCustomFields": [
     {
       "id": "string",
@@ -620,7 +628,8 @@ Return ONLY a valid JSON object matching this schema:
     }
   ],
   "changesSummary": [
-    "string — e.g. 'Updated Application Deadline to 25 Aug 2026'",
+    "string — e.g. 'Updated Placement Drive Date to 25 Aug 2026'",
+    "string — e.g. 'Shortlisted 14 students for Round 2 Interview'",
     "string — e.g. 'Added field Test Venue: PCCOE Lab 3 in 1. General & Job Details'"
   ]
 }

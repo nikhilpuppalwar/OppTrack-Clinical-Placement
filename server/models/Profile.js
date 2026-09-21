@@ -64,6 +64,7 @@ const profileSchema = new mongoose.Schema(
         sensitive: { type: Boolean, default: false },
       },
     ],
+    deletedFieldIds: { type: [String], default: [] },
   },
   { timestamps: true }
 );

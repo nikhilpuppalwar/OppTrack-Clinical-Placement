@@ -4,6 +4,7 @@ const Reminder = require('../models/Reminder');
 const Profile = require('../models/Profile');
 const eligibilityService = require('../services/eligibility.service');
 const reminderService = require('../services/reminder.service');
+const calendarSyncService = require('../services/calendarSync.service');
 
 // @GET /api/opportunities
 const getOpportunities = async (req, res) => {
@@ -70,6 +71,11 @@ const createOpportunity = async (req, res) => {
     await reminderService.scheduleReminder(opp, req.user);
   }
 
+  // Google Calendar Sync
+  await calendarSyncService.createOrUpdateEvent(req.user._id, opp).catch(err => {
+    console.warn('Google Calendar sync error on create:', err.message);
+  });
+
   res.status(201).json(opp);
 };
 
@@ -110,6 +116,11 @@ const updateOpportunity = async (req, res) => {
     description: `Edited opportunity: ${opp.company} — ${opp.role}`,
   });
 
+  // Google Calendar Sync
+  await calendarSyncService.createOrUpdateEvent(req.user._id, opp).catch(err => {
+    console.warn('Google Calendar sync error on update:', err.message);
+  });
+
   res.json(opp);
 };
 
@@ -127,6 +138,11 @@ const deleteOpportunity = async (req, res) => {
     opportunityId: null,
     eventType: 'deleted',
     description: `Deleted opportunity: ${company} — ${role}`,
+  });
+
+  // Google Calendar Event Deletion
+  await calendarSyncService.deleteEvent(req.user._id, opp).catch(err => {
+    console.warn('Google Calendar sync error on delete:', err.message);
   });
 
   res.json({ message: 'Opportunity deleted.' });
@@ -158,6 +174,17 @@ const updateStatus = async (req, res) => {
     description: `${opp.company}: status changed to ${newStatus}`,
     metadata: { fromStatus: oldStatus, toStatus: newStatus },
   });
+
+  // Google Calendar Sync: remove if terminal status (rejected/offer), else update
+  if (newStatus === 'rejected' || newStatus === 'offer') {
+    await calendarSyncService.deleteEvent(req.user._id, opp).catch(err => {
+      console.warn('Google Calendar sync error on status update:', err.message);
+    });
+  } else {
+    await calendarSyncService.createOrUpdateEvent(req.user._id, opp).catch(err => {
+      console.warn('Google Calendar sync error on status update:', err.message);
+    });
+  }
 
   res.json(opp);
 };
@@ -218,6 +245,24 @@ const aiUpdateOpportunity = async (req, res) => {
     opp.deadline = new Date(updateResult.updatedDeadline);
     deadlineUpdated = true;
   }
+  if (updateResult.updatedTestDate) {
+    opp.testDate = new Date(updateResult.updatedTestDate);
+  }
+  if (updateResult.updatedDriveDate) {
+    opp.driveDate = new Date(updateResult.updatedDriveDate);
+  }
+  if (updateResult.updatedInterviewDate) {
+    opp.interviewDate = new Date(updateResult.updatedInterviewDate);
+  }
+  if (updateResult.shortlistInfo) {
+    opp.shortlistInfo = updateResult.shortlistInfo;
+  }
+  if (updateResult.newStatus) {
+    const validStatuses = ['not_applied', 'applied', 'oa', 'interview', 'hr', 'offer', 'rejected'];
+    if (validStatuses.includes(updateResult.newStatus)) {
+      opp.status = updateResult.newStatus;
+    }
+  }
 
   // Apply updated custom fields
   if (updateResult.updatedCustomFields && updateResult.updatedCustomFields.length > 0) {
@@ -232,6 +277,11 @@ const aiUpdateOpportunity = async (req, res) => {
   }
 
   await opp.save();
+
+  // Mirror all updated dates to Google Calendar
+  await calendarSyncService.createOrUpdateEvent(req.user._id, opp).catch(err => {
+    console.warn('Google Calendar mirror warning on AI update:', err.message);
+  });
 
   // Reschedule reminder if deadline updated
   if (deadlineUpdated && opp.deadline) {

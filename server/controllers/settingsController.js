@@ -131,6 +131,27 @@ const testAiKey = async (req, res) => {
   }
 };
 
+// @POST /api/settings/test-notification
+const testNotification = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const result = await reminderService.sendTestNotification(user, req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message || 'Failed to dispatch test notification' });
+  }
+};
+
+// @GET /api/settings/upcoming-reminders
+const getUpcomingReminders = async (req, res) => {
+  try {
+    const reminders = await reminderService.getUpcomingReminders(req.user._id);
+    res.json({ reminders, count: reminders.length });
+  } catch (err) {
+    res.status(500).json({ message: err.message || 'Failed to load upcoming reminders' });
+  }
+};
+
 // @GET /api/settings/export
 const exportData = async (req, res) => {
   const userId = req.user._id;
@@ -143,6 +164,11 @@ const exportData = async (req, res) => {
 
   const exportPayload = {
     exportedAt: new Date().toISOString(),
+    version: '1.5.0',
+    stats: {
+      opportunitiesCount: opportunities.length,
+      historyCount: history.length,
+    },
     user,
     profile,
     opportunities,
@@ -154,4 +180,159 @@ const exportData = async (req, res) => {
   res.json(exportPayload);
 };
 
-module.exports = { getSettings, updateSettings, testEmail, testAiKey, exportData };
+// @GET /api/settings/export-csv
+const exportCsv = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const opportunities = await Opportunity.find({ userId }).sort({ createdAt: -1 });
+
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = [
+      'Company',
+      'Role',
+      'Type',
+      'Status',
+      'Package',
+      'Allowed Branches',
+      'Application Deadline',
+      'OA / Test Date',
+      'Campus Drive Date',
+      'Interview Date',
+      'Shortlist Updates',
+      'Location',
+      'Application URL',
+      'Created At',
+    ];
+
+    const rows = opportunities.map((opp) => [
+      escapeCsv(opp.company),
+      escapeCsv(opp.role),
+      escapeCsv(opp.type),
+      escapeCsv(opp.status),
+      escapeCsv(opp.package),
+      escapeCsv((opp.allowedBranches || []).join('; ')),
+      escapeCsv(opp.deadline ? new Date(opp.deadline).toISOString() : ''),
+      escapeCsv(opp.testDate ? new Date(opp.testDate).toISOString() : ''),
+      escapeCsv(opp.driveDate ? new Date(opp.driveDate).toISOString() : ''),
+      escapeCsv(opp.interviewDate ? new Date(opp.interviewDate).toISOString() : ''),
+      escapeCsv(opp.shortlistInfo),
+      escapeCsv(opp.location),
+      escapeCsv(opp.applyUrl),
+      escapeCsv(opp.createdAt ? new Date(opp.createdAt).toISOString() : ''),
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=opptrack-opportunities-${Date.now()}.csv`);
+    res.send(csvContent);
+  } catch (err) {
+    res.status(500).json({ message: err.message || 'Failed to export CSV' });
+  }
+};
+
+// @POST /api/settings/import-backup
+const importBackup = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { backupData, mode = 'merge' } = req.body;
+
+    if (!backupData || typeof backupData !== 'object') {
+      return res.status(400).json({ message: 'Invalid backup file payload. Must be a valid JSON object.' });
+    }
+
+    let opportunitiesRestored = 0;
+    let profileRestored = false;
+    let historyRestored = 0;
+
+    // Handle opportunities
+    const rawOpps = backupData.opportunities || backupData.jobs || [];
+    if (Array.isArray(rawOpps) && rawOpps.length > 0) {
+      if (mode === 'replace') {
+        await Opportunity.deleteMany({ userId });
+      }
+
+      for (const item of rawOpps) {
+        if (!item.company) continue;
+        const oppData = {
+          userId,
+          company: item.company,
+          role: item.role || 'Software Engineer',
+          type: item.type || 'placement',
+          status: item.status || 'not_applied',
+          package: item.package || '',
+          allowedBranches: Array.isArray(item.allowedBranches) ? item.allowedBranches : [],
+          deadline: item.deadline || null,
+          testDate: item.testDate || null,
+          driveDate: item.driveDate || null,
+          interviewDate: item.interviewDate || null,
+          shortlistInfo: item.shortlistInfo || '',
+          location: item.location || '',
+          applyUrl: item.applyUrl || '',
+          description: item.description || '',
+          eligibilityCriteria: item.eligibilityCriteria || '',
+          notes: item.notes || '',
+          customFields: item.customFields || {},
+        };
+
+        if (mode === 'merge') {
+          await Opportunity.findOneAndUpdate(
+            { userId, company: oppData.company, role: oppData.role },
+            { $set: oppData },
+            { upsert: true, new: true }
+          );
+        } else {
+          await Opportunity.create(oppData);
+        }
+        opportunitiesRestored++;
+      }
+    }
+
+    // Handle profile
+    if (backupData.profile && typeof backupData.profile === 'object') {
+      const p = { ...backupData.profile };
+      delete p._id;
+      delete p.userId;
+      delete p.__v;
+      await Profile.findOneAndUpdate({ userId }, { $set: { ...p, userId } }, { upsert: true, new: true });
+      profileRestored = true;
+    }
+
+    // Log Activity
+    await ActivityLog.create({
+      userId,
+      eventType: 'backup_restored',
+      description: `Restored backup: ${opportunitiesRestored} opportunities (${mode} mode).`,
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully restored ${opportunitiesRestored} opportunities and profile data.`,
+      stats: {
+        opportunitiesRestored,
+        profileRestored,
+        historyRestored,
+      },
+    });
+  } catch (err) {
+    console.error('Import backup error:', err);
+    res.status(500).json({ message: err.message || 'Failed to restore backup.' });
+  }
+};
+
+module.exports = {
+  getSettings,
+  updateSettings,
+  testEmail,
+  testAiKey,
+  testNotification,
+  getUpcomingReminders,
+  exportData,
+  exportCsv,
+  importBackup,
+};
