@@ -137,9 +137,12 @@ export default function Login() {
                     <label style={{ fontSize: 12.5, fontWeight: 600, color: '#0B1F3A' }}>
                       Password
                     </label>
-                    <span style={{ fontSize: 11.5, color: '#2563EB', cursor: 'pointer', fontWeight: 500 }}>
+                    <Link
+                      to="/forgot-password"
+                      style={{ fontSize: 11.5, color: '#2563EB', textDecoration: 'none', fontWeight: 600 }}
+                    >
                       Forgot password?
-                    </span>
+                    </Link>
                   </div>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                     <span style={{ position: 'absolute', left: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>

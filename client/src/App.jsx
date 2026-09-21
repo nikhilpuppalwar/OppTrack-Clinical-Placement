@@ -14,6 +14,8 @@ import History from './pages/History';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import HelpGuide from './pages/HelpGuide';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function HomeRoute() {
   const { user, loading } = useAuth();
@@ -46,6 +48,8 @@ export default function App() {
           <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={<HomeRoute />} />
           <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
           <Route path="/opportunities" element={<ProtectedLayout><Opportunities /></ProtectedLayout>} />
