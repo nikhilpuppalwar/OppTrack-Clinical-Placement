@@ -510,7 +510,7 @@ export default function Landing() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EAF2FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <FolderShared size={20} />
+                      <Folder size={20} />
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', fontFamily: 'monospace' }}>01 // VAULT</span>
                   </div>
