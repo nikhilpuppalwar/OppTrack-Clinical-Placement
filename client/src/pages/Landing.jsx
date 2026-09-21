@@ -584,7 +584,7 @@ export default function Landing() {
                     End-to-End Opportunity Pipeline
                   </h3>
                   <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 20px' }}>
-                    Track status transitions from Not Applied $\rightarrow$ Applied $\rightarrow$ Online Assessment $\rightarrow$ Interview $\rightarrow$ HR $\rightarrow$ Offer.
+                    Track status transitions from Not Applied → Applied → Online Assessment → Interview → HR → Offer.
                   </p>
                 </div>
 
