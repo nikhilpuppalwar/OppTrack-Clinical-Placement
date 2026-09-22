@@ -436,14 +436,56 @@ function parseDateTokens(str) {
 }
 
 /**
- * Click / Set value on any Form element (Checkbox, Radio, Picklist, Short Answer, Paragraph, Date/Time)
+ * Dynamic semantic similarity scoring for form options (Token Jaccard, Acronym, and Numeric match)
+ */
+function computeDynamicOptionScore(optionLabel, targetValue) {
+  if (!optionLabel || !targetValue) return 0;
+  const optStr = String(optionLabel).trim().toLowerCase();
+  const targetStr = String(targetValue).trim().toLowerCase();
+  const clean = (s) => s.replace(/[^a-z0-9]/g, '');
+  const optNorm = clean(optStr);
+  const targetNorm = clean(targetStr);
+
+  if (!optNorm || !targetNorm) return 0;
+  if (optNorm === targetNorm) return 1.0;
+
+  // Numeric match for ratings & linear scale (1-5, 1-10)
+  const targetNum = targetStr.match(/\b\d+\b/)?.[0];
+  const optNum = optStr.match(/\b\d+\b/)?.[0];
+  if (targetNum && optNum && targetNum === optNum) return 1.0;
+
+  let score = 0;
+  // Substring / continuous inclusion
+  if (optNorm.includes(targetNorm) || targetNorm.includes(optNorm)) {
+    score = Math.max(score, 0.7);
+  }
+
+  // Token overlap / Jaccard
+  const optTokens = optStr.split(/[^a-z0-9]+/).filter(Boolean);
+  const targetTokens = targetStr.split(/[^a-z0-9]+/).filter(Boolean);
+  const common = optTokens.filter((t) => t.length > 1 && targetTokens.includes(t));
+  if (common.length > 0) {
+    const overlapRatio = common.length / Math.max(optTokens.length, targetTokens.length);
+    score = Math.max(score, overlapRatio * 0.85);
+  }
+
+  // Acronym match (e.g. "CS" vs "Computer Science", "IT" vs "Information Technology")
+  const targetAcronym = targetTokens.map((t) => t[0]).join('');
+  const optAcronym = optTokens.map((t) => t[0]).join('');
+  if ((targetAcronym && optNorm === targetAcronym) || (optAcronym && targetNorm === optAcronym)) {
+    score = Math.max(score, 0.9);
+  }
+
+  return score;
+}
+
+/**
+ * Click / Set value on any Form element dynamically (Checkbox, Radio, Picklist, Short Answer, Paragraph, Date/Time)
  */
 function setAnswerOnBlock(blockInfo, value) {
   if (!blockInfo || value === undefined || value === null || value === '') return false;
 
-  const normalize = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
   const cleanStr = String(value).trim();
-  const targetNorm = normalize(cleanStr);
 
   // 1. Text Inputs & Paragraphs
   if (blockInfo.type === 'short_text' || blockInfo.type === 'paragraph') {
@@ -464,25 +506,19 @@ function setAnswerOnBlock(blockInfo, value) {
 
   // 2. Radio Buttons / MCQ / Linear Scale / Ratings
   if (blockInfo.type === 'radio' && blockInfo.radioEls?.length) {
-    const numericMatch = cleanStr.match(/\b\d+\b/);
-    const targetNum = numericMatch ? numericMatch[0] : null;
+    let bestRadio = null;
+    let highestScore = 0;
 
-    let bestRadio = blockInfo.radioEls.find((rEl) => {
+    for (const rEl of blockInfo.radioEls) {
       const lbl = getChoiceLabel(rEl);
-      const lblNorm = normalize(lbl);
-      if (lblNorm === targetNorm) return true;
-      if (targetNum && lbl.trim() === targetNum) return true;
-      return false;
-    });
-
-    if (!bestRadio) {
-      bestRadio = blockInfo.radioEls.find((rEl) => {
-        const lblNorm = normalize(getChoiceLabel(rEl));
-        return lblNorm && targetNorm && (lblNorm.includes(targetNorm) || targetNorm.includes(lblNorm));
-      });
+      const score = computeDynamicOptionScore(lbl, cleanStr);
+      if (score > highestScore) {
+        highestScore = score;
+        bestRadio = rEl;
+      }
     }
 
-    if (bestRadio) {
+    if (bestRadio && highestScore >= 0.35) {
       const isChecked = bestRadio.getAttribute('aria-checked') === 'true' || bestRadio.checked === true;
       if (!isChecked) {
         bestRadio.click();
@@ -512,24 +548,30 @@ function setAnswerOnBlock(blockInfo, value) {
   // 3. Checkboxes (Multi-select)
   if (blockInfo.type === 'checkbox' && blockInfo.checkEls?.length) {
     const targetItems = Array.isArray(value)
-      ? value.map((s) => normalize(s)).filter(Boolean)
-      : cleanStr.split(/[,;\n|]+/).map((s) => normalize(s)).filter(Boolean);
+      ? value.map((s) => String(s).trim()).filter(Boolean)
+      : cleanStr.split(/[,;\n|]+/).map((s) => s.trim()).filter(Boolean);
 
     let clickedAny = false;
     const unmatchedItems = [...targetItems];
 
     blockInfo.checkEls.forEach((cEl) => {
       const lbl = getChoiceLabel(cEl);
-      const lblNorm = normalize(lbl);
-      if (!lblNorm) return;
+      if (!lbl) return;
 
-      const isMatch = targetItems.some((tNorm) => {
-        return lblNorm === tNorm || lblNorm.includes(tNorm) || tNorm.includes(lblNorm);
-      });
+      let isMatch = false;
+      let matchedItemIdx = -1;
+
+      for (let i = 0; i < unmatchedItems.length; i++) {
+        const score = computeDynamicOptionScore(lbl, unmatchedItems[i]);
+        if (score >= 0.35) {
+          isMatch = true;
+          matchedItemIdx = i;
+          break;
+        }
+      }
 
       if (isMatch) {
-        const idx = unmatchedItems.findIndex((t) => lblNorm === t || lblNorm.includes(t) || t.includes(lblNorm));
-        if (idx !== -1) unmatchedItems.splice(idx, 1);
+        if (matchedItemIdx !== -1) unmatchedItems.splice(matchedItemIdx, 1);
 
         const isChecked = cEl.getAttribute('aria-checked') === 'true' || cEl.checked === true;
         if (!isChecked) {
@@ -563,13 +605,22 @@ function setAnswerOnBlock(blockInfo, value) {
   if (blockInfo.type === 'dropdown') {
     if (blockInfo.selectEl) {
       const select = blockInfo.selectEl;
-      const opts = Array.from(select.options);
-      const best = opts.find((opt) => {
-        const oNorm = normalize(opt.text || opt.value);
-        return oNorm === targetNorm || oNorm.includes(targetNorm) || targetNorm.includes(oNorm);
-      });
-      if (best) {
-        select.value = best.value;
+      let bestOpt = null;
+      let highestScore = 0;
+
+      for (const opt of Array.from(select.options)) {
+        const score = Math.max(
+          computeDynamicOptionScore(opt.text, cleanStr),
+          computeDynamicOptionScore(opt.value, cleanStr)
+        );
+        if (score > highestScore) {
+          highestScore = score;
+          bestOpt = opt;
+        }
+      }
+
+      if (bestOpt && highestScore >= 0.3) {
+        select.value = bestOpt.value;
         select.dispatchEvent(new Event('change', { bubbles: true }));
         select.dispatchEvent(new Event('input', { bubbles: true }));
         return true;
@@ -582,14 +633,20 @@ function setAnswerOnBlock(blockInfo, value) {
         const optionEls = Array.from(
           document.querySelectorAll('div[role="option"], div.OA0qNb div[jsaction], div.MocG8c')
         );
-        const bestOpt = optionEls.find((oEl) => {
-          const lbl = getChoiceLabel(oEl);
-          if (!lbl || lbl.toLowerCase() === 'choose' || lbl.toLowerCase() === 'select') return false;
-          const oNorm = normalize(lbl);
-          return oNorm === targetNorm || oNorm.includes(targetNorm) || targetNorm.includes(oNorm);
-        });
+        let bestOpt = null;
+        let highestScore = 0;
 
-        if (bestOpt) {
+        for (const oEl of optionEls) {
+          const lbl = getChoiceLabel(oEl);
+          if (!lbl || lbl.toLowerCase() === 'choose' || lbl.toLowerCase() === 'select') continue;
+          const score = computeDynamicOptionScore(lbl, cleanStr);
+          if (score > highestScore) {
+            highestScore = score;
+            bestOpt = oEl;
+          }
+        }
+
+        if (bestOpt && highestScore >= 0.3) {
           bestOpt.click();
           bestOpt.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
         }

@@ -10,9 +10,9 @@ const Document = require('../models/Document');
 const vectorService = require('../services/vector.service');
 
 function resolveApiKeyAndProvider(userSettings = {}) {
-  let provider = (userSettings.llmProvider || 'groq').toLowerCase().trim();
-  let apiKey = userSettings.llmApiKey?.trim();
-  let model = userSettings.llmModel?.trim();
+  let provider = (userSettings.llmProvider || process.env.LLM_PROVIDER || 'groq').toLowerCase().trim();
+  let apiKey = (userSettings.llmApiKey || process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)?.trim();
+  let model = (userSettings.llmModel || process.env.LLM_MODEL)?.trim();
 
   if (apiKey) {
     if (apiKey.startsWith('gsk_')) provider = 'groq';
@@ -369,21 +369,49 @@ Return ONLY a JSON object with this exact structure:
 };
 
 function findBestOptionMatch(options, targetValue) {
-  if (!Array.isArray(options) || !options.length || !targetValue) return targetValue;
+  if (!Array.isArray(options) || !options.length || targetValue === undefined || targetValue === null) return targetValue;
   const clean = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const targetStr = String(targetValue).trim().toLowerCase();
   const targetNorm = clean(targetValue);
   if (!targetNorm) return targetValue;
 
-  const exact = options.find((opt) => clean(opt) === targetNorm);
-  if (exact) return exact;
+  let bestOption = targetValue;
+  let highestScore = 0;
 
-  const match = options.find((opt) => {
-    const oNorm = clean(opt);
-    return oNorm && (oNorm.includes(targetNorm) || targetNorm.includes(oNorm));
-  });
-  if (match) return match;
+  const targetTokens = targetStr.split(/[^a-z0-9]+/).filter((t) => t.length > 0);
+  const targetAcronym = targetTokens.map((t) => t[0]).join('');
 
-  return targetValue;
+  for (const opt of options) {
+    if (!opt) continue;
+    const optStr = String(opt).trim().toLowerCase();
+    const optNorm = clean(opt);
+    if (!optNorm) continue;
+
+    if (optNorm === targetNorm) return opt; // Exact normalized match
+
+    let score = 0;
+    if (optNorm.includes(targetNorm) || targetNorm.includes(optNorm)) {
+      score += 0.65;
+    }
+
+    const optTokens = optStr.split(/[^a-z0-9]+/).filter((t) => t.length > 0);
+    const common = optTokens.filter((t) => t.length > 1 && targetTokens.includes(t));
+    if (common.length > 0) {
+      score += (common.length / Math.max(optTokens.length, targetTokens.length)) * 0.45;
+    }
+
+    const optAcronym = optTokens.map((t) => t[0]).join('');
+    if ((targetAcronym && optNorm === targetAcronym) || (optAcronym && targetNorm === optAcronym)) {
+      score += 0.85;
+    }
+
+    if (score > highestScore) {
+      highestScore = score;
+      bestOption = opt;
+    }
+  }
+
+  return highestScore >= 0.25 ? bestOption : targetValue;
 }
 
 function matchCheckboxOptions(options, candidateTexts = []) {
@@ -416,27 +444,31 @@ function matchCheckboxOptions(options, candidateTexts = []) {
 }
 
 /**
- * Direct matching engine against user's MongoDB Database Profile & Vector Index
+ * Dynamic Semantic Matching Engine against candidate profile & dynamic vault attributes
+ * 100% Dynamic: Zero rule-based hardcoded if/else statements.
+ * Matches any question via multi-vector semantic scoring and dynamic options resolution.
  */
 function performDatabaseFallbackMatching(questions, profile, vectorIndex) {
   return questions.map((q) => {
-    // 1. Vector similarity search in database profile
+    // 1. Dynamic Vector semantic similarity search across candidate profile & dynamic vault fields
     const searchHits = vectorService.searchVectorIndex(vectorIndex, q.label, 3);
     const topHit = searchHits && searchHits[0];
 
-    if (topHit && topHit.score >= 0.40 && topHit.value) {
+    if (topHit && topHit.score >= 0.28 && topHit.value !== undefined && topHit.value !== null && String(topHit.value).trim()) {
       let finalVal = String(topHit.value);
+
+      // Dynamic option selection for radio / dropdown / picklist
       if ((q.type === 'radio' || q.type === 'dropdown') && q.options?.length) {
         finalVal = findBestOptionMatch(q.options, finalVal);
       } else if (q.type === 'checkbox' && q.options?.length) {
         const candidateContexts = [
+          topHit.value,
           profile.technicalCertifications,
           profile.projectDetails,
           profile.projectTitle,
           profile.branch,
           profile.stream,
           profile.hobby,
-          finalVal,
         ];
         const multi = matchCheckboxOptions(q.options, candidateContexts);
         if (multi) finalVal = multi;
@@ -446,107 +478,21 @@ function performDatabaseFallbackMatching(questions, profile, vectorIndex) {
         questionId: q.id,
         label: q.label,
         value: finalVal,
-        confidenceScore: Math.min(0.95, Number((topHit.score + 0.1).toFixed(2))),
+        confidenceScore: Math.min(0.98, Number((topHit.score + 0.15).toFixed(2))),
         matchedField: topHit.key || 'DB_PROFILE',
-        reason: `Matched database field '${topHit.label}' via Vector Similarity (${Math.round(topHit.score * 100)}%)`,
+        reason: `Matched candidate attribute '${topHit.label}' dynamically (${Math.round(topHit.score * 100)}% semantic score)`,
         sensitive: topHit.sensitive || false,
       };
     }
 
-    // 2. Direct key mapping on MongoDB profile
-    const labelLower = q.label.toLowerCase();
-    let matchedValue = '';
-    let matchedField = null;
-    let confidence = 0.0;
-
-    if (labelLower.includes('prn') || labelLower.includes('roll')) {
-      matchedValue = profile.prn; matchedField = 'prn'; confidence = 0.95;
-    } else if (labelLower.includes('college email') || (labelLower.includes('email') && labelLower.includes('college'))) {
-      matchedValue = profile.collegeEmail || profile.personalEmail; matchedField = 'collegeEmail'; confidence = 0.95;
-    } else if (labelLower.includes('email')) {
-      matchedValue = profile.personalEmail || profile.collegeEmail; matchedField = 'personalEmail'; confidence = 0.90;
-    } else if (labelLower.includes('phone') || labelLower.includes('mobile') || labelLower.includes('contact no')) {
-      matchedValue = profile.phone; matchedField = 'phone'; confidence = 0.95;
-    } else if (labelLower.includes('name of student') || labelLower.includes('full name') || labelLower.includes('candidate name') || labelLower === 'name') {
-      matchedValue = profile.candidateName; matchedField = 'candidateName'; confidence = 0.95;
-    } else if (labelLower.includes('gender')) {
-      matchedValue = profile.gender; matchedField = 'gender'; confidence = 0.95;
-    } else if (labelLower.includes('college') || labelLower.includes('institute')) {
-      matchedValue = profile.collegeName; matchedField = 'collegeName'; confidence = 0.90;
-    } else if (labelLower.includes('branch')) {
-      matchedValue = profile.branch; matchedField = 'branch'; confidence = 0.95;
-    } else if (labelLower.includes('course') || labelLower.includes('stream') || labelLower.includes('degree')) {
-      matchedValue = profile.stream; matchedField = 'stream'; confidence = 0.90;
-    } else if (labelLower.includes('graduation') || labelLower.includes('passing year')) {
-      matchedValue = profile.passingYear; matchedField = 'passingYear'; confidence = 0.90;
-    } else if (labelLower.includes('10th') || labelLower.includes('ssc')) {
-      matchedValue = profile.tenthPercent; matchedField = 'tenthPercent'; confidence = 0.90;
-    } else if (labelLower.includes('12th') || labelLower.includes('hsc')) {
-      matchedValue = profile.twelfthPercent; matchedField = 'twelfthPercent'; confidence = 0.90;
-    } else if (labelLower.includes('cgpa') || labelLower.includes('btech %') || labelLower.includes('be %') || labelLower.includes('pointer')) {
-      matchedValue = profile.cgpa; matchedField = 'cgpa'; confidence = 0.90;
-    } else if (labelLower.includes('resume') || labelLower.includes('cv') || labelLower.includes('drive link')) {
-      matchedValue = profile.resumeLink; matchedField = 'resumeLink'; confidence = 0.95;
-    } else if (labelLower.includes('linkedin')) {
-      matchedValue = profile.linkedinLink; matchedField = 'linkedinLink'; confidence = 0.95;
-    } else if (labelLower.includes('github')) {
-      matchedValue = profile.githubLink; matchedField = 'githubLink'; confidence = 0.95;
-    } else if (labelLower.includes('leetcode')) {
-      matchedValue = profile.leetcodeLink; matchedField = 'leetcodeLink'; confidence = 0.95;
-    } else if (labelLower.includes('codechef')) {
-      matchedValue = profile.codechefLink; matchedField = 'codechefLink'; confidence = 0.95;
-    } else if (labelLower.includes('hackerrank')) {
-      matchedValue = profile.hackerrankLink; matchedField = 'hackerrankLink'; confidence = 0.95;
-    } else if (labelLower.includes('project title') || labelLower.includes('capstone')) {
-      matchedValue = profile.projectTitle; matchedField = 'projectTitle'; confidence = 0.90;
-    } else if (labelLower.includes('project') || labelLower.includes('project description')) {
-      matchedValue = profile.projectDetails || profile.projectTitle; matchedField = 'projectDetails'; confidence = 0.85;
-    } else if (labelLower.includes('certification') || labelLower.includes('skill') || labelLower.includes('technical') || labelLower.includes('technology')) {
-      matchedValue = profile.technicalCertifications; matchedField = 'technicalCertifications'; confidence = 0.85;
-    } else if (labelLower.includes('internship') || labelLower.includes('work experience')) {
-      matchedValue = profile.previousInternships; matchedField = 'previousInternships'; confidence = 0.85;
-    } else if (labelLower.includes('backlog')) {
-      matchedValue = profile.hasBacklog || 'No'; matchedField = 'hasBacklog'; confidence = 0.90;
-    } else if (labelLower.includes('hobby') || labelLower.includes('interest')) {
-      matchedValue = profile.hobby; matchedField = 'hobby'; confidence = 0.85;
-    }
-
-    if (matchedValue) {
-      let finalVal = String(matchedValue);
-      if ((q.type === 'radio' || q.type === 'dropdown') && q.options?.length) {
-        finalVal = findBestOptionMatch(q.options, finalVal);
-      } else if (q.type === 'checkbox' && q.options?.length) {
-        const candidateContexts = [
-          profile.technicalCertifications,
-          profile.projectDetails,
-          profile.projectTitle,
-          profile.branch,
-          profile.stream,
-          profile.hobby,
-          finalVal,
-        ];
-        const multi = matchCheckboxOptions(q.options, candidateContexts);
-        if (multi) finalVal = multi;
-      }
-
-      return {
-        questionId: q.id,
-        label: q.label,
-        value: finalVal,
-        confidenceScore: confidence,
-        matchedField,
-        reason: `Matched database field '${matchedField}' directly from MongoDB profile`,
-        sensitive: false,
-      };
-    }
-
+    // Dynamic non-match: when question has no candidate data in Profile Vault
     return {
       questionId: q.id,
       label: q.label,
       value: '',
       confidenceScore: 0.0,
       matchedField: null,
-      reason: 'No matching data in candidate database profile',
+      reason: 'No matching candidate information found in Profile Vault',
       sensitive: false,
     };
   });
