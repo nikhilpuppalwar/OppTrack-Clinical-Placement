@@ -22,6 +22,7 @@ function msg(type, extra = {}) {
 
 function setNativeValue(el, value) {
   if (!el) return;
+  try { el.focus(); } catch {}
   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
     Object.getPrototypeOf(el),
     'value'
@@ -35,6 +36,7 @@ function setNativeValue(el, value) {
 
   el.dispatchEvent(new Event('input', { bubbles: true }));
   el.dispatchEvent(new Event('change', { bubbles: true }));
+  try { el.blur(); } catch {}
 }
 
 function injectGlobalStyles() {
@@ -233,74 +235,61 @@ function injectGlobalStyles() {
   document.head.appendChild(style);
 }
 
-// ─── Universal Google Forms Parser ──────────────────────────────────────────
+// ─── Universal Form Parser ──────────────────────────────────────────────────
 function getQuestionBlocks() {
-  return Array.from(document.querySelectorAll('div[role="listitem"]'));
+  const gFormBlocks = Array.from(
+    document.querySelectorAll('div[role="listitem"], div.Qr7Oae, div.freebirdFormviewerViewItemsItemItem')
+  );
+  if (gFormBlocks.length > 0) return gFormBlocks;
+
+  const genericBlocks = Array.from(
+    document.querySelectorAll('.form-group, .form-row, .field, fieldset, tr:has(input, select, textarea)')
+  );
+  if (genericBlocks.length > 0) return genericBlocks;
+
+  return Array.from(document.querySelectorAll('input:not([type="hidden"]), textarea, select')).map(
+    (el) => el.closest('.form-group, .field, div') || el.parentElement || el
+  );
 }
 
 function getQuestionLabel(block) {
-  const labelEl = block.querySelector('[data-params], .M7eMe, .LC3bg, .freebirdFormviewerViewItemsItemItemTitle');
-  return (labelEl?.textContent || '').trim();
-}
-
-/**
- * Universal Form Field Inspection: Supports Text, Textarea, Radio, Checkbox, Dropdown & File Inputs
- */
-function inspectQuestionBlock(block) {
-  const label = getQuestionLabel(block);
-  if (!label) return null;
-
-  // File Upload
-  const fileInput = block.querySelector('input[type="file"]');
-  if (fileInput) {
-    return { label, type: 'file', element: fileInput, options: [] };
+  if (!block) return '';
+  const labelEl = block.querySelector(
+    '[data-params], .M7eMe, .LC3bg, .freebirdFormviewerViewItemsItemItemTitle, [role="heading"], label, legend'
+  );
+  if (labelEl && labelEl.textContent.trim()) {
+    return labelEl.textContent.replace(/\s*\*+\s*$/, '').trim();
   }
 
-  // Text / Textarea / Email / Date / Number
-  const textInput =
-    block.querySelector('input[type="text"]') ||
-    block.querySelector('textarea') ||
-    block.querySelector('input[type="email"]') ||
-    block.querySelector('input[type="number"]') ||
-    block.querySelector('input[type="date"]');
-
-  if (textInput) {
-    return {
-      label,
-      type: textInput.tagName.toLowerCase() === 'textarea' ? 'paragraph' : 'short_text',
-      element: textInput,
-      placeholder: textInput.placeholder || '',
-      currentValue: textInput.value || '',
-      options: [],
-    };
+  const inputEl = block.querySelector('input, textarea, select');
+  if (inputEl) {
+    if (inputEl.getAttribute('aria-label')) {
+      return inputEl.getAttribute('aria-label').replace(/\s*\*+\s*$/, '').trim();
+    }
+    if (inputEl.id) {
+      const associatedLabel = document.querySelector(`label[for="${inputEl.id}"]`);
+      if (associatedLabel) return associatedLabel.textContent.replace(/\s*\*+\s*$/, '').trim();
+    }
+    if (inputEl.placeholder) return inputEl.placeholder.trim();
+    if (inputEl.name) return inputEl.name.trim();
   }
-
-  // Radio Buttons / MCQ / Rating / Linear Scale
-  const radioEls = Array.from(block.querySelectorAll('div[role="radio"]'));
-  if (radioEls.length > 0) {
-    const options = radioEls.map((el) => getChoiceLabel(el)).filter(Boolean);
-    return { label, type: 'radio', radioEls, options };
-  }
-
-  // Checkboxes
-  const checkEls = Array.from(block.querySelectorAll('div[role="checkbox"]'));
-  if (checkEls.length > 0) {
-    const options = checkEls.map((el) => getChoiceLabel(el)).filter(Boolean);
-    return { label, type: 'checkbox', checkEls, options };
-  }
-
-  // Dropdown / Listbox
-  const listboxEl = block.querySelector('div[role="listbox"]');
-  if (listboxEl) {
-    const optionEls = Array.from(block.querySelectorAll('div[role="option"]'));
-    const options = optionEls.map((el) => getChoiceLabel(el)).filter(Boolean);
-    return { label, type: 'dropdown', listboxEl, optionEls, options };
-  }
-
-  return null;
+  return '';
 }
 
 function getChoiceLabel(el) {
+  if (!el) return '';
+  if (el.tagName?.toLowerCase() === 'input') {
+    if (el.labels && el.labels.length && el.labels[0].textContent) {
+      return el.labels[0].textContent.trim();
+    }
+    const parentLabel = el.closest('label');
+    if (parentLabel) return parentLabel.textContent.trim();
+    if (el.nextElementSibling && el.nextElementSibling.tagName === 'LABEL') {
+      return el.nextElementSibling.textContent.trim();
+    }
+    if (el.value) return el.value.trim();
+  }
+
   return (
     el.getAttribute('data-value') ||
     el.getAttribute('aria-label') ||
@@ -311,59 +300,336 @@ function getChoiceLabel(el) {
 }
 
 /**
- * Click / Set value on any Google Form element (Text, Radio, Checkbox, Dropdown)
+ * Universal Form Field Inspection: Supports Checkbox, Radio, Picklist/Dropdown, Short Answer,
+ * Paragraph, Date/Time parts, and File Uploads
  */
-function setAnswerOnBlock(blockInfo, value) {
-  if (!blockInfo || !value) return false;
+function inspectQuestionBlock(block) {
+  const label = getQuestionLabel(block);
+  if (!label) return null;
 
-  const normalize = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
-  const targetNorm = normalize(value);
-
-  // 1. Text Inputs
-  if (blockInfo.element && (blockInfo.type === 'short_text' || blockInfo.type === 'paragraph')) {
-    setNativeValue(blockInfo.element, value);
-    blockInfo.element.dataset.otFilled = '1';
-    blockInfo.element.dataset.otOriginal = value;
-    return true;
+  // 1. File Upload
+  const fileInput = block.querySelector('input[type="file"]');
+  if (fileInput) {
+    return { label, type: 'file', element: fileInput, options: [] };
   }
 
-  // 2. Radio Buttons / MCQ / Linear Scale
-  if (blockInfo.type === 'radio' && blockInfo.radioEls) {
-    const bestRadio = blockInfo.radioEls.find((rEl) => {
-      const lblNorm = normalize(getChoiceLabel(rEl));
-      return lblNorm === targetNorm || lblNorm.includes(targetNorm) || targetNorm.includes(lblNorm);
-    });
+  // 2. Date Parts (Google Forms 3-part Day/Month/Year inputs)
+  const dayInput = block.querySelector('input[aria-label*="Day" i], input[placeholder*="DD" i], input[name*="day" i]');
+  const monthInput = block.querySelector('input[aria-label*="Month" i], input[placeholder*="MM" i], input[name*="month" i]');
+  const yearInput = block.querySelector('input[aria-label*="Year" i], input[placeholder*="YYYY" i], input[name*="year" i]');
+  if (dayInput && monthInput && yearInput) {
+    return {
+      label,
+      type: 'date_parts',
+      dayInput,
+      monthInput,
+      yearInput,
+      options: [],
+    };
+  }
 
-    if (bestRadio) {
-      bestRadio.click();
+  // 3. Time Parts (Google Forms Hour/Minute inputs)
+  const hourInput = block.querySelector('input[aria-label*="Hour" i], input[placeholder*="HH" i]');
+  const minuteInput = block.querySelector('input[aria-label*="Minute" i], input[placeholder*="MM" i]');
+  if (hourInput && minuteInput) {
+    return {
+      label,
+      type: 'time_parts',
+      hourInput,
+      minuteInput,
+      options: [],
+    };
+  }
+
+  // 4. Native Date / Time input
+  const dateInput = block.querySelector('input[type="date"]');
+  if (dateInput) {
+    return {
+      label,
+      type: 'date',
+      element: dateInput,
+      currentValue: dateInput.value || '',
+      options: [],
+    };
+  }
+  const timeInput = block.querySelector('input[type="time"]');
+  if (timeInput) {
+    return {
+      label,
+      type: 'time',
+      element: timeInput,
+      currentValue: timeInput.value || '',
+      options: [],
+    };
+  }
+
+  // 5. Dropdown / Picklist (Google Forms listbox or Native <select>)
+  const listboxEl = block.querySelector('div[role="listbox"], div[role="combobox"]');
+  if (listboxEl) {
+    const optionEls = Array.from(block.querySelectorAll('div[role="option"]'));
+    const options = optionEls.map(getChoiceLabel).filter(Boolean);
+    return { label, type: 'dropdown', listboxEl, optionEls, options };
+  }
+  const selectEl = block.querySelector('select');
+  if (selectEl) {
+    const options = Array.from(selectEl.options)
+      .map((o) => (o.text || o.value).trim())
+      .filter((o) => o && !o.toLowerCase().includes('select') && !o.toLowerCase().includes('choose'));
+    return { label, type: 'dropdown', selectEl, options };
+  }
+
+  // 6. Radio Buttons / Multiple Choice / Rating Scale (Linear 1-5, 1-10)
+  const radioEls = Array.from(block.querySelectorAll('div[role="radio"], input[type="radio"]'));
+  if (radioEls.length > 0) {
+    const options = radioEls.map(getChoiceLabel).filter(Boolean);
+    const otherInput = block.querySelector('input.Hvn9uc, input[aria-label*="Other" i], input[type="text"]:not([aria-label=""])');
+    return { label, type: 'radio', radioEls, otherInput, options };
+  }
+
+  // 7. Checkboxes (Multi-select)
+  const checkEls = Array.from(block.querySelectorAll('div[role="checkbox"], input[type="checkbox"]'));
+  if (checkEls.length > 0) {
+    const options = checkEls.map(getChoiceLabel).filter(Boolean);
+    const otherInput = block.querySelector('input.Hvn9uc, input[aria-label*="Other" i]');
+    return { label, type: 'checkbox', checkEls, otherInput, options };
+  }
+
+  // 8. Paragraph / Long Answer / Textarea
+  const textarea = block.querySelector('textarea, div[contenteditable="true"]');
+  if (textarea) {
+    return {
+      label,
+      type: 'paragraph',
+      element: textarea,
+      placeholder: textarea.placeholder || '',
+      currentValue: textarea.value || textarea.innerText || '',
+      options: [],
+    };
+  }
+
+  // 9. Short Answer / Text / Email / Phone / URL / Number
+  const textInput = block.querySelector(
+    'input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], input[type="search"], input:not([type])'
+  );
+  if (textInput) {
+    return {
+      label,
+      type: 'short_text',
+      element: textInput,
+      placeholder: textInput.placeholder || '',
+      currentValue: textInput.value || '',
+      options: [],
+    };
+  }
+
+  return null;
+}
+
+function parseDateTokens(str) {
+  if (!str) return null;
+  const s = String(str).trim();
+  let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (m) return { year: m[1], month: m[2].padStart(2, '0'), day: m[3].padStart(2, '0') };
+  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if (m) return { day: m[1].padStart(2, '0'), month: m[2].padStart(2, '0'), year: m[3] };
+  return null;
+}
+
+/**
+ * Click / Set value on any Form element (Checkbox, Radio, Picklist, Short Answer, Paragraph, Date/Time)
+ */
+function setAnswerOnBlock(blockInfo, value) {
+  if (!blockInfo || value === undefined || value === null || value === '') return false;
+
+  const normalize = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanStr = String(value).trim();
+  const targetNorm = normalize(cleanStr);
+
+  // 1. Text Inputs & Paragraphs
+  if (blockInfo.type === 'short_text' || blockInfo.type === 'paragraph') {
+    if (blockInfo.element) {
+      if (blockInfo.element.getAttribute('contenteditable') === 'true') {
+        blockInfo.element.focus();
+        blockInfo.element.innerText = cleanStr;
+        blockInfo.element.dispatchEvent(new Event('input', { bubbles: true }));
+        blockInfo.element.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        setNativeValue(blockInfo.element, cleanStr);
+      }
+      blockInfo.element.dataset.otFilled = '1';
+      blockInfo.element.dataset.otOriginal = cleanStr;
       return true;
     }
   }
 
-  // 3. Checkboxes
-  if (blockInfo.type === 'checkbox' && blockInfo.checkEls) {
+  // 2. Radio Buttons / MCQ / Linear Scale / Ratings
+  if (blockInfo.type === 'radio' && blockInfo.radioEls?.length) {
+    const numericMatch = cleanStr.match(/\b\d+\b/);
+    const targetNum = numericMatch ? numericMatch[0] : null;
+
+    let bestRadio = blockInfo.radioEls.find((rEl) => {
+      const lbl = getChoiceLabel(rEl);
+      const lblNorm = normalize(lbl);
+      if (lblNorm === targetNorm) return true;
+      if (targetNum && lbl.trim() === targetNum) return true;
+      return false;
+    });
+
+    if (!bestRadio) {
+      bestRadio = blockInfo.radioEls.find((rEl) => {
+        const lblNorm = normalize(getChoiceLabel(rEl));
+        return lblNorm && targetNorm && (lblNorm.includes(targetNorm) || targetNorm.includes(lblNorm));
+      });
+    }
+
+    if (bestRadio) {
+      const isChecked = bestRadio.getAttribute('aria-checked') === 'true' || bestRadio.checked === true;
+      if (!isChecked) {
+        bestRadio.click();
+        if (bestRadio.tagName?.toLowerCase() === 'input') {
+          bestRadio.checked = true;
+          bestRadio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+      return true;
+    }
+
+    // Fallback: Check if an "Other" option exists
+    const otherRadio = blockInfo.radioEls.find((rEl) => {
+      const lbl = getChoiceLabel(rEl).toLowerCase();
+      return lbl.includes('other') || rEl.getAttribute('aria-label')?.toLowerCase().includes('other');
+    });
+
+    if (otherRadio) {
+      otherRadio.click();
+      if (blockInfo.otherInput) {
+        setNativeValue(blockInfo.otherInput, cleanStr);
+      }
+      return true;
+    }
+  }
+
+  // 3. Checkboxes (Multi-select)
+  if (blockInfo.type === 'checkbox' && blockInfo.checkEls?.length) {
+    const targetItems = Array.isArray(value)
+      ? value.map((s) => normalize(s)).filter(Boolean)
+      : cleanStr.split(/[,;\n|]+/).map((s) => normalize(s)).filter(Boolean);
+
     let clickedAny = false;
+    const unmatchedItems = [...targetItems];
+
     blockInfo.checkEls.forEach((cEl) => {
-      const lblNorm = normalize(getChoiceLabel(cEl));
-      if (lblNorm === targetNorm || targetNorm.includes(lblNorm) || lblNorm.includes(targetNorm)) {
-        cEl.click();
+      const lbl = getChoiceLabel(cEl);
+      const lblNorm = normalize(lbl);
+      if (!lblNorm) return;
+
+      const isMatch = targetItems.some((tNorm) => {
+        return lblNorm === tNorm || lblNorm.includes(tNorm) || tNorm.includes(lblNorm);
+      });
+
+      if (isMatch) {
+        const idx = unmatchedItems.findIndex((t) => lblNorm === t || lblNorm.includes(t) || t.includes(lblNorm));
+        if (idx !== -1) unmatchedItems.splice(idx, 1);
+
+        const isChecked = cEl.getAttribute('aria-checked') === 'true' || cEl.checked === true;
+        if (!isChecked) {
+          cEl.click();
+          if (cEl.tagName?.toLowerCase() === 'input') {
+            cEl.checked = true;
+            cEl.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
         clickedAny = true;
       }
     });
+
+    if (unmatchedItems.length > 0 && blockInfo.otherInput) {
+      const otherCheck = blockInfo.checkEls.find((cEl) => {
+        const lbl = getChoiceLabel(cEl).toLowerCase();
+        return lbl.includes('other') || cEl.getAttribute('aria-label')?.toLowerCase().includes('other');
+      });
+      if (otherCheck) {
+        const isChecked = otherCheck.getAttribute('aria-checked') === 'true' || otherCheck.checked === true;
+        if (!isChecked) otherCheck.click();
+        setNativeValue(blockInfo.otherInput, unmatchedItems.join(', '));
+        clickedAny = true;
+      }
+    }
+
     return clickedAny;
   }
 
-  // 4. Dropdowns / Listbox
-  if (blockInfo.type === 'dropdown' && blockInfo.listboxEl) {
-    blockInfo.listboxEl.click();
-    setTimeout(() => {
-      const optionEls = Array.from(document.querySelectorAll('div[role="option"], div.OA0qNb div[jsaction]'));
-      const bestOpt = optionEls.find((oEl) => {
-        const lblNorm = normalize(getChoiceLabel(oEl));
-        return lblNorm === targetNorm || lblNorm.includes(targetNorm) || targetNorm.includes(lblNorm);
+  // 4. Dropdown / Picklist / Select
+  if (blockInfo.type === 'dropdown') {
+    if (blockInfo.selectEl) {
+      const select = blockInfo.selectEl;
+      const opts = Array.from(select.options);
+      const best = opts.find((opt) => {
+        const oNorm = normalize(opt.text || opt.value);
+        return oNorm === targetNorm || oNorm.includes(targetNorm) || targetNorm.includes(oNorm);
       });
-      if (bestOpt) bestOpt.click();
-    }, 150);
+      if (best) {
+        select.value = best.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      }
+    }
+
+    if (blockInfo.listboxEl) {
+      blockInfo.listboxEl.click();
+      setTimeout(() => {
+        const optionEls = Array.from(
+          document.querySelectorAll('div[role="option"], div.OA0qNb div[jsaction], div.MocG8c')
+        );
+        const bestOpt = optionEls.find((oEl) => {
+          const lbl = getChoiceLabel(oEl);
+          if (!lbl || lbl.toLowerCase() === 'choose' || lbl.toLowerCase() === 'select') return false;
+          const oNorm = normalize(lbl);
+          return oNorm === targetNorm || oNorm.includes(targetNorm) || targetNorm.includes(oNorm);
+        });
+
+        if (bestOpt) {
+          bestOpt.click();
+          bestOpt.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+        }
+      }, 180);
+      return true;
+    }
+  }
+
+  // 5. Date Parts (Google Forms 3-part Day/Month/Year)
+  if (blockInfo.type === 'date_parts') {
+    const parts = parseDateTokens(cleanStr);
+    if (parts) {
+      if (blockInfo.dayInput) setNativeValue(blockInfo.dayInput, parts.day);
+      if (blockInfo.monthInput) setNativeValue(blockInfo.monthInput, parts.month);
+      if (blockInfo.yearInput) setNativeValue(blockInfo.yearInput, parts.year);
+      return true;
+    }
+  }
+
+  // 6. Native Date
+  if (blockInfo.type === 'date' && blockInfo.element) {
+    const parts = parseDateTokens(cleanStr);
+    const dateFormatted = parts ? `${parts.year}-${parts.month}-${parts.day}` : cleanStr;
+    setNativeValue(blockInfo.element, dateFormatted);
+    return true;
+  }
+
+  // 7. Time Parts
+  if (blockInfo.type === 'time_parts') {
+    const tm = cleanStr.match(/(\d{1,2})[:.](\d{2})/);
+    if (tm) {
+      if (blockInfo.hourInput) setNativeValue(blockInfo.hourInput, tm[1].padStart(2, '0'));
+      if (blockInfo.minuteInput) setNativeValue(blockInfo.minuteInput, tm[2]);
+      return true;
+    }
+  }
+
+  // 8. Native Time
+  if (blockInfo.type === 'time' && blockInfo.element) {
+    setNativeValue(blockInfo.element, cleanStr);
     return true;
   }
 
@@ -585,13 +851,33 @@ async function analyzeAndSaveNewData() {
     if (!info) return;
 
     let currentValue = '';
-    if (info.currentValue) currentValue = info.currentValue;
-    else if (info.type === 'radio' && info.radioEls) {
-      const selected = info.radioEls.find((r) => r.getAttribute('aria-checked') === 'true');
+    if (info.currentValue) {
+      currentValue = info.currentValue;
+    } else if (info.type === 'radio' && info.radioEls) {
+      const selected = info.radioEls.find((r) => r.getAttribute('aria-checked') === 'true' || r.checked);
       if (selected) currentValue = getChoiceLabel(selected);
+      if (info.otherInput && info.otherInput.value) currentValue = info.otherInput.value;
     } else if (info.type === 'checkbox' && info.checkEls) {
-      const selected = info.checkEls.filter((c) => c.getAttribute('aria-checked') === 'true');
+      const selected = info.checkEls.filter((c) => c.getAttribute('aria-checked') === 'true' || c.checked);
       if (selected.length) currentValue = selected.map(getChoiceLabel).join(', ');
+      if (info.otherInput && info.otherInput.value) {
+        currentValue = currentValue ? `${currentValue}, ${info.otherInput.value}` : info.otherInput.value;
+      }
+    } else if (info.type === 'dropdown') {
+      if (info.selectEl) {
+        currentValue = info.selectEl.options[info.selectEl.selectedIndex]?.text || '';
+      } else if (info.listboxEl) {
+        currentValue = getChoiceLabel(info.listboxEl) || '';
+      }
+    } else if (info.type === 'date_parts') {
+      const d = info.dayInput?.value || '';
+      const m = info.monthInput?.value || '';
+      const y = info.yearInput?.value || '';
+      if (d && m && y) currentValue = `${y}-${m}-${d}`;
+    } else if (info.type === 'time_parts') {
+      const h = info.hourInput?.value || '';
+      const min = info.minuteInput?.value || '';
+      if (h && min) currentValue = `${h}:${min}`;
     }
 
     formFields.push({

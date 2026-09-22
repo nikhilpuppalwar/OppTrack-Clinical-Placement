@@ -310,13 +310,19 @@ ${JSON.stringify(rawProfileSummary, null, 2)}
 Questions to Autofill (with Vector DB similarity matches):
 ${JSON.stringify(questionsWithContext, null, 2)}
 
-INSTRUCTIONS:
-1. For each question in "Questions to Autofill", understand what data is requested.
-2. Search the Candidate Database Profile & Vector Context for the exact or best matching candidate value.
-3. If the question is an open-ended subjective question (e.g. "Describe your key project", "Why apply?", "Skills summary"), synthesize a high-quality response using the candidate's actual projects, skills, or background. Set matchedField to "AI_GENERATED".
-4. CONFIDENCE SCORE: Output a score between 0.00 and 1.00 representing how confident you are in the accuracy of the answer.
-5. MISSING DATA RULE: If no relevant data is present in the database profile for this question, or if you are uncertain, return "value": "", "matchedField": null, and "confidenceScore": 0.00. NEVER invent false candidate data (like fake phone numbers, fake emails, or fake PRN).
-6. SENSITIVE GATE: Set "sensitive": true if the field is Aadhar, PAN, or marked sensitive in profile.
+INSTRUCTIONS & QUESTION FORMAT RULES:
+1. Understand what data each question requests. Search Candidate Database Profile Context & Vector matches for candidate's actual data.
+2. QUESTION FORMAT SPECIFIC RULES:
+   - CHECKBOX (multi-select): If question type is "checkbox", the candidate can match multiple options. Compare candidate's skills, certifications, degrees, or background against the provided "options" array. The "value" MUST be a comma-separated list of the EXACT matching option strings from "options" (e.g. "Java, Python, Git").
+   - RADIO / MULTIPLE CHOICE: If question type is "radio", select the single best matching option from the provided "options" array. The "value" MUST be the EXACT option string from the provided "options" array (e.g., if options are ["Male", "Female", "Other"] and profile gender is "Male", return "Male"). For rating scales (1 to 5, 1 to 10), return the matching rating number.
+   - PICKLIST / DROPDOWN / SELECT: If question type is "dropdown", pick the single EXACT option string from the provided "options" array that best matches the candidate's data (e.g., if branch is "Computer Science and Engineering" and options are ["CS", "IT", "Mechanical"], return "CS").
+   - SHORT ANSWER (text, email, tel/phone, number, url, prn/roll): Provide the exact, accurate candidate factual data.
+   - PARAGRAPH (long answer / subjective): Synthesize a professional, compelling answer using the candidate's real projects, skills, or background. Set matchedField to "AI_GENERATED".
+   - DATE: Return in standard ISO format "YYYY-MM-DD" (e.g. "2002-05-14").
+   - TIME: Return in "HH:MM" format (e.g. "10:00").
+3. CONFIDENCE SCORE: Output a score between 0.00 and 1.00 representing confidence in the accuracy of the answer.
+4. MISSING DATA RULE: If no relevant data is present in the database profile for this question, or if you are uncertain, return "value": "", "matchedField": null, and "confidenceScore": 0.00. NEVER invent false candidate data (like fake phone numbers, fake emails, or fake PRN).
+5. SENSITIVE GATE: Set "sensitive": true if the field is Aadhar, PAN, or marked sensitive in profile.
 
 Return ONLY a JSON object with this exact structure:
 {
@@ -362,6 +368,53 @@ Return ONLY a JSON object with this exact structure:
   }
 };
 
+function findBestOptionMatch(options, targetValue) {
+  if (!Array.isArray(options) || !options.length || !targetValue) return targetValue;
+  const clean = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const targetNorm = clean(targetValue);
+  if (!targetNorm) return targetValue;
+
+  const exact = options.find((opt) => clean(opt) === targetNorm);
+  if (exact) return exact;
+
+  const match = options.find((opt) => {
+    const oNorm = clean(opt);
+    return oNorm && (oNorm.includes(targetNorm) || targetNorm.includes(oNorm));
+  });
+  if (match) return match;
+
+  return targetValue;
+}
+
+function matchCheckboxOptions(options, candidateTexts = []) {
+  if (!Array.isArray(options) || !options.length) return '';
+  const allCandidateWords = candidateTexts
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  const matched = options.filter((opt) => {
+    if (!opt) return false;
+    const optTrimmed = opt.trim().toLowerCase();
+    if (!optTrimmed) return false;
+
+    // 1. Exact phrase/word match in text with punctuation/word boundaries
+    const escaped = optTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(^|[^a-z0-9+])${escaped}([^a-z0-9+]|$)`, 'i');
+    if (regex.test(allCandidateWords)) return true;
+
+    // 2. If multi-word option, check if all major words exist
+    const words = optTrimmed.split(/\s+/).filter((w) => w.length > 2);
+    if (words.length > 1 && words.every((w) => allCandidateWords.includes(w))) {
+      return true;
+    }
+
+    return false;
+  });
+
+  return matched.join(', ');
+}
+
 /**
  * Direct matching engine against user's MongoDB Database Profile & Vector Index
  */
@@ -372,10 +425,27 @@ function performDatabaseFallbackMatching(questions, profile, vectorIndex) {
     const topHit = searchHits && searchHits[0];
 
     if (topHit && topHit.score >= 0.40 && topHit.value) {
+      let finalVal = String(topHit.value);
+      if ((q.type === 'radio' || q.type === 'dropdown') && q.options?.length) {
+        finalVal = findBestOptionMatch(q.options, finalVal);
+      } else if (q.type === 'checkbox' && q.options?.length) {
+        const candidateContexts = [
+          profile.technicalCertifications,
+          profile.projectDetails,
+          profile.projectTitle,
+          profile.branch,
+          profile.stream,
+          profile.hobby,
+          finalVal,
+        ];
+        const multi = matchCheckboxOptions(q.options, candidateContexts);
+        if (multi) finalVal = multi;
+      }
+
       return {
         questionId: q.id,
         label: q.label,
-        value: String(topHit.value),
+        value: finalVal,
         confidenceScore: Math.min(0.95, Number((topHit.score + 0.1).toFixed(2))),
         matchedField: topHit.key || 'DB_PROFILE',
         reason: `Matched database field '${topHit.label}' via Vector Similarity (${Math.round(topHit.score * 100)}%)`,
@@ -431,7 +501,7 @@ function performDatabaseFallbackMatching(questions, profile, vectorIndex) {
       matchedValue = profile.projectTitle; matchedField = 'projectTitle'; confidence = 0.90;
     } else if (labelLower.includes('project') || labelLower.includes('project description')) {
       matchedValue = profile.projectDetails || profile.projectTitle; matchedField = 'projectDetails'; confidence = 0.85;
-    } else if (labelLower.includes('certification') || labelLower.includes('course')) {
+    } else if (labelLower.includes('certification') || labelLower.includes('skill') || labelLower.includes('technical') || labelLower.includes('technology')) {
       matchedValue = profile.technicalCertifications; matchedField = 'technicalCertifications'; confidence = 0.85;
     } else if (labelLower.includes('internship') || labelLower.includes('work experience')) {
       matchedValue = profile.previousInternships; matchedField = 'previousInternships'; confidence = 0.85;
@@ -442,10 +512,27 @@ function performDatabaseFallbackMatching(questions, profile, vectorIndex) {
     }
 
     if (matchedValue) {
+      let finalVal = String(matchedValue);
+      if ((q.type === 'radio' || q.type === 'dropdown') && q.options?.length) {
+        finalVal = findBestOptionMatch(q.options, finalVal);
+      } else if (q.type === 'checkbox' && q.options?.length) {
+        const candidateContexts = [
+          profile.technicalCertifications,
+          profile.projectDetails,
+          profile.projectTitle,
+          profile.branch,
+          profile.stream,
+          profile.hobby,
+          finalVal,
+        ];
+        const multi = matchCheckboxOptions(q.options, candidateContexts);
+        if (multi) finalVal = multi;
+      }
+
       return {
         questionId: q.id,
         label: q.label,
-        value: String(matchedValue),
+        value: finalVal,
         confidenceScore: confidence,
         matchedField,
         reason: `Matched database field '${matchedField}' directly from MongoDB profile`,
