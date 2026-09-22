@@ -1118,14 +1118,22 @@ if (window.location.href.includes('docs.google.com/forms')) {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'AUTOFILL_NOW') {
     performAIAutofill()
-      .then(sendResponse)
-      .catch((err) => sendResponse({ fieldsFilledCount: 0, error: err.message }));
+      .then((res) => {
+        try { sendResponse(res); } catch (e) {}
+      })
+      .catch((err) => {
+        try { sendResponse({ fieldsFilledCount: 0, error: err.message }); } catch (e) {}
+      });
     return true;
   }
   if (message.type === 'ANALYZE_NEW_DATA_NOW') {
     analyzeAndSaveNewData()
-      .then(() => sendResponse({ ok: true }))
-      .catch((err) => sendResponse({ ok: false, error: err.message }));
+      .then(() => {
+        try { sendResponse({ ok: true }); } catch (e) {}
+      })
+      .catch((err) => {
+        try { sendResponse({ ok: false, error: err.message }); } catch (e) {}
+      });
     return true;
   }
 });

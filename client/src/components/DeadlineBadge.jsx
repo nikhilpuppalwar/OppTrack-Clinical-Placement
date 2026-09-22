@@ -17,6 +17,8 @@ export default function DeadlineBadge({ deadline }) {
     whiteSpace: 'nowrap',
   };
 
+  let label = '';
+
   if (diff < 0) {
     badgeStyle = {
       ...badgeStyle,

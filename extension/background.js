@@ -106,10 +106,17 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 // ─── Message handlers ─────────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  // Must return true to allow async sendResponse
-  handleMessage(msg, sender).then(sendResponse).catch((err) => {
-    sendResponse({ ok: false, error: err.message });
-  });
+  handleMessage(msg, sender)
+    .then((res) => {
+      try {
+        sendResponse(res !== undefined ? res : { ok: false });
+      } catch (e) {}
+    })
+    .catch((err) => {
+      try {
+        sendResponse({ ok: false, error: err.message });
+      } catch (e) {}
+    });
   return true;
 });
 
