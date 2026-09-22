@@ -8,7 +8,7 @@ import {
   User, Settings, LogOut, Puzzle, HelpCircle, ExternalLink,
   Bell, X, Clock, Send, Sparkles, AlertTriangle, ShieldCheck
 } from 'lucide-react';
-import { settingsAPI } from '../api';
+import { settingsAPI, profileAPI } from '../api';
 import { sendDesktopNotification, requestNotificationPermission } from '../utils/notifications';
 import toast from 'react-hot-toast';
 
@@ -31,6 +31,7 @@ export default function Sidebar() {
   const [upcomingReminders, setUpcomingReminders] = useState([]);
   const [showRemindersModal, setShowRemindersModal] = useState(false);
   const [testingNotification, setTestingNotification] = useState(false);
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
 
   const fetchReminders = async () => {
     try {
@@ -41,11 +42,25 @@ export default function Sidebar() {
     }
   };
 
+  const fetchPendingSyncs = async () => {
+    try {
+      if (!user) return;
+      const { data } = await profileAPI.getPendingSyncs();
+      setPendingSyncCount(data?.syncs?.length || 0);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchReminders();
-    const interval = setInterval(fetchReminders, 2 * 60 * 1000);
+    fetchPendingSyncs();
+    const interval = setInterval(() => {
+      fetchReminders();
+      fetchPendingSyncs();
+    }, 2 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   const handleQuickTestNotification = async () => {
     setTestingNotification(true);
@@ -173,6 +188,20 @@ export default function Sidebar() {
               <>
                 <Icon size={17} color={isActive ? '#18B7A0' : '#667085'} />
                 <span>{label}</span>
+                {to === '/profile' && pendingSyncCount > 0 && (
+                  <span style={{
+                    marginLeft: 'auto',
+                    background: '#18B7A0',
+                    color: '#FFFFFF',
+                    fontSize: 10.5,
+                    fontWeight: 800,
+                    padding: '2px 7px',
+                    borderRadius: 10,
+                    boxShadow: '0 1px 4px rgba(24, 183, 160, 0.3)'
+                  }}>
+                    New ({pendingSyncCount})
+                  </span>
+                )}
               </>
             )}
           </NavLink>

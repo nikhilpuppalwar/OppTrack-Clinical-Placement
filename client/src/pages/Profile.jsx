@@ -838,10 +838,17 @@ export default function Profile() {
                     Incoming Data from {currentSync.source || 'Chrome Extension'}
                   </h3>
                   <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12,
+                    background: '#E8F8F5', color: '#0D7A6B', border: '1px solid rgba(24,183,160,0.4)',
+                    display: 'inline-flex', alignItems: 'center', gap: 4
+                  }}>
+                    ✨ New data is present (comes from extension)
+                  </span>
+                  <span style={{
                     fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
                     background: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D'
                   }}>
-                    Awaiting Verification ({pendingSyncs.length} Queued)
+                    {pendingSyncs.length} Submission{pendingSyncs.length > 1 ? 's' : ''} Queued
                   </span>
                 </div>
                 <p style={{ margin: '3px 0 0 0', fontSize: 12.5, color: '#667085' }}>
@@ -888,8 +895,8 @@ export default function Profile() {
             gap: 10
           }}>
             <Sparkles size={16} color="#2563EB" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: '#172033', lineHeight: 1.45 }}>
-              <strong>AI Analysis:</strong> We detected <strong>{currentSync.analysis?.length || 0} candidate field(s)</strong> from this form. Review the side-by-side differences below. Previous data will <strong>never</strong> be removed unless you explicitly accept the updated value.
+            <span style={{ fontSize: 13, color: '#172033', lineHeight: 1.5 }}>
+              <strong>AI Analysis & Suggestions:</strong> We detected <strong>{currentSync.analysis?.length || 0} candidate field(s)</strong> from this form. Review the suggested actions below. Once you verify and merge, your <strong>AI Vector Database index will update automatically</strong> so the Chrome extension can use the new values on future forms. Previous data will <strong>never</strong> be removed unless you explicitly choose to replace it.
             </span>
           </div>
 
