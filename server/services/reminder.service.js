@@ -11,13 +11,13 @@ const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
 
 const getTransporter = (user) => {
-  const host = user?.settings?.smtpHost || 'smtp.gmail.com';
-  const port = Number(user?.settings?.smtpPort) || 587;
-  const authUser = user?.settings?.smtpUser;
-  const authPass = user?.settings?.smtpPass;
+  const host = user?.settings?.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(user?.settings?.smtpPort || process.env.SMTP_PORT) || 587;
+  const authUser = user?.settings?.smtpUser || process.env.SMTP_USER;
+  const authPass = user?.settings?.smtpPass || process.env.SMTP_PASS;
 
   if (!authUser || !authPass) {
-    throw new Error('SMTP Email & Password not configured. Please add SMTP credentials in Settings.');
+    throw new Error('Server SMTP credentials not configured in .env');
   }
 
   return {

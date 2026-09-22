@@ -16,6 +16,7 @@ import Settings from './pages/Settings';
 import HelpGuide from './pages/HelpGuide';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import GoogleTesterPage from './pages/GoogleTesterPage';
 
 function HomeRoute() {
   const { user, loading } = useAuth();
@@ -60,6 +61,8 @@ export default function App() {
           <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
           <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
           <Route path="/help" element={<ProtectedLayout><HelpGuide /></ProtectedLayout>} />
+          <Route path="/google-tester" element={<ProtectedLayout><GoogleTesterPage /></ProtectedLayout>} />
+          <Route path="/request-tester" element={<ProtectedLayout><GoogleTesterPage /></ProtectedLayout>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

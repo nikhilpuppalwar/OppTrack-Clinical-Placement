@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { settingsAPI, googleAPI, gmailAPI, calendarAPI } from '../api';
 import { 
   Eye, EyeOff, Sparkles, Send, Save, Bell, Download, CheckCircle2, 
@@ -686,12 +687,12 @@ export default function Settings() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-            background: isEmailConfigured ? '#EAF8EF' : '#F7F9FC',
-            border: `1px solid ${isEmailConfigured ? '#A7F3D0' : '#E5EAF0'}`,
-            color: isEmailConfigured ? '#15803D' : '#667085',
+            background: '#EAF8EF',
+            border: '1px solid #A7F3D0',
+            color: '#15803D',
           }}>
             <Mail size={13} />
-            <span>SMTP Email: <strong>{isEmailConfigured ? 'Active' : 'Optional'}</strong></span>
+            <span>Email Reminders: <strong>Active (Automated)</strong></span>
           </div>
         </div>
       </header>
@@ -708,8 +709,7 @@ export default function Settings() {
           { id: 'senders', label: '2. Trusted Senders', icon: Mail, accent: '#DC2626' },
           { id: 'reminders', label: '3. Notifications & Alerts', icon: Bell, accent: '#D97706' },
           { id: 'ai', label: '4. AI Engine', icon: Cpu, accent: '#087F71' },
-          { id: 'email', label: '5. Email & SMTP', icon: Mail, accent: '#15803D' },
-          { id: 'data', label: '6. Data & Backup', icon: Database, accent: '#4F46E5' },
+          { id: 'data', label: '5. Data & Backup', icon: Database, accent: '#4F46E5' },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -854,6 +854,48 @@ export default function Settings() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Google OAuth Beta Tester Notice Banner */}
+            <div style={{
+              marginBottom: 20,
+              background: '#E8F8F5',
+              border: '1px solid rgba(24,183,160,0.3)',
+              borderRadius: 10,
+              padding: '12px 18px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 12
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ShieldCheck size={20} color="#0D7A6B" />
+                <div>
+                  <strong style={{ fontSize: 13, color: '#0D7A6B' }}>Google OAuth 100-User Testing Mode Active</strong>
+                  <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#475569' }}>
+                    Google limits OAuth testing to 100 users. If your Gmail is not yet authorized in Google Cloud Console, submit your request to be added.
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                to="/google-tester"
+                style={{
+                  background: '#0B1F3A',
+                  color: '#FFFFFF',
+                  padding: '7px 14px',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                Request / Manage Tester Access →
+              </Link>
             </div>
 
             {googleStatus.isConnected && (
@@ -1456,106 +1498,7 @@ export default function Settings() {
         )}
 
         {/* ══════════════════════════════════════════════════════════════ */}
-        {/* ── CARD 5: SMTP EMAIL CONFIGURATION (PRIORITY 5) ── */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {(activeTab === 'all' || activeTab === 'email') && (
-          <div style={{
-            background: '#FFFFFF',
-            border: '1px solid #E5EAF0',
-            borderTop: '4px solid #15803D',
-            borderRadius: 14,
-            padding: 28,
-            boxShadow: '0 1px 3px rgba(11,31,58,0.04)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10,
-                  background: '#EAF8EF', border: '1px solid #A7F3D0',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#15803D'
-                }}>
-                  <Mail size={20} />
-                </div>
-                <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 2px 0' }}>
-                    SMTP Email Configuration
-                  </h2>
-                  <p style={{ margin: 0, fontSize: 13, color: '#667085' }}>
-                    Configure your Gmail App Password to dispatch reminder emails directly to your personal mailbox.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleTestEmail}
-                disabled={testingEmail}
-                style={{
-                  background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#15803D',
-                  padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                }}
-              >
-                <Send size={14} /> {testingEmail ? 'Sending…' : 'Send Test Email'}
-              </button>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
-              <div>
-                <FieldLabel htmlFor="smtpHost">SMTP Host</FieldLabel>
-                <DarkInput
-                  id="smtpHost"
-                  value={settings.smtpHost}
-                  onChange={e => setSettings(s => ({ ...s, smtpHost: e.target.value }))}
-                  accentColor="#15803D"
-                />
-              </div>
-              <div>
-                <FieldLabel htmlFor="smtpPort">SMTP Port</FieldLabel>
-                <DarkInput
-                  id="smtpPort"
-                  type="number"
-                  value={settings.smtpPort}
-                  onChange={e => setSettings(s => ({ ...s, smtpPort: Number(e.target.value) }))}
-                  accentColor="#15803D"
-                />
-              </div>
-              <div>
-                <FieldLabel htmlFor="smtpUser">Sender Email</FieldLabel>
-                <DarkInput
-                  id="smtpUser"
-                  placeholder="your.email@gmail.com"
-                  value={settings.smtpUser}
-                  onChange={e => setSettings(s => ({ ...s, smtpUser: e.target.value }))}
-                  accentColor="#15803D"
-                />
-              </div>
-              <div>
-                <FieldLabel htmlFor="smtpPass">Gmail App Password</FieldLabel>
-                <DarkInput
-                  id="smtpPass"
-                  type={showSmtpPass ? 'text' : 'password'}
-                  placeholder="16-character app password"
-                  value={settings.smtpPass}
-                  onChange={e => setSettings(s => ({ ...s, smtpPass: e.target.value }))}
-                  accentColor="#15803D"
-                  suffix={
-                    <button
-                      type="button"
-                      onClick={() => setShowSmtpPass(!showSmtpPass)}
-                      style={{ background: 'transparent', border: 'none', padding: '0 12px', color: '#667085', cursor: 'pointer' }}
-                    >
-                      {showSmtpPass ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {/* ── CARD 6: DATA BACKUP & RESTORE (PRIORITY 6 - FUNCTIONAL!) ── */}
+        {/* ── CARD 5: DATA BACKUP & RESTORE (PRIORITY 5 - FUNCTIONAL!) ── */}
         {/* ══════════════════════════════════════════════════════════════ */}
         {(activeTab === 'all' || activeTab === 'data') && (
           <div style={{

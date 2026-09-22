@@ -34,6 +34,7 @@ app.use('/api/ai', require('./routes/ai'));
 app.use('/api/google', require('./routes/google'));
 app.use('/api/gmail', require('./routes/gmail'));
 app.use('/api/calendar', require('./routes/calendar'));
+app.use('/api/tester-requests', require('./routes/tester'));
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ message: `Route ${req.method} ${req.path} not found` }));

@@ -76,11 +76,13 @@ const testEmail = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     const settingsToTest = { ...user.settings, ...req.body };
-    if (!settingsToTest.smtpUser || !settingsToTest.smtpPass) {
+    const authUser = settingsToTest.smtpUser || process.env.SMTP_USER;
+    const authPass = settingsToTest.smtpPass || process.env.SMTP_PASS;
+    if (!authUser || !authPass) {
       return res.status(400).json({
         isKeyMissing: true,
         keyType: 'Email',
-        message: 'SMTP Email and App Password are not configured in Settings.',
+        message: 'Server SMTP credentials are not configured in .env',
       });
     }
     user.settings = settingsToTest;
@@ -91,7 +93,7 @@ const testEmail = async (req, res) => {
     res.status(400).json({
       isKeyMissing: err.message?.includes('SMTP Email') || err.message?.includes('credentials'),
       keyType: 'Email',
-      message: err.message || 'Failed to send test email. Check your SMTP credentials.',
+      message: err.message || 'Failed to send test email.',
     });
   }
 };

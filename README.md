@@ -1,6 +1,6 @@
-# 🎯 OppTrack — Clinical Placement Tracker
+# 🎯 OppTrack — Placement & Clinical Application Assistant
 
-> **AI-powered placement opportunity tracker with intelligent form autofill Chrome Extension.**
+> **Intelligent campus placement tracker, Google OAuth calendar & email synchronizer, and AI-powered Chrome Extension for automatic form filling.**
 
 [![Live Demo](https://img.shields.io/badge/Live%20App-Vercel-black?logo=vercel)](https://opp-track-clinical-placement.vercel.app)
 [![GitHub](https://img.shields.io/badge/GitHub-Repo-blue?logo=github)](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement)
@@ -8,37 +8,57 @@
 
 ---
 
-## ✨ Features
+## 🎨 Modern Design System
 
-### 🌐 Web Application
-- **Dashboard** — Overview of active opportunities, upcoming deadlines, and recent activity
-- **Opportunities Tracker** — Add, update, and manage placement company applications
-- **Calendar View** — Visual deadline tracker for all opportunities
-- **Activity Log** — Full history of all form submissions and profile updates
-- **Profile Vault** — Store all placement profile data in one place (academics, skills, address, achievements, links)
-- **AI Settings** — Configure your preferred AI provider (Groq, Gemini, OpenAI, OpenRouter, Anthropic) and API key — synced with the extension
+OppTrack features a curated, high-contrast productivity design system:
+- **Primary Navy (`#0B1F3A`)**: Structural headers, navigation sidebar, and primary call-to-actions.
+- **Deep Blue (`#123C73`)**: Active states, emphasis text, and brand badges.
+- **Vibrant Teal (`#18B7A0` / `#22C7AE`)**: Accents, progress indicators, highlights, and success cues.
+- **Background (`#F7F9FC`) & Cards (`#FFFFFF`)**: Clean, distraction-free surfaces with soft borders (`#E5EAF0`).
 
-### 🧩 Chrome Extension
-- **AI Vector Autofill** — Detects form fields intelligently and fills them using your Profile Vault data via LLM
-- **Confidence Scoring** — Each filled answer carries a confidence score
-- **Database Fallback** — If AI fails, uses direct vector search from your MongoDB profile data
-- **New Data Detection** — Prompts to save new information found in a form back to your profile
-- **Settings Sync** — Extension AI settings (provider, model, API key) are fully synced with the web app account
-- **Register Redirect** — Not registered? The extension redirects you directly to the website registration page
+---
+
+## ✨ Features & Capabilities
+
+### 1. 🌐 Web Application
+- **Dashboard Overview** — High-level metrics for active opportunities, upcoming deadlines, placement statistics, and quick actions.
+- **Opportunities Tracker** — Create, organize, filter, and track applications across multiple stages (Applied, Assessment, Interview, Offer, Rejected).
+- **Calendar View** — Full-month and weekly schedule of interview dates, drive deadlines, and preparation milestones.
+- **Google OAuth Integrations**:
+  - **Gmail Auto-Fetch**: Queries your inbox for campus drive emails, shortlists, and placement notifications with one-click conversion into opportunity cards.
+  - **Google Calendar Sync**: Automatically writes application deadlines, online tests, and interview schedules to your Google Calendar with custom reminders.
+- **Developer Testing Program (100-User Cap)**:
+  - Built-in applicant request page (`/google-tester`) for students to submit their Gmail.
+  - Shows real-time slots availability (1 Developer + Approved Testers / 100 User Google Cap).
+  - Automatically dispatches an instant notification email to the administrator with one-click links to Google Cloud Console Audience test users.
+- **Automated Deadline Notifications**:
+  - Daily cron service notifies students before critical test and application deadlines directly via platform SMTP — no manual user SMTP configuration required!
+- **Profile Vault** — Centralized, secure storage for candidate credentials:
+  - Personal information, Contact details, Academic scores (10th, 12th, B.Tech/Graduation, CGPA).
+  - Technical skills, projects, certifications, LinkedIn, GitHub, and portfolio links.
+- **Multi-LLM AI Configuration** — Support for Groq Cloud, Google Gemini, OpenAI, OpenRouter, and Anthropic with automatic client-extension synchronization.
+
+---
+
+### 2. 🧩 Chrome Extension (MV3)
+- **AI Vector Autofill** — Scans active web forms (e.g., Google Forms) and maps questions to your Profile Vault data using LLM reasoning.
+- **Confidence Scoring** — Visual confidence badge for every filled answer so students can review before submitting.
+- **Local Fallback Engine** — Uses cosine vector similarity directly against MongoDB profile records if the primary LLM is unavailable.
+- **New Data Learning** — Detects any new profile fields entered in external forms and prompts you to save them back to your Profile Vault.
+- **Instant Settings Sync** — Seamlessly synchronizes AI models and API keys with your OppTrack web account.
 
 ---
 
 ## 🏗️ Tech Stack
 
-| Layer | Technology |
+| Layer | Technologies |
 |---|---|
-| **Frontend** | React.js (Vite), CSS-in-JS |
-| **Backend** | Node.js, Express.js |
-| **Database** | MongoDB (Mongoose) |
-| **AI Providers** | Groq Cloud, Google Gemini, OpenAI, OpenRouter, Anthropic |
-| **Vector Search** | In-memory cosine similarity vector index (custom) |
-| **Extension** | Chrome MV3 Extension (Vanilla JS) |
-| **Deployment** | Vercel (Frontend), Render (Backend) |
+| **Frontend** | React 18 (Vite), React Router v6, Lucide Icons, Modern CSS-in-JS |
+| **Backend** | Node.js, Express.js, Nodemailer, Cron Services |
+| **Database** | MongoDB Atlas (Mongoose ODM) |
+| **Integrations** | Google Cloud OAuth2, Gmail API (v1), Google Calendar API (v3) |
+| **AI Providers** | Groq (Llama 3.3 / 3.1), Google Gemini (2.0 / 1.5 Flash), OpenAI (GPT-4o), OpenRouter |
+| **Extension** | Chrome Manifest V3 (Vanilla JS, Content Scripts, Service Worker) |
 
 ---
 
@@ -51,7 +71,7 @@ git clone https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement.git
 cd OppTrack-Clinical-Placement
 ```
 
-### 2. Setup Environment Variables
+### 2. Configure Server Environment Variables
 
 Create a `.env` file in the `server/` directory:
 
@@ -60,11 +80,21 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
 CLIENT_URL=http://localhost:5173
+
+# Google OAuth Credentials (Google Cloud Console)
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:5000/api/google/callback
+
+# Platform SMTP (For automated student reminders & tester notifications)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_gmail_app_password
+ADMIN_EMAIL=your_email@gmail.com
 ```
 
-> **Note:** AI API keys are **not** stored in `.env` — they are managed per-user in the database via the Settings page.
-
-### 3. Install & Run Backend
+### 3. Install & Start Backend
 
 ```bash
 cd server
@@ -72,97 +102,100 @@ npm install
 npm run dev
 ```
 
-### 4. Install & Run Frontend
+The backend server starts on `http://localhost:5000`.
+
+### 4. Install & Start Frontend
 
 ```bash
-cd client
+cd ../client
 npm install
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`.
+The frontend web app will be available at `http://localhost:5173`.
 
 ---
 
-## 🧩 Chrome Extension Setup
+## 🧩 Chrome Extension Installation
 
-### Load as Unpacked Extension (Development)
+### Developer Mode Installation
 
-1. Go to `chrome://extensions/` in your browser
-2. Enable **Developer Mode** (toggle top-right)
-3. Click **Load Unpacked**
-4. Select the `extension/` folder from this repo
-5. The OppTrack AI Autofill extension will appear in your extensions bar
+1. Open Google Chrome and navigate to `chrome://extensions/`.
+2. Toggle on **Developer mode** in the top-right corner.
+3. Click **Load unpacked**.
+4. Select the `extension/` directory from this repository.
+5. Pin the OppTrack extension to your toolbar and sign in with your OppTrack account.
 
-### Download Packaged Extension (Release)
+### Packaged Download (.zip)
 
 > ⬇️ **[Download OppTrack.AutoFill.Extension.zip](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement/releases/download/extension/OppTrack.AutoFill.Extension.zip)**
 
 ---
 
-## 🤖 AI Provider Configuration
+## 🛡️ Google OAuth & Tester Program Workflow
 
-After registering and logging in:
+Under Google Cloud policies, unverified applications run in **Testing Mode**, which enforces a hard limit of **100 authorized test users**:
 
-1. Go to **Settings** in the web app (or click ⚙️ in the extension)
-2. Select your **AI Provider**:
-   - **Groq Cloud** — Free, ultra-fast (recommended for beginners) — API key from [console.groq.com](https://console.groq.com/keys) starts with `gsk_`
-   - **Google Gemini** — Free tier available — API key from [aistudio.google.com](https://aistudio.google.com/apikey) starts with `AIzaSy`
-   - **OpenAI** — GPT-4o-mini / GPT-4o — API key from [platform.openai.com](https://platform.openai.com/api-keys) starts with `sk-`
-   - **OpenRouter** — Access 100+ models — API key from [openrouter.ai](https://openrouter.ai) starts with `sk-or-`
-   - **Anthropic** — Claude models
-3. Select a **Model** from the dropdown
-4. Paste your **API Key**
-5. Click **Test AI Connection** then **Save AI Settings**
-
-> Settings sync automatically between the web app and extension!
+```
+[Student / Applicant]
+         │
+         ▼
+Submits Gmail at /google-tester
+         │
+         ▼
+[OppTrack Backend] ─────────► Sends Alert Email to Platform Admin
+                                  │
+                                  ▼
+                     Admin clicks direct link to
+                     Google Cloud Console Audience
+                                  │
+                                  ▼
+                     Admin adds Gmail to Test Users
+                                  │
+                                  ▼
+[Student connects Gmail & Calendar with zero verification errors!]
+```
 
 ---
 
-## 📁 Project Structure
+## 📁 Repository Structure
 
 ```
 OppTrack-Clinical-Placement/
-├── client/                    # React.js Frontend (Vite)
-│   └── src/
-│       ├── pages/             # Dashboard, Opportunities, Profile, Settings...
-│       ├── components/        # Sidebar, MissingKeyModal, etc.
-│       ├── api/               # Axios API layer
-│       └── context/           # Auth context
+├── client/                     # React.js Frontend (Vite)
+│   ├── src/
+│   │   ├── pages/              # Dashboard, Opportunities, Calendar, HelpGuide, GoogleTesterPage...
+│   │   ├── components/         # Sidebar, Navbar, Modals...
+│   │   ├── api/                # Centralized Axios API services
+│   │   └── context/            # AuthContext & state providers
+│   └── package.json
 │
-├── server/                    # Node.js / Express Backend
-│   ├── controllers/           # aiFormController, settingsController...
-│   ├── models/                # User, Profile, Opportunity, ActivityLog...
-│   ├── routes/                # API route definitions
-│   ├── services/              # aiExtraction.service, vector.service...
-│   └── middleware/            # Auth middleware (JWT)
+├── server/                     # Node.js / Express Backend
+│   ├── controllers/            # opportunity, gmail, calendar, tester, settings...
+│   ├── models/                 # User, Opportunity, TesterRequest, Profile...
+│   ├── routes/                 # API endpoints (REST)
+│   ├── services/               # reminder.service, gmailSync.service, calendarSync.service...
+│   ├── server.js               # Express application entrypoint
+│   └── package.json
 │
-└── extension/                 # Chrome MV3 Extension
-    ├── popup/                 # popup.html, popup.js, popup.css
-    ├── content/               # content.js (form scanner & autofill)
-    └── background.js          # Service worker (auth, message routing)
+└── extension/                  # Chrome Manifest V3 Extension
+    ├── popup/                  # Extension UI & controls
+    ├── content/                # Page scanner & intelligent autofill
+    ├── background.js           # Background worker & auth router
+    └── manifest.json
 ```
-
----
-
-## 🔗 Links
-
-| Resource | URL |
-|---|---|
-| 🌐 Live Web App | [opp-track-clinical-placement.vercel.app](https://opp-track-clinical-placement.vercel.app) |
-| 📦 Extension Download | [OppTrack.AutoFill.Extension.zip](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement/releases/download/extension/OppTrack.AutoFill.Extension.zip) |
-| ⭐ GitHub Repo | [nikhilpuppalwar/OppTrack-Clinical-Placement](https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement) |
 
 ---
 
 ## 👤 Author
 
 **Nikhil Puppalwar**
-- College: Pimpri Chinchwad College of Engineering (PCCOE), Pune
-- Email: nikhil.puppalwar23@pccoepune.org
+- Institution: Pimpri Chinchwad College of Engineering (PCCOE), Pune
+- Email: nikhilpuppalwar16@gmail.com
+- GitHub: [@nikhilpuppalwar](https://github.com/nikhilpuppalwar)
 
 ---
 
 ## 📜 License
 
-This project is licensed under the MIT License.
+This project is open source and available under the [MIT License](LICENSE).

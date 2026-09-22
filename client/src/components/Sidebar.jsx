@@ -6,7 +6,7 @@ import logoImg from '../assets/logo.png';
 import {
   LayoutDashboard, Briefcase, Calendar, History,
   User, Settings, LogOut, Puzzle, HelpCircle, ExternalLink,
-  Bell, X, Clock, Send, Sparkles, AlertTriangle
+  Bell, X, Clock, Send, Sparkles, AlertTriangle, ShieldCheck
 } from 'lucide-react';
 import { settingsAPI } from '../api';
 import { sendDesktopNotification, requestNotificationPermission } from '../utils/notifications';
@@ -19,6 +19,7 @@ const NAV = [
   { to: '/history', icon: History, label: 'Activity Log' },
   { to: '/profile', icon: User, label: 'Profile Vault' },
   { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/google-tester', icon: ShieldCheck, label: 'Google Testers' },
   { to: '/help', icon: HelpCircle, label: 'Help & Extension' },
 ];
 

@@ -96,3 +96,12 @@ export const calendarAPI = {
   syncAll: () => api.post('/calendar/sync-all'),
 };
 
+// Google OAuth Tester Requests (100-User Cap)
+export const testerAPI = {
+  getStats: () => api.get('/tester-requests/stats'),
+  create: (data) => api.post('/tester-requests', data),
+  getMyStatus: (params) => api.get('/tester-requests/my-status', { params }),
+  listAll: (params) => api.get('/tester-requests/all', { params }),
+  updateStatus: (id, data) => api.patch(`/tester-requests/${id}/status`, data),
+};
+
