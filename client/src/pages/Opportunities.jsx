@@ -1271,42 +1271,42 @@ export default function Opportunities() {
 
       {/* AI Merge Modal */}
       {activeAiOpp && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#171B18', border: '1px solid #9A8CFF', borderRadius: 16, width: '100%', maxWidth: 600, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.8)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(11, 31, 58, 0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 16, width: '100%', maxWidth: 600, padding: 26, boxShadow: '0 20px 50px rgba(11, 31, 58, 0.18)', display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#121413', border: '1px solid #9A8CFF', color: '#9A8CFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#E8F8F5', border: '1px solid rgba(24, 183, 160, 0.3)', color: '#0D7A6B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Wand2 size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 18, color: '#9A8CFF', fontFamily: 'serif' }}>Merge Follow-up Email (AI)</h3>
-                  <p style={{ margin: 0, fontSize: 12, color: 'rgba(242,243,237,0.5)', fontFamily: 'DM Mono, monospace' }}>{activeAiOpp.company}</p>
+                  <h3 style={{ margin: 0, fontSize: 17, color: '#0B1F3A', fontWeight: 700 }}>Merge Follow-up Email (AI)</h3>
+                  <p style={{ margin: '2px 0 0', fontSize: 12.5, color: '#667085', fontWeight: 500 }}>{activeAiOpp.company} — Paste test links, interview dates, or result emails</p>
                 </div>
               </div>
-              <button style={{ background: 'transparent', border: 'none', color: '#F2F3ED', cursor: 'pointer' }} onClick={() => setActiveAiOpp(null)}><X size={18} /></button>
+              <button style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer', padding: 4 }} onClick={() => setActiveAiOpp(null)}><X size={18} /></button>
             </div>
 
             <textarea
-              style={{ width: '100%', background: '#121413', border: '1px solid #2A302B', color: '#F2F3ED', padding: 14, borderRadius: 8, minHeight: 160, fontFamily: 'DM Mono, monospace', fontSize: 13 }}
-              placeholder="Paste follow-up email text here..."
+              style={{ width: '100%', background: '#F8FAFD', border: '1px solid #CBD5E1', color: '#172033', padding: 14, borderRadius: 8, minHeight: 160, fontSize: 13, outline: 'none', boxSizing: 'border-box', lineHeight: 1.5 }}
+              placeholder="Paste follow-up email text, interview schedule, or test link here..."
               value={followUpText}
               onChange={e => setFollowUpText(e.target.value)}
             />
 
             {changesSummary && (
-              <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid #22c55e40', borderRadius: 8, padding: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 12, color: '#22c55e', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ background: '#EAF8EF', border: '1px solid #A3E5D9', borderRadius: 8, padding: 14 }}>
+                <div style={{ fontWeight: 700, fontSize: 12.5, color: '#16A34A', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <CalendarDays size={14} /> Changes Merged & Calendar Updated!
                 </div>
-                <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#F2F3ED' }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: '#172033', lineHeight: 1.6 }}>
                   {changesSummary.map((cs, i) => <li key={i}>{cs}</li>)}
                 </ul>
               </div>
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button onClick={() => setActiveAiOpp(null)} style={{ background: 'transparent', border: '1px solid #2A302B', color: '#F2F3ED', padding: '8px 16px', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleAiUpdateSubmit} disabled={aiUpdating} style={{ background: '#121413', color: '#9A8CFF', border: '1px solid #9A8CFF', padding: '8px 20px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={() => setActiveAiOpp(null)} style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#667085', padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleAiUpdateSubmit} disabled={aiUpdating} style={{ background: '#0B1F3A', color: '#FFFFFF', border: 'none', padding: '9px 20px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 {aiUpdating ? 'Merging…' : 'Merge Info'}
               </button>
             </div>
