@@ -23,10 +23,9 @@ function resolveApiKeyAndProvider(userSettings = {}) {
 
   // Model safety validation per provider according to official documentation
   if (provider === 'groq') {
-    // Groq active models: openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b, llama-3.3-70b-versatile, llama-3.1-8b-instant, etc.
-    const deprecatedGroqModels = ['llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+    const deprecatedGroqModels = ['llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
     if (!model || model === 'other' || deprecatedGroqModels.includes(model)) {
-      model = 'openai/gpt-oss-120b';
+      model = 'llama-3.3-70b-versatile';
     }
   } else if (provider === 'gemini') {
     const deprecatedGeminiModels = ['gemini-2.0-flash-exp'];
@@ -100,9 +99,6 @@ async function callLLM(prompt, userSettings) {
   if (provider === 'groq') {
     const modelsToTry = [
       model,
-      'openai/gpt-oss-120b',
-      'openai/gpt-oss-20b',
-      'qwen/qwen3.8-27b',
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
     ].filter((m, i, arr) => m && arr.indexOf(m) === i);
@@ -417,8 +413,32 @@ function performDatabaseFallbackMatching(questions, profile, vectorIndex) {
       matchedValue = profile.tenthPercent; matchedField = 'tenthPercent'; confidence = 0.90;
     } else if (labelLower.includes('12th') || labelLower.includes('hsc')) {
       matchedValue = profile.twelfthPercent; matchedField = 'twelfthPercent'; confidence = 0.90;
-    } else if (labelLower.includes('cgpa') || labelLower.includes('btech %') || labelLower.includes('be %')) {
+    } else if (labelLower.includes('cgpa') || labelLower.includes('btech %') || labelLower.includes('be %') || labelLower.includes('pointer')) {
       matchedValue = profile.cgpa; matchedField = 'cgpa'; confidence = 0.90;
+    } else if (labelLower.includes('resume') || labelLower.includes('cv') || labelLower.includes('drive link')) {
+      matchedValue = profile.resumeLink; matchedField = 'resumeLink'; confidence = 0.95;
+    } else if (labelLower.includes('linkedin')) {
+      matchedValue = profile.linkedinLink; matchedField = 'linkedinLink'; confidence = 0.95;
+    } else if (labelLower.includes('github')) {
+      matchedValue = profile.githubLink; matchedField = 'githubLink'; confidence = 0.95;
+    } else if (labelLower.includes('leetcode')) {
+      matchedValue = profile.leetcodeLink; matchedField = 'leetcodeLink'; confidence = 0.95;
+    } else if (labelLower.includes('codechef')) {
+      matchedValue = profile.codechefLink; matchedField = 'codechefLink'; confidence = 0.95;
+    } else if (labelLower.includes('hackerrank')) {
+      matchedValue = profile.hackerrankLink; matchedField = 'hackerrankLink'; confidence = 0.95;
+    } else if (labelLower.includes('project title') || labelLower.includes('capstone')) {
+      matchedValue = profile.projectTitle; matchedField = 'projectTitle'; confidence = 0.90;
+    } else if (labelLower.includes('project') || labelLower.includes('project description')) {
+      matchedValue = profile.projectDetails || profile.projectTitle; matchedField = 'projectDetails'; confidence = 0.85;
+    } else if (labelLower.includes('certification') || labelLower.includes('course')) {
+      matchedValue = profile.technicalCertifications; matchedField = 'technicalCertifications'; confidence = 0.85;
+    } else if (labelLower.includes('internship') || labelLower.includes('work experience')) {
+      matchedValue = profile.previousInternships; matchedField = 'previousInternships'; confidence = 0.85;
+    } else if (labelLower.includes('backlog')) {
+      matchedValue = profile.hasBacklog || 'No'; matchedField = 'hasBacklog'; confidence = 0.90;
+    } else if (labelLower.includes('hobby') || labelLower.includes('interest')) {
+      matchedValue = profile.hobby; matchedField = 'hobby'; confidence = 0.85;
     }
 
     if (matchedValue) {
