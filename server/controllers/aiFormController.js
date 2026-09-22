@@ -513,26 +513,29 @@ Form Title: "${formTitle}"
 Existing Candidate Database Profile:
 ${JSON.stringify(existingProfileData, null, 2)}
 
-Fields & Entered Values Scanned from Form:
+Questions & Fields Scanned from Form:
 ${JSON.stringify(formFields, null, 2)}
 
 INSTRUCTIONS:
-1. Analyze the fields and values scanned from the form.
-2. Compare each filled field against the candidate's existing database profile.
-3. Identify ANY NEW candidate information that is present in the form but MISSING or DIFFERENT in the database profile (for example: a new PRN, updated CGPA, new phone number, new GitHub/LeetCode link, new certification, or custom field).
-4. Ignore generic non-candidate form questions (like "Do you agree to terms?", "Select your batch timing", "Today's date").
-5. Return ONLY a JSON object with proposed additions/updates:
+1. Analyze all fields and questions scanned from the form.
+2. Compare each field against the candidate's existing database profile:
+   A) NEW/UPDATED VALUE: If the form contains an entered value that is missing or different in the database profile (e.g., updated CGPA, new phone, PRN, LeetCode link), suggest it with that value.
+   B) MISSING FIELD REQUIREMENT: If the form asks for candidate information (e.g., "Father's Name", "Alternate Phone", "Current Address", "JEE Score", "Backlogs details") that does NOT exist in the database profile, suggest it as a new dynamic field. Set "value" to whatever was entered, or "" if left blank.
+   C) FILE UPLOAD REQUIREMENT: If the form asks for a file attachment (resume, marksheet, id card, photo), suggest it with fieldType: "file_path" and reason: "File upload required by this placement form."
+3. Ignore generic non-candidate form questions (like "I agree to terms", "Captcha", "Confirm").
+4. Return ONLY a JSON object with this exact structure:
 
 {
   "detectedNewData": [
     {
-      "id": "string (suggested unique key/slug)",
+      "id": "string (unique slug)",
       "label": "string (human-readable field label)",
-      "value": "string (the new value found)",
-      "section": "personal | academic | competitive_coding | projects | dynamic",
-      "fieldType": "short_text | paragraph | date | select",
+      "value": "string (value found or suggested)",
+      "section": "personal | academic | competitive_coding | projects | documents | dynamic",
+      "fieldType": "short_text | paragraph | date | select | file_path",
       "isNew": true,
-      "reason": "string (e.g. 'Found PRN value in form which was empty in DB')"
+      "isFile": boolean,
+      "reason": "string (e.g. 'Required by this form. Add to Profile Vault for future autofill.')"
     }
   ]
 }
@@ -542,14 +545,35 @@ INSTRUCTIONS:
     try {
       result = await callLLM(prompt, userSettings);
     } catch (llmErr) {
-      if (llmErr.isKeyMissing) {
-        return res.status(400).json({
-          isKeyMissing: true,
-          keyType: 'AI',
-          message: 'AI API Key is missing. Please configure your LLM API Key in Settings.',
-        });
-      }
-      throw llmErr;
+      console.warn('AI form analysis LLM error, using intelligent profile diff fallback:', llmErr.message);
+      // Intelligent fallback diff against profile
+      const fallbackNewData = [];
+      const vectorIndex = vectorService.buildVectorIndex(profile);
+
+      formFields.forEach((field, i) => {
+        if (!field.label) return;
+        const hits = vectorService.searchVectorIndex(vectorIndex, field.label, 1);
+        const topHit = hits && hits[0];
+        const isMatchedInProfile = topHit && topHit.score >= 0.50 && topHit.value;
+
+        if (!isMatchedInProfile) {
+          const isFile = field.type === 'file' || field.label.toLowerCase().includes('upload') || field.label.toLowerCase().includes('resume');
+          fallbackNewData.push({
+            id: `field_${Date.now()}_${i}`,
+            label: field.label,
+            value: field.value || '',
+            section: isFile ? 'documents' : 'dynamic',
+            fieldType: isFile ? 'file_path' : (field.type === 'paragraph' ? 'paragraph' : 'short_text'),
+            isNew: true,
+            isFile,
+            reason: isFile
+              ? 'File upload required by this placement form. Add to your Profile Vault.'
+              : 'Field is currently missing from your Profile Vault. Add it for instant autofill next time.',
+          });
+        }
+      });
+
+      result = { detectedNewData: fallbackNewData };
     }
 
     res.json({

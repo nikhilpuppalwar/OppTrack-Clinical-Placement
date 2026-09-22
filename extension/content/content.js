@@ -514,6 +514,16 @@ async function performAIAutofill() {
     }
   });
 
+  // Record in Form History so Recent Forms in extension popup is immediately updated!
+  msg('POST_FORM_HISTORY', {
+    payload: {
+      formUrl: window.location.href,
+      formTitle: document.title || 'Google Form',
+      action: filledCount > 0 ? 'autofill' : 'scan',
+      fieldsFilledCount: filledCount,
+    },
+  }).catch(() => {});
+
   return { fieldsFilledCount: filledCount };
 }
 
@@ -533,10 +543,10 @@ function buildFileHelperCard(question, documents) {
 
   const card = document.createElement('div');
   card.className = `${NS}-file-helper`;
-  card.style.cssText = 'border:1px dashed rgba(183,227,74,0.4);border-radius:8px;background:rgba(183,227,74,0.05);padding:10px 14px;margin-top:8px;font-size:12px;color:rgba(242,243,237,0.85);';
+  card.style.cssText = 'border:1px dashed rgba(24,183,160,0.4);border-radius:8px;background:rgba(24,183,160,0.06);padding:10px 14px;margin-top:8px;font-size:12px;color:#0B1F3A;';
 
   const title = document.createElement('div');
-  title.style.cssText = 'font-size:11px;font-weight:700;text-transform:uppercase;color:#b7e34a;margin-bottom:6px;';
+  title.style.cssText = 'font-size:11px;font-weight:700;text-transform:uppercase;color:#0D7A6B;margin-bottom:6px;display:flex;align-items:center;gap:5px;';
   title.textContent = `📎 Suggested ${typeHint.toUpperCase()} Document`;
   card.appendChild(title);
 
@@ -548,7 +558,7 @@ function buildFileHelperCard(question, documents) {
     link.href = doc.fileUrl;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.style.cssText = 'color:#60a5fa;text-decoration:none;font-weight:500;';
+    link.style.cssText = 'color:#2563EB;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:4px;';
     link.textContent = `↗ Open ${doc.label}`;
 
     row.appendChild(link);
@@ -556,8 +566,8 @@ function buildFileHelperCard(question, documents) {
   });
 
   const reminder = document.createElement('div');
-  reminder.style.cssText = 'font-size:11px;color:rgba(242,243,237,0.5);margin-top:6px;';
-  reminder.textContent = '⚠ Download file then upload manually above';
+  reminder.style.cssText = 'font-size:11px;color:#667085;margin-top:6px;';
+  reminder.textContent = 'ℹ️ Open/download file link, then attach to the file upload box above';
   card.appendChild(reminder);
 
   return card;
@@ -584,21 +594,31 @@ async function analyzeAndSaveNewData() {
       if (selected.length) currentValue = selected.map(getChoiceLabel).join(', ');
     }
 
-    if (currentValue.trim()) {
-      formFields.push({
-        label: info.label,
-        value: currentValue.trim(),
-        type: info.type,
-      });
-    }
+    formFields.push({
+      label: info.label,
+      value: currentValue.trim(),
+      type: info.type,
+      options: info.options || [],
+      placeholder: info.placeholder || '',
+    });
   });
 
   if (!formFields.length) {
-    alert('No filled fields found on this form to analyze.');
+    alert('No form fields detected on this page to analyze.');
     return;
   }
 
   const formTitle = document.title || 'Google Form';
+
+  // Record in Form History so Recent Forms in extension popup is immediately updated!
+  msg('POST_FORM_HISTORY', {
+    payload: {
+      formUrl: window.location.href,
+      formTitle: formTitle,
+      action: 'sync',
+      fieldsFilledCount: formFields.filter(f => f.value).length,
+    },
+  }).catch(() => {});
 
   const res = await msg('ANALYZE_NEW_DATA', {
     payload: { formFields, formTitle },
@@ -612,7 +632,7 @@ async function analyzeAndSaveNewData() {
   const detectedNewData = res.data?.detectedNewData || [];
 
   if (!detectedNewData.length) {
-    alert('No new or updated profile data found in this form! All values already match your database profile.');
+    alert('AI Analysis Complete: All questions on this form already match your Profile Vault!');
     return;
   }
 
@@ -630,23 +650,28 @@ function showNewDataModal(items) {
   overlay.innerHTML = `
     <div class="${NS}-modal-card">
       <div class="${NS}-modal-header">
-        <div class="${NS}-modal-title">🔍 New Candidate Data Detected</div>
+        <div class="${NS}-modal-title">✨ AI Suggested Fields to Add / Update</div>
         <button id="${NS}-close-modal" style="background:none;border:none;color:#667085;font-size:18px;cursor:pointer;line-height:1;">✕</button>
       </div>
       <div class="${NS}-modal-body">
-        <p style="font-size:12px;color:#667085;margin-bottom:14px;">
-          The AI scanned this form and found <strong>${items.length}</strong> new/updated detail(s) missing from your database profile:
+        <p style="font-size:12.5px;color:#667085;margin-bottom:14px;line-height:1.5;">
+          The AI analyzed this form and identified <strong>${items.length}</strong> detail(s) missing or updated compared to your Profile Vault. Review or edit values below:
         </p>
         <div id="${NS}-items-container">
           ${items
             .map(
               (item) => `
-            <div class="${NS}-item-row">
-              <input type="checkbox" id="chk_${item.id}" data-id="${item.id}" checked style="margin-top:3px;accent-color:#18B7A0;cursor:pointer;" />
-              <div class="${NS}-item-info">
-                <div class="${NS}-item-label">${item.label}</div>
-                <div class="${NS}-item-val">${item.value}</div>
-                <div class="${NS}-item-reason">${item.reason}</div>
+            <div class="${NS}-item-row" style="background:#F8FAFD;border:1px solid #E5EAF0;border-radius:10px;padding:12px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start;">
+              <input type="checkbox" id="chk_${item.id}" data-id="${item.id}" checked style="margin-top:6px;accent-color:#18B7A0;cursor:pointer;flex-shrink:0;" />
+              <div class="${NS}-item-info" style="flex:1;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                  <span class="${NS}-item-label" style="font-size:13px;font-weight:700;color:#0B1F3A;">${item.label}</span>
+                  ${item.isFile ? `<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#5B21B6;padding:1px 6px;border-radius:4px;">File Upload</span>` : ''}
+                </div>
+                <div style="margin:4px 0;">
+                  <input type="text" id="val_${item.id}" value="${item.value || ''}" placeholder="${item.isFile ? 'e.g. Google Drive Link or File Name' : 'Enter value to save into vault...'}" style="width:100%;padding:7px 10px;border:1px solid #CBD5E1;border-radius:6px;font-size:12.5px;color:#0B1F3A;background:#FFFFFF;outline:none;box-sizing:border-box;" />
+                </div>
+                <div class="${NS}-item-reason" style="font-size:11.5px;color:#667085;margin-top:4px;">${item.reason}</div>
               </div>
             </div>
           `
@@ -654,9 +679,9 @@ function showNewDataModal(items) {
             .join('')}
         </div>
       </div>
-      <div class="${NS}-modal-footer">
-        <button id="${NS}-cancel-btn" class="${NS}-btn" style="background:#FFFFFF;border:1px solid #E5EAF0;color:#667085;">Cancel</button>
-        <button id="${NS}-save-db-btn" class="${NS}-btn" style="background:#0B1F3A;color:#FFFFFF;">💾 Save Selected to Database</button>
+      <div class="${NS}-modal-footer" style="padding:14px 20px;border-top:1px solid #E5EAF0;display:flex;justify-content:flex-end;gap:10px;background:#F8FAFD;">
+        <button id="${NS}-cancel-btn" class="${NS}-btn" style="background:#FFFFFF;border:1px solid #E5EAF0;color:#667085;padding:8px 16px;border-radius:6px;cursor:pointer;">Cancel</button>
+        <button id="${NS}-save-db-btn" class="${NS}-btn" style="background:#0B1F3A;color:#FFFFFF;padding:8px 18px;border-radius:6px;font-weight:700;cursor:pointer;">💾 Send to Profile Vault</button>
       </div>
     </div>
   `;
@@ -669,31 +694,41 @@ function showNewDataModal(items) {
   document.getElementById(`${NS}-save-db-btn`).onclick = async () => {
     const saveBtn = document.getElementById(`${NS}-save-db-btn`);
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving to Database…';
+    saveBtn.textContent = 'Sending to Vault…';
 
-    const fieldsToSave = items.filter((it) => {
-      const chk = document.getElementById(`chk_${it.id}`);
-      return chk && chk.checked;
-    });
+    const fieldsToSave = items
+      .filter((it) => {
+        const chk = document.getElementById(`chk_${it.id}`);
+        return chk && chk.checked;
+      })
+      .map((it) => {
+        const valInput = document.getElementById(`val_${it.id}`);
+        return {
+          ...it,
+          value: valInput ? valInput.value.trim() : it.value,
+        };
+      });
 
     if (!fieldsToSave.length) {
       alert('Please select at least one item to save.');
       saveBtn.disabled = false;
-      saveBtn.textContent = '💾 Save Selected to Database';
+      saveBtn.textContent = '💾 Send to Profile Vault';
       return;
     }
 
     const syncRes = await msg('SYNC_NEW_DATA', {
-      fieldsToSave,
-      formUrl: window.location.href,
-      formTitle: document.title,
+      payload: {
+        fieldsToSave,
+        formUrl: window.location.href,
+        formTitle: document.title || 'Google Form',
+      }
     });
     overlay.remove();
 
     if (syncRes.ok) {
       alert(
         syncRes.data?.message ||
-          'Candidate data sent to your OppTrack Profile Vault! Please open OppTrack to review and verify the AI merge recommendations before saving.'
+          'Candidate fields sent to your OppTrack Profile Vault! Please open OppTrack to review and verify the AI suggestions.'
       );
     } else {
       alert(`Failed to save: ${syncRes.data?.message || syncRes.error}`);
