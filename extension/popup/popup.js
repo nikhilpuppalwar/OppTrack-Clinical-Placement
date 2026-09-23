@@ -10,46 +10,80 @@ let currentTab = null;
 let matchedOpp = null;
 
 const PRESET_PROVIDERS = [
-  { value: 'groq', label: 'Groq Cloud (Recommended — Ultra Fast & Free)' },
-  { value: 'gemini', label: 'Google Gemini (gemini-1.5-flash / Pro)' },
-  { value: 'openai', label: 'OpenAI (ChatGPT / GPT-4o)' },
-  { value: 'anthropic', label: 'Anthropic (Claude 3.5)' },
-  { value: 'openrouter', label: 'OpenRouter.ai (All Open Models)' },
-  { value: 'deepseek', label: 'DeepSeek AI' },
-  { value: 'together', label: 'Together.ai' },
-  { value: 'other', label: '✏️ Custom Provider...' },
+  { value: 'groq', label: 'Groq Cloud (Fast LPU Inference — Recommended)' },
+  { value: 'gemini', label: 'Google Gemini (gemini-2.0-flash / 1.5-flash)' },
+  { value: 'openai', label: 'OpenAI (GPT-4o / GPT-4o-mini)' },
+  { value: 'anthropic', label: 'Anthropic (Claude 3.5 / 3.7)' },
+  { value: 'deepseek', label: 'DeepSeek AI (V3 / R1)' },
+  { value: 'openrouter', label: 'OpenRouter.ai (Universal Multi-Model API)' },
+  { value: 'together', label: 'Together.ai (Open Source Models)' },
+  { value: 'mistral', label: 'Mistral AI (Codestral / Large)' },
+  { value: 'ollama', label: 'Ollama / Local LLM (Self-hosted)' },
+  { value: 'other', label: '✏️ Custom Provider / OpenAI-Compatible Endpoint...' },
 ];
 
 const PRESET_MODELS = {
   groq: [
-    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended — Powerful & Fast)' },
+    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended — High Quality & Fast)' },
     { value: 'openai/gpt-oss-20b', label: 'openai/gpt-oss-20b (Ultra Fast)' },
-    { value: 'qwen/qwen3.8-27b', label: 'qwen/qwen3.8-27b' },
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
-    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'llama-3.3-70b-specdec', label: 'llama-3.3-70b-specdec (Speculative Decoding)' },
+    { value: 'llama-3.1-70b-versatile', label: 'llama-3.1-70b-versatile (Active)' },
+    { value: 'meta-llama/llama-guard-3-8b', label: 'meta-llama/llama-guard-3-8b' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   gemini: [
-    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Recommended — Fast & Latest)' },
-    { value: 'gemini-1.5-flash', label: 'gemini-1.5-flash (Fast & Free)' },
-    { value: 'gemini-1.5-pro', label: 'gemini-1.5-pro (High Accuracy)' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Recommended — Latest & Fastest)' },
+    { value: 'gemini-2.0-flash-lite', label: 'gemini-2.0-flash-lite (Cost-effective)' },
+    { value: 'gemini-1.5-flash-latest', label: 'gemini-1.5-flash-latest (Reliable)' },
+    { value: 'gemini-2.5-flash', label: 'gemini-2.5-flash (Next-Gen Preview)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   openai: [
-    { value: 'gpt-4o-mini', label: 'gpt-4o-mini (Fast & Affordable)' },
-    { value: 'gpt-4o', label: 'gpt-4o (High Accuracy)' },
-    { value: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'gpt-4o-mini', label: 'gpt-4o-mini (Recommended — Fast & Low Cost)' },
+    { value: 'gpt-4o', label: 'gpt-4o (High Reasoning Accuracy)' },
+    { value: 'o3-mini', label: 'o3-mini (Advanced Reasoning)' },
+    { value: 'gpt-4-turbo', label: 'gpt-4-turbo (Production Standard)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   anthropic: [
-    { value: 'claude-3-haiku-20240307', label: 'claude-3-haiku-20240307' },
-    { value: 'claude-3-5-sonnet-20241022', label: 'claude-3-5-sonnet-20241022' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'claude-3-5-haiku-latest', label: 'claude-3-5-haiku-latest (Recommended — Fast & Sharp)' },
+    { value: 'claude-3-5-sonnet-latest', label: 'claude-3-5-sonnet-latest (Top Reasoning)' },
+    { value: 'claude-3-7-sonnet-latest', label: 'claude-3-7-sonnet-latest (Hybrid Reasoning)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   openrouter: [
     { value: 'meta-llama/llama-3.3-70b-instruct', label: 'meta-llama/llama-3.3-70b-instruct' },
-    { value: 'deepseek/deepseek-r1', label: 'deepseek/deepseek-r1' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'deepseek/deepseek-chat', label: 'deepseek/deepseek-chat (DeepSeek V3)' },
+    { value: 'deepseek/deepseek-r1', label: 'deepseek/deepseek-r1 (Reasoning)' },
+    { value: 'google/gemini-2.0-flash-001', label: 'google/gemini-2.0-flash-001' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  deepseek: [
+    { value: 'deepseek-chat', label: 'deepseek-chat (DeepSeek V3 — Recommended)' },
+    { value: 'deepseek-reasoner', label: 'deepseek-reasoner (DeepSeek R1)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  together: [
+    { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', label: 'Meta-Llama-3.1-70B-Instruct-Turbo' },
+    { value: 'mistralai/Mixtral-8x22B-Instruct-v0.1', label: 'Mixtral-8x22B-Instruct-v0.1' },
+    { value: 'deepseek-ai/DeepSeek-V3', label: 'deepseek-ai/DeepSeek-V3' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  mistral: [
+    { value: 'mistral-large-latest', label: 'mistral-large-latest' },
+    { value: 'mistral-small-latest', label: 'mistral-small-latest' },
+    { value: 'codestral-latest', label: 'codestral-latest' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  ollama: [
+    { value: 'llama3.3', label: 'llama3.3 (Local)' },
+    { value: 'mistral', label: 'mistral (Local)' },
+    { value: 'qwen2.5', label: 'qwen2.5 (Local)' },
+    { value: 'deepseek-r1', label: 'deepseek-r1 (Local)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  other: [
+    { value: 'other', label: '✏️ Enter Custom Model Name...' },
   ],
 };
 
@@ -71,7 +105,7 @@ async function init() {
   const name = auth.user?.name || auth.user?.email || 'User';
   $('user-name').textContent = name;
 
-  // Load Settings (API Key, Provider, Model)
+  // Load Settings (API Key, Provider, Model, Base URL)
   loadSettings();
 
   // Determine if current page is a Google Form
@@ -113,6 +147,35 @@ async function init() {
   loadRecentForms();
 }
 
+function updateEndpointAndKeyHint(provider, baseUrl = '') {
+  const isLocal = provider === 'ollama' || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1');
+  const keyInput = $('llm-api-key');
+  const keyHint = $('key-hint');
+  const baseUrlGroup = $('base-url-group');
+
+  if (baseUrlGroup) {
+    if (provider === 'ollama' || provider === 'other' || isCustomProvider || baseUrl) {
+      baseUrlGroup.classList.remove('hidden');
+    } else {
+      baseUrlGroup.classList.add('hidden');
+    }
+  }
+
+  if (isLocal) {
+    if (keyHint) {
+      keyHint.textContent = 'Optional (Local)';
+      keyHint.style.color = '#16A34A';
+    }
+    if (keyInput) keyInput.placeholder = 'Optional for local Ollama / LM Studio (or leave blank)';
+  } else {
+    if (keyHint) {
+      keyHint.textContent = `Required for ${provider || 'AI'}`;
+      keyHint.style.color = '';
+    }
+    if (keyInput) keyInput.placeholder = 'Paste your API key (gsk_… / sk-or-… / AIzaSy…)';
+  }
+}
+
 // ─── Settings Logic (Synced 100% with Web App) ────────────────────────────────
 async function loadSettings() {
   const res = await msg('GET_SETTINGS');
@@ -120,6 +183,7 @@ async function loadSettings() {
     const s = res.data;
     const provider = s.llmProvider || 'groq';
     const model = s.llmModel || 'openai/gpt-oss-120b';
+    const baseUrl = s.llmBaseUrl || '';
 
     const isKnownProvider = PRESET_PROVIDERS.some((p) => p.value === provider);
     if (!isKnownProvider && provider) {
@@ -130,14 +194,19 @@ async function loadSettings() {
       $('llm-provider').value = provider;
     }
 
+    if ($('llm-base-url')) {
+      $('llm-base-url').value = baseUrl;
+    }
+
     updateModelSelectOptions(provider, model);
 
     $('llm-api-key').value = s.llmApiKey || '';
-    $('key-hint').textContent = `Required for ${provider}`;
+    updateEndpointAndKeyHint(provider, baseUrl);
 
     const msgEl = $('settings-msg');
-    if (s.hasApiKey) {
-      msgEl.textContent = '🟢 API Key active & synced with database account!';
+    const isLocal = provider === 'ollama' || baseUrl.includes('localhost');
+    if (s.hasApiKey || isLocal) {
+      msgEl.textContent = '🟢 AI Engine active & synced with database account!';
       msgEl.className = 'settings-msg success';
       msgEl.classList.remove('hidden');
     } else {
@@ -154,7 +223,7 @@ function updateModelSelectOptions(provider, selectedModel) {
 
   const models = PRESET_MODELS[provider] || [
     { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ];
 
   models.forEach((m) => {
@@ -181,11 +250,16 @@ function setIsCustomProvider(custom) {
     $('llm-provider').classList.add('hidden');
     $('custom-provider-input').classList.remove('hidden');
     $('toggle-custom-provider').textContent = '← Presets';
+    if ($('base-url-group')) $('base-url-group').classList.remove('hidden');
   } else {
     $('llm-provider').classList.remove('hidden');
     $('custom-provider-input').classList.add('hidden');
     $('toggle-custom-provider').textContent = '✏️ Custom';
   }
+  updateEndpointAndKeyHint(
+    custom ? $('custom-provider-input').value : $('llm-provider').value,
+    $('llm-base-url')?.value
+  );
 }
 
 function setIsCustomModel(custom) {
@@ -212,13 +286,35 @@ $('llm-provider').addEventListener('change', (e) => {
     groq: 'openai/gpt-oss-120b',
     gemini: 'gemini-2.0-flash',
     openai: 'gpt-4o-mini',
-    anthropic: 'claude-3-haiku-20240307',
+    anthropic: 'claude-3-5-haiku-latest',
     openrouter: 'meta-llama/llama-3.3-70b-instruct',
+    deepseek: 'deepseek-chat',
+    together: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
+    mistral: 'mistral-large-latest',
+    ollama: 'llama3.3',
   };
   const defModel = defaultModels[prov] || 'openai/gpt-oss-120b';
   updateModelSelectOptions(prov, defModel);
-  $('key-hint').textContent = `Required for ${prov}`;
+
+  if (prov === 'ollama' && $('llm-base-url') && !$('llm-base-url').value.trim()) {
+    $('llm-base-url').value = 'http://localhost:11434/v1';
+  }
+
+  updateEndpointAndKeyHint(prov, $('llm-base-url')?.value);
 });
+
+// Custom Provider Input Change
+$('custom-provider-input').addEventListener('input', (e) => {
+  updateEndpointAndKeyHint(e.target.value, $('llm-base-url')?.value);
+});
+
+// Base URL Input Change
+if ($('llm-base-url')) {
+  $('llm-base-url').addEventListener('input', (e) => {
+    const prov = isCustomProvider ? $('custom-provider-input').value : $('llm-provider').value;
+    updateEndpointAndKeyHint(prov, e.target.value);
+  });
+}
 
 // Model Select Change
 $('llm-model-select').addEventListener('change', (e) => {
@@ -259,10 +355,13 @@ function getSettingsFromUI() {
     ? $('custom-model-input').value.trim()
     : $('llm-model-select').value;
 
+  const baseUrl = $('llm-base-url') ? $('llm-base-url').value.trim() : '';
+
   return {
     llmProvider: provider,
     llmApiKey: $('llm-api-key').value.trim(),
     llmModel: model,
+    llmBaseUrl: baseUrl,
   };
 }
 

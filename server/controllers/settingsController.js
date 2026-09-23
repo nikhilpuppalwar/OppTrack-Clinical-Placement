@@ -44,6 +44,25 @@ function resolveApiKeyAndProvider(userSettings = {}) {
     if (!model || model === 'other') {
       model = 'meta-llama/llama-3.3-70b-instruct';
     }
+  } else if (provider === 'deepseek') {
+    if (!model || model === 'other') {
+      model = 'deepseek-chat';
+    }
+  } else if (provider === 'together') {
+    if (!model || model === 'other') {
+      model = 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo';
+    }
+  } else if (provider === 'mistral') {
+    if (!model || model === 'other') {
+      model = 'mistral-large-latest';
+    }
+  } else if (provider === 'ollama') {
+    if (!model || model === 'other') {
+      model = 'llama3.3';
+    }
+    if (!baseUrl) {
+      baseUrl = 'http://localhost:11434/v1';
+    }
   }
 
   return { apiKey, provider, model, baseUrl };
@@ -114,7 +133,8 @@ const testAiKey = async (req, res) => {
     const settingsToTest = { ...user.settings, ...req.body };
     const { apiKey, provider, model, baseUrl } = resolveApiKeyAndProvider(settingsToTest);
 
-    if (!apiKey) {
+    const isLocal = provider === 'ollama' || (baseUrl && (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')));
+    if (!apiKey && !isLocal) {
       return res.status(400).json({
         isKeyMissing: true,
         keyType: 'AI',
@@ -122,10 +142,11 @@ const testAiKey = async (req, res) => {
       });
     }
 
+    const effectiveApiKey = apiKey || (isLocal ? 'ollama-local-key' : '');
     const sampleText = 'Company: TestCorp, Role: Software Engineer, CTC: 10 LPA, Deadline: 2026-12-31';
     const result = await aiService.extract(sampleText, {
       llmProvider: provider,
-      llmApiKey: apiKey,
+      llmApiKey: effectiveApiKey,
       llmModel: model,
       llmBaseUrl: baseUrl,
     });

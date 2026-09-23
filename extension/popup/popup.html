@@ -94,6 +94,14 @@
         <span class="badge-tag">Account Specific</span>
       </div>
 
+      <!-- AI Model Deprecation & Lifecycle Notice (Synced with Web App) -->
+      <div class="notice-box">
+        <div class="notice-title">📢 AI Model Updates (2025–2026)</div>
+        <div>
+          Groq decommissioned older <code>llama-3.1-8b</code> & <code>llama-3.3-70b-versatile</code>. Recommended: <strong>openai/gpt-oss-120b</strong> or <strong>gemini-2.0-flash</strong>.
+        </div>
+      </div>
+
       <!-- AI Provider -->
       <div class="field-group">
         <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -101,25 +109,35 @@
           <button type="button" id="toggle-custom-provider" class="text-link-btn">✏️ Custom</button>
         </div>
         <select id="llm-provider">
-          <option value="groq">Groq Cloud (Recommended — Ultra Fast & Free)</option>
-          <option value="openai">OpenAI (ChatGPT / GPT-4o)</option>
-          <option value="anthropic">Anthropic (Claude 3.5)</option>
-          <option value="openrouter">OpenRouter.ai (All Open Models)</option>
-          <option value="deepseek">DeepSeek AI</option>
-          <option value="together">Together.ai</option>
-          <option value="other">✏️ Custom Provider...</option>
+          <option value="groq">Groq Cloud (Fast LPU Inference — Recommended)</option>
+          <option value="gemini">Google Gemini (gemini-2.0-flash / 1.5-flash)</option>
+          <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+          <option value="anthropic">Anthropic (Claude 3.5 / 3.7)</option>
+          <option value="deepseek">DeepSeek AI (V3 / R1)</option>
+          <option value="openrouter">OpenRouter.ai (Universal Multi-Model API)</option>
+          <option value="together">Together.ai (Open Source Models)</option>
+          <option value="mistral">Mistral AI (Codestral / Large)</option>
+          <option value="ollama">Ollama / Local LLM (Self-hosted)</option>
+          <option value="other">✏️ Custom Provider / OpenAI-Compatible Endpoint...</option>
         </select>
-        <input type="text" id="custom-provider-input" class="hidden" placeholder="e.g. vllm / local" />
+        <input type="text" id="custom-provider-input" class="hidden" placeholder="e.g. vllm, lmstudio, perplexity, deepseek, together" />
+      </div>
+
+      <!-- Custom Base URL (For Ollama, Localhost, or OpenAI-compatible endpoints) -->
+      <div id="base-url-group" class="field-group hidden">
+        <label for="llm-base-url">API Base URL / Endpoint</label>
+        <input type="text" id="llm-base-url" placeholder="e.g. http://localhost:11434/v1 or https://api.perplexity.ai" />
+        <div class="field-subtext">OpenAI-compatible root or /chat/completions URL for self-hosted or proxy endpoints.</div>
       </div>
 
       <!-- LLM Model -->
       <div class="field-group">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <label for="llm-model">LLM Model</label>
+          <label for="llm-model-select">LLM Model</label>
           <button type="button" id="toggle-custom-model" class="text-link-btn">✏️ Custom</button>
         </div>
         <select id="llm-model-select"></select>
-        <input type="text" id="custom-model-input" class="hidden" placeholder="e.g. llama-3.3-70b-versatile" />
+        <input type="text" id="custom-model-input" class="hidden" placeholder="e.g. openai/gpt-oss-120b, gemini-2.0-flash, llama-3.3:70b" />
       </div>
 
       <!-- LLM API Key -->
