@@ -73,8 +73,23 @@ async function handleAuthCallback(code, userId) {
 
   user.googleAuth.connectedAt = new Date();
   if (googleEmail) user.googleAuth.googleEmail = googleEmail;
+  user.googleAuth.calendarSyncEnabled = true;
+  user.googleAuth.gmailSyncEnabled = true;
 
   await user.save();
+
+  // Trigger initial calendar sync in background for existing opportunities
+  setImmediate(() => {
+    try {
+      const calendarSync = require('./calendarSync.service');
+      calendarSync.syncAllUserOpportunities(userId).catch(err => {
+        console.warn('Initial calendar sync background error:', err.message);
+      });
+    } catch (e) {
+      console.warn('Could not run initial calendar sync:', e.message);
+    }
+  });
+
   return { user, googleEmail };
 }
 

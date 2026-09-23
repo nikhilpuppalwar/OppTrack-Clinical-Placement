@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS = {
   llmProvider: 'groq',
   llmApiKey: '',
   llmModel: 'openai/gpt-oss-120b',
+  llmBaseUrl: '',
   smtpHost: 'smtp.gmail.com',
   smtpPort: 587,
   smtpUser: '',
@@ -34,46 +35,80 @@ const DEFAULT_SETTINGS = {
 };
 
 const PRESET_PROVIDERS = [
-  { value: 'groq', label: 'Groq Cloud (Recommended — Ultra Fast & Free)' },
-  { value: 'gemini', label: 'Google Gemini (gemini-2.0-flash / 1.5)' },
-  { value: 'openai', label: 'OpenAI (ChatGPT / GPT-4o)' },
-  { value: 'anthropic', label: 'Anthropic (Claude 3.5)' },
-  { value: 'openrouter', label: 'OpenRouter.ai (All Open Models)' },
-  { value: 'deepseek', label: 'DeepSeek AI' },
-  { value: 'together', label: 'Together.ai' },
-  { value: 'other', label: '✏️ Custom Provider...' },
+  { value: 'groq', label: 'Groq Cloud (Fast LPU Inference — Recommended)' },
+  { value: 'gemini', label: 'Google Gemini (gemini-2.0-flash / 1.5-flash)' },
+  { value: 'openai', label: 'OpenAI (GPT-4o / GPT-4o-mini)' },
+  { value: 'anthropic', label: 'Anthropic (Claude 3.5 / 3.7)' },
+  { value: 'deepseek', label: 'DeepSeek AI (V3 / R1)' },
+  { value: 'openrouter', label: 'OpenRouter.ai (Universal Multi-Model API)' },
+  { value: 'together', label: 'Together.ai (Open Source Models)' },
+  { value: 'mistral', label: 'Mistral AI (Codestral / Large)' },
+  { value: 'ollama', label: 'Ollama / Local LLM (Self-hosted)' },
+  { value: 'other', label: '✏️ Custom Provider / OpenAI-Compatible Endpoint...' },
 ];
 
 const PRESET_MODELS = {
   groq: [
-    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended — Powerful & Fast)' },
+    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended — High Quality & Fast)' },
     { value: 'openai/gpt-oss-20b', label: 'openai/gpt-oss-20b (Ultra Fast)' },
-    { value: 'qwen/qwen3.8-27b', label: 'qwen/qwen3.8-27b' },
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
-    { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'llama-3.3-70b-specdec', label: 'llama-3.3-70b-specdec (Speculative Decoding)' },
+    { value: 'llama-3.1-70b-versatile', label: 'llama-3.1-70b-versatile (Active)' },
+    { value: 'meta-llama/llama-guard-3-8b', label: 'meta-llama/llama-guard-3-8b' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   gemini: [
-    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Recommended — Latest & Fast)' },
-    { value: 'gemini-1.5-flash', label: 'gemini-1.5-flash (Fast & Free)' },
-    { value: 'gemini-1.5-pro', label: 'gemini-1.5-pro (High Accuracy)' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Recommended — Latest & Fastest)' },
+    { value: 'gemini-2.0-flash-lite', label: 'gemini-2.0-flash-lite (Cost-effective)' },
+    { value: 'gemini-1.5-flash-latest', label: 'gemini-1.5-flash-latest (Reliable)' },
+    { value: 'gemini-2.5-flash', label: 'gemini-2.5-flash (Next-Gen Preview)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   openai: [
-    { value: 'gpt-4o-mini', label: 'gpt-4o-mini (Fast & Affordable)' },
-    { value: 'gpt-4o', label: 'gpt-4o (High Accuracy)' },
-    { value: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'gpt-4o-mini', label: 'gpt-4o-mini (Recommended — Fast & Low Cost)' },
+    { value: 'gpt-4o', label: 'gpt-4o (High Reasoning Accuracy)' },
+    { value: 'o3-mini', label: 'o3-mini (Advanced Reasoning)' },
+    { value: 'gpt-4-turbo', label: 'gpt-4-turbo (Production Standard)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   anthropic: [
-    { value: 'claude-3-haiku-20240307', label: 'claude-3-haiku-20240307' },
-    { value: 'claude-3-5-sonnet-20241022', label: 'claude-3-5-sonnet-20241022' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'claude-3-5-haiku-latest', label: 'claude-3-5-haiku-latest (Recommended — Fast & Sharp)' },
+    { value: 'claude-3-5-sonnet-latest', label: 'claude-3-5-sonnet-latest (Top Reasoning)' },
+    { value: 'claude-3-7-sonnet-latest', label: 'claude-3-7-sonnet-latest (Hybrid Reasoning)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   openrouter: [
     { value: 'meta-llama/llama-3.3-70b-instruct', label: 'meta-llama/llama-3.3-70b-instruct' },
-    { value: 'deepseek/deepseek-r1', label: 'deepseek/deepseek-r1' },
-    { value: 'other', label: '✏️ Custom Model...' },
+    { value: 'deepseek/deepseek-chat', label: 'deepseek/deepseek-chat (DeepSeek V3)' },
+    { value: 'deepseek/deepseek-r1', label: 'deepseek/deepseek-r1 (Reasoning)' },
+    { value: 'google/gemini-2.0-flash-001', label: 'google/gemini-2.0-flash-001' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  deepseek: [
+    { value: 'deepseek-chat', label: 'deepseek-chat (DeepSeek V3 — Recommended)' },
+    { value: 'deepseek-reasoner', label: 'deepseek-reasoner (DeepSeek R1)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  together: [
+    { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', label: 'Meta-Llama-3.1-70B-Instruct-Turbo' },
+    { value: 'mistralai/Mixtral-8x22B-Instruct-v0.1', label: 'Mixtral-8x22B-Instruct-v0.1' },
+    { value: 'deepseek-ai/DeepSeek-V3', label: 'deepseek-ai/DeepSeek-V3' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  mistral: [
+    { value: 'mistral-large-latest', label: 'mistral-large-latest' },
+    { value: 'mistral-small-latest', label: 'mistral-small-latest' },
+    { value: 'codestral-latest', label: 'codestral-latest' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  ollama: [
+    { value: 'llama3.3', label: 'llama3.3 (Local)' },
+    { value: 'mistral', label: 'mistral (Local)' },
+    { value: 'qwen2.5', label: 'qwen2.5 (Local)' },
+    { value: 'deepseek-r1', label: 'deepseek-r1 (Local)' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  other: [
+    { value: 'other', label: '✏️ Enter Custom Model Name...' },
   ],
 };
 
@@ -246,11 +281,12 @@ export default function Settings() {
         const loaded = { ...DEFAULT_SETTINGS, ...data };
         setSettings(loaded);
         setInitialSettings(loaded);
-        const isKnownProvider = PRESET_PROVIDERS.some(p => p.value === loaded.llmProvider);
-        if (!isKnownProvider && loaded.llmProvider) setIsCustomProvider(true);
-        const providerPresets = PRESET_MODELS[loaded.llmProvider] || [];
-        const isKnownModel = providerPresets.some(m => m.value === loaded.llmModel);
-        if (!isKnownModel && loaded.llmModel) setIsCustomModel(true);
+        const isKnownProvider = PRESET_PROVIDERS.some(p => p.value === loaded.llmProvider && p.value !== 'other');
+        const customProv = !isKnownProvider || loaded.llmProvider === 'other';
+        setIsCustomProvider(customProv);
+        const providerPresets = PRESET_MODELS[customProv ? 'other' : loaded.llmProvider] || [];
+        const isKnownModel = providerPresets.some(m => m.value === loaded.llmModel && m.value !== 'other');
+        setIsCustomModel(!isKnownModel || loaded.llmModel === 'other');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -318,7 +354,8 @@ export default function Settings() {
   };
 
   const handleTestAi = async () => {
-    if (!settings.llmApiKey) {
+    const isLocalProvider = settings.llmProvider === 'ollama' || settings.llmBaseUrl?.includes('localhost') || settings.llmBaseUrl?.includes('127.0.0.1');
+    if (!settings.llmApiKey && !isLocalProvider) {
       return setKeyModal({
         isOpen: true,
         keyType: 'AI',
@@ -326,9 +363,12 @@ export default function Settings() {
       });
     }
     setTestingAi(true);
-    const id = toast.loading(`Testing ${settings.llmProvider || 'AI'} connection...`);
+    const id = toast.loading(`Testing ${settings.llmProvider || 'AI'} connection (${settings.llmModel || 'default'})...`);
     try {
-      const { data } = await settingsAPI.testAiKey(settings);
+      const { data } = await settingsAPI.testAiKey({
+        ...settings,
+        llmApiKey: settings.llmApiKey || (isLocalProvider ? 'ollama' : '')
+      });
       toast.success(data.message || 'AI connected!', { id });
     } catch (err) {
       if (err.response?.data?.isKeyMissing) {
@@ -598,9 +638,9 @@ export default function Settings() {
     }
   };
 
-  const currentModels = PRESET_MODELS[settings.llmProvider] || [
-    { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
-    { value: 'other', label: '✏️ Custom Model...' },
+  const activeProviderKey = isCustomProvider ? 'other' : settings.llmProvider;
+  const currentModels = PRESET_MODELS[activeProviderKey] || PRESET_MODELS.other || [
+    { value: 'other', label: '✏️ Enter Custom Model Name...' },
   ];
 
   if (loading) return <div className="loading-center"><div className="spinner" /></div>;
@@ -1435,6 +1475,39 @@ export default function Settings() {
               </button>
             </div>
 
+            {/* ── Latest AI Model Deprecation & Lifecycle News Bulletin ── */}
+            <div style={{
+              background: '#FFFBEB',
+              border: '1px solid #FCD34D',
+              borderRadius: 10,
+              padding: '14px 18px',
+              marginBottom: 20,
+              display: 'flex',
+              gap: 12,
+              alignItems: 'flex-start',
+            }}>
+              <AlertTriangle size={18} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div style={{ fontSize: 12.5, color: '#92400E', lineHeight: 1.55 }}>
+                <strong style={{ fontSize: 13, color: '#78350F', display: 'block', marginBottom: 4 }}>
+                  📢 Latest AI Model Lifecycle & Deprecation Bulletin (2025–2026)
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <li>
+                    <strong>Groq Cloud:</strong> Decommissioned older models: <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>llama-3.1-8b-instant</code>, <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>llama-3.3-70b-versatile</code>, <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>qwen/qwen3.8-27b</code>, and <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>llama3-70b-8192</code>. Active replacements: <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>openai/gpt-oss-120b</code> (recommended) or <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>llama-3.3-70b-specdec</code>.
+                  </li>
+                  <li>
+                    <strong>OpenAI:</strong> Legacy <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-3.5-turbo</code>, <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-3.5-turbo-instruct</code>, and <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-4-0613</code> are scheduled for complete shutdown in late 2026. Use <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-4o-mini</code> or <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-4o</code>.
+                  </li>
+                  <li>
+                    <strong>Google Gemini:</strong> Legacy Gemini 1.0 (Pro/Vision) and experimental previews (<code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gemini-2.0-flash-exp</code>) are retired. Recommended: <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gemini-2.0-flash</code>.
+                  </li>
+                  <li>
+                    <strong>Anthropic:</strong> Claude 3 Haiku is superseded by <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>claude-3-5-haiku-latest</code>.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
               <div>
                 <FieldLabel htmlFor="llmProvider">AI Provider</FieldLabel>
@@ -1449,7 +1522,12 @@ export default function Settings() {
                       setIsCustomProvider(false);
                       const newP = e.target.value;
                       const defModel = PRESET_MODELS[newP]?.[0]?.value || '';
-                      setSettings(s => ({ ...s, llmProvider: newP, llmModel: defModel }));
+                      setSettings(s => ({
+                        ...s,
+                        llmProvider: newP,
+                        llmModel: defModel,
+                        llmBaseUrl: newP === 'ollama' ? 'http://localhost:11434/v1' : s.llmBaseUrl
+                      }));
                     }
                   }}
                   options={PRESET_PROVIDERS}
@@ -1475,12 +1553,70 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* Custom Provider & Base URL Inputs */}
+            {isCustomProvider && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginTop: 16 }}>
+                <div>
+                  <FieldLabel htmlFor="customProviderInput">Custom Provider Identifier</FieldLabel>
+                  <DarkInput
+                    id="customProviderInput"
+                    placeholder="e.g. vllm, lmstudio, perplexity, deepseek, together"
+                    value={settings.llmProvider}
+                    onChange={e => setSettings(s => ({ ...s, llmProvider: e.target.value }))}
+                  />
+                  <span style={{ fontSize: 11.5, color: '#667085', marginTop: 4, display: 'block' }}>
+                    Identifier name for logging and provider-specific endpoint resolution.
+                  </span>
+                </div>
+
+                <div>
+                  <FieldLabel htmlFor="llmBaseUrl">API Base URL / Endpoint (OpenAI Compatible)</FieldLabel>
+                  <DarkInput
+                    id="llmBaseUrl"
+                    placeholder="e.g. http://localhost:11434/v1 or https://api.perplexity.ai"
+                    value={settings.llmBaseUrl || ''}
+                    onChange={e => setSettings(s => ({ ...s, llmBaseUrl: e.target.value }))}
+                  />
+                  <span style={{ fontSize: 11.5, color: '#667085', marginTop: 4, display: 'block' }}>
+                    Custom root or /chat/completions URL for self-hosted or proxy endpoints.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Custom Model Input */}
+            {isCustomModel && (
+              <div style={{ marginTop: 16 }}>
+                <FieldLabel htmlFor="customModelInput">Custom Model Identifier / Name</FieldLabel>
+                <DarkInput
+                  id="customModelInput"
+                  placeholder="e.g. gpt-4.5-preview, llama-3.3:70b, deepseek-chat, qwen-2.5-72b-instruct"
+                  value={settings.llmModel}
+                  onChange={e => setSettings(s => ({ ...s, llmModel: e.target.value }))}
+                />
+                <span style={{ fontSize: 11.5, color: '#667085', marginTop: 4, display: 'block' }}>
+                  Enter the exact model string required by your chosen provider.
+                </span>
+              </div>
+            )}
+
             <div style={{ marginTop: 20 }}>
-              <FieldLabel htmlFor="llmApiKey">LLM API Key</FieldLabel>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <FieldLabel htmlFor="llmApiKey">LLM API Key</FieldLabel>
+                {(settings.llmProvider === 'ollama' || settings.llmBaseUrl?.includes('localhost')) && (
+                  <span style={{ fontSize: 11.5, color: '#16A34A', fontWeight: 600 }}>
+                    Local endpoint detected — API key is optional
+                  </span>
+                )}
+              </div>
               <DarkInput
                 id="llmApiKey"
                 type={showKey ? 'text' : 'password'}
-                placeholder="Enter your API key (e.g. gsk_... or AIzaSy...)"
+                placeholder={
+                  settings.llmProvider === 'ollama' || settings.llmBaseUrl?.includes('localhost')
+                    ? 'Optional for local Ollama / LM Studio (leave blank or enter "ollama")'
+                    : 'Enter your API key (e.g. gsk_... or AIzaSy... or sk-...)'
+                }
                 value={settings.llmApiKey}
                 onChange={e => setSettings(s => ({ ...s, llmApiKey: e.target.value }))}
                 suffix={

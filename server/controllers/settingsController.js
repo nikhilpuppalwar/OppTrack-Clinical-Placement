@@ -9,48 +9,57 @@ function resolveApiKeyAndProvider(userSettings = {}) {
   let provider = (userSettings.llmProvider || 'groq').toLowerCase().trim();
   let apiKey = userSettings.llmApiKey?.trim();
   let model = userSettings.llmModel?.trim();
+  let baseUrl = userSettings.llmBaseUrl?.trim() || '';
 
-  if (apiKey) {
-    if (apiKey.startsWith('gsk_')) provider = 'groq';
-    else if (apiKey.startsWith('sk-or-')) provider = 'openrouter';
-    else if (apiKey.startsWith('AIzaSy')) provider = 'gemini';
-    else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
+  // Only auto-detect if provider is not explicitly set or set to default 'groq' without user selection
+  if (!userSettings.llmProvider) {
+    if (apiKey) {
+      if (apiKey.startsWith('gsk_')) provider = 'groq';
+      else if (apiKey.startsWith('sk-or-')) provider = 'openrouter';
+      else if (apiKey.startsWith('AIzaSy')) provider = 'gemini';
+      else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
+    }
   }
 
-  // Model safety validation per provider according to official documentation
+  // Model safety validation: only migrate known decommissioned/discontinued models or placeholder 'other'
   if (provider === 'groq') {
-    const deprecatedGroqModels = ['llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+    const deprecatedGroqModels = [
+      'llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it',
+      'llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'qwen/qwen3.8-27b'
+    ];
     if (!model || model === 'other' || deprecatedGroqModels.includes(model)) {
       model = 'openai/gpt-oss-120b';
     }
   } else if (provider === 'gemini') {
-    const deprecatedGeminiModels = ['gemini-2.0-flash-exp'];
+    const deprecatedGeminiModels = ['gemini-2.0-flash-exp', 'gemini-1.0-pro', 'gemini-1.0-pro-vision'];
     if (!model || model === 'other' || deprecatedGeminiModels.includes(model)) {
       model = 'gemini-2.0-flash';
     }
   } else if (provider === 'openai') {
-    if (!model || model === 'other') {
+    const deprecatedOpenAiModels = ['gpt-3.5-turbo', 'gpt-3.5-turbo-instruct', 'gpt-4-0613', 'gpt-4-1106-preview'];
+    if (!model || model === 'other' || deprecatedOpenAiModels.includes(model)) {
       model = 'gpt-4o-mini';
     }
   } else if (provider === 'openrouter') {
-    if (!model || !model.includes('/') || model === 'other') {
+    if (!model || model === 'other') {
       model = 'meta-llama/llama-3.3-70b-instruct';
     }
   }
 
-  return { apiKey, provider, model };
+  return { apiKey, provider, model, baseUrl };
 }
 
 // @GET /api/settings
 const getSettings = async (req, res) => {
   const userSettings = req.user.settings || {};
-  const { apiKey, provider, model } = resolveApiKeyAndProvider(userSettings);
+  const { apiKey, provider, model, baseUrl } = resolveApiKeyAndProvider(userSettings);
 
   res.json({
     ...userSettings,
     llmProvider: userSettings.llmProvider || provider || 'groq',
     llmApiKey: userSettings.llmApiKey || apiKey || '',
     llmModel: userSettings.llmModel || model || '',
+    llmBaseUrl: userSettings.llmBaseUrl || baseUrl || '',
     hasApiKey: !!apiKey,
   });
 };
@@ -103,7 +112,7 @@ const testAiKey = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     const settingsToTest = { ...user.settings, ...req.body };
-    const { apiKey, provider, model } = resolveApiKeyAndProvider(settingsToTest);
+    const { apiKey, provider, model, baseUrl } = resolveApiKeyAndProvider(settingsToTest);
 
     if (!apiKey) {
       return res.status(400).json({
@@ -118,10 +127,11 @@ const testAiKey = async (req, res) => {
       llmProvider: provider,
       llmApiKey: apiKey,
       llmModel: model,
+      llmBaseUrl: baseUrl,
     });
 
     res.json({
-      message: `AI Connection Successful! (${provider} - ${model || 'default'})`,
+      message: `AI Connection Successful! (${provider} — ${model || 'default'})`,
       result,
     });
   } catch (err) {

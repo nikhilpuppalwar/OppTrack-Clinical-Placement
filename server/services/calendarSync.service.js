@@ -16,8 +16,13 @@ async function syncMilestone({ calendar, opportunity, typeKey, dateValue, titleS
   const d = new Date(dateValue);
   if (isNaN(d.getTime())) return null;
 
-  const endDateTime = new Date(d.getTime() + 60 * 60 * 1000); // 1 hour duration block
-  const linksList = (opportunity.links || []).map(l => `${l.label || 'Link'}: ${l.url}`).join('\n');
+  const isDateOnly = typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue.trim());
+  const startObj = isDateOnly
+    ? { date: dateValue.trim() }
+    : { dateTime: d.toISOString(), timeZone: 'Asia/Kolkata' };
+  const endObj = isDateOnly
+    ? { date: dateValue.trim() }
+    : { dateTime: endDateTime.toISOString(), timeZone: 'Asia/Kolkata' };
 
   const eventPayload = {
     summary: `${opportunity.company} — ${titleSuffix}`,
@@ -31,14 +36,8 @@ async function syncMilestone({ calendar, opportunity, typeKey, dateValue, titleS
       linksList ? `Links:\n${linksList}` : '',
       '\n(Synced automatically via OppTrack)',
     ].filter(Boolean).join('\n'),
-    start: {
-      dateTime: d.toISOString(),
-      timeZone: 'Asia/Kolkata',
-    },
-    end: {
-      dateTime: endDateTime.toISOString(),
-      timeZone: 'Asia/Kolkata',
-    },
+    start: startObj,
+    end: endObj,
     reminders: {
       useDefault: false,
       overrides: [
@@ -244,9 +243,15 @@ async function deleteEvent(userId, opportunity) {
 async function syncAllUserOpportunities(userId) {
   const user = await User.findById(userId);
   if (!user || !user.googleAuth?.refreshToken) {
-    const err = new Error('Google Account is not connected.');
+    const err = new Error('Google Account is not connected. Please connect your Google Account in Settings.');
     err.isGoogleAuthMissing = true;
     throw err;
+  }
+
+  // Ensure calendarSyncEnabled is active so createOrUpdateEvent does not bail out
+  if (!user.googleAuth.calendarSyncEnabled) {
+    user.googleAuth.calendarSyncEnabled = true;
+    await user.save();
   }
 
   const opportunities = await Opportunity.find({
@@ -259,8 +264,10 @@ async function syncAllUserOpportunities(userId) {
 
   for (const opp of opportunities) {
     try {
-      await createOrUpdateEvent(userId, opp);
-      syncedCount++;
+      const res = await createOrUpdateEvent(userId, opp);
+      if (res) {
+        syncedCount++;
+      }
     } catch (err) {
       console.error(`Failed to sync opp ${opp._id} to Calendar:`, err.message);
       errorCount++;
@@ -270,8 +277,126 @@ async function syncAllUserOpportunities(userId) {
   return { total: opportunities.length, syncedCount, errorCount };
 }
 
+/**
+ * Fetches events from the user's primary Google Calendar via Google Calendar API v3
+ * @param {string|mongoose.Types.ObjectId} userId
+ */
+async function getGoogleCalendarEvents(userId) {
+  const user = await User.findById(userId);
+  if (!user || !user.googleAuth?.refreshToken) {
+    return { isConnected: false, events: [], message: 'Google Account is not connected.' };
+  }
+
+  // Auto-activate calendarSyncEnabled if refresh token is present
+  if (!user.googleAuth.calendarSyncEnabled) {
+    user.googleAuth.calendarSyncEnabled = true;
+    await user.save().catch(() => {});
+  }
+
+  try {
+    const auth = await googleAuthService.getAuthorizedGoogleClient(userId);
+    const calendar = google.calendar({ version: 'v3', auth });
+
+    const now = new Date();
+    // Default 3 months in past to 6 months in future
+    const timeMin = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
+    const timeMax = new Date(now.getFullYear(), now.getMonth() + 6, 1).toISOString();
+
+    const res = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin,
+      timeMax,
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 250,
+    });
+
+    const items = res.data.items || [];
+    const formattedEvents = items.map((item) => {
+      const isOppTrack =
+        Boolean(item.description && item.description.includes('Synced automatically via OppTrack')) ||
+        Boolean(item.summary &&
+          (item.summary.includes('— Application Deadline') ||
+            item.summary.includes('— OA') ||
+            item.summary.includes('— Campus Placement Drive') ||
+            item.summary.includes('— Interview')));
+
+      let start = null;
+      let end = null;
+      let allDay = false;
+
+      if (item.start?.dateTime) {
+        start = new Date(item.start.dateTime);
+      } else if (item.start?.date) {
+        start = new Date(`${item.start.date}T00:00:00`);
+        allDay = true;
+      }
+
+      if (item.end?.dateTime) {
+        end = new Date(item.end.dateTime);
+      } else if (item.end?.date) {
+        end = new Date(`${item.end.date}T23:59:59`);
+      } else if (start) {
+        end = new Date(start.getTime() + 60 * 60 * 1000);
+      }
+
+      let milestoneType = 'other';
+      const summaryUpper = (item.summary || '').toLowerCase();
+      if (summaryUpper.includes('application deadline') || summaryUpper.includes('deadline')) {
+        milestoneType = 'deadline';
+      } else if (summaryUpper.includes('oa') || summaryUpper.includes('assessment') || summaryUpper.includes('test')) {
+        milestoneType = 'test';
+      } else if (summaryUpper.includes('placement drive') || summaryUpper.includes('campus drive') || summaryUpper.includes('drive')) {
+        milestoneType = 'drive';
+      } else if (summaryUpper.includes('interview')) {
+        milestoneType = 'interview';
+      }
+
+      let color = '#4285F4'; // Google Calendar blue
+      if (isOppTrack) {
+        if (milestoneType === 'deadline') color = '#2563EB';
+        else if (milestoneType === 'test') color = '#F59E0B';
+        else if (milestoneType === 'drive') color = '#8B5CF6';
+        else if (milestoneType === 'interview') color = '#EA580C';
+      }
+
+      return {
+        id: item.id,
+        title: item.summary || 'Untitled Event',
+        start,
+        end,
+        allDay,
+        description: item.description || '',
+        location: item.location || '',
+        htmlLink: item.htmlLink || `https://calendar.google.com/calendar/u/0/r/eventedit/${item.id}`,
+        isOppTrack,
+        milestoneType,
+        source: 'google',
+        color,
+      };
+    }).filter(e => e.start && !isNaN(e.start.getTime()));
+
+    return {
+      isConnected: true,
+      googleEmail: user.googleAuth.googleEmail,
+      calendarSyncEnabled: true,
+      events: formattedEvents,
+    };
+  } catch (err) {
+    console.error('getGoogleCalendarEvents error:', err.message);
+    return {
+      isConnected: true,
+      googleEmail: user.googleAuth?.googleEmail,
+      calendarSyncEnabled: Boolean(user.googleAuth?.calendarSyncEnabled),
+      error: err.message,
+      events: [],
+    };
+  }
+}
+
 module.exports = {
   createOrUpdateEvent,
   deleteEvent,
   syncAllUserOpportunities,
+  getGoogleCalendarEvents,
 };

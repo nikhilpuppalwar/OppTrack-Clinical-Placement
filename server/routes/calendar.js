@@ -5,6 +5,16 @@ const calendarSyncService = require('../services/calendarSync.service');
 
 router.use(protect);
 
+// @GET /api/calendar/events
+router.get('/events', async (req, res) => {
+  try {
+    const result = await calendarSyncService.getGoogleCalendarEvents(req.user._id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: err.message || 'Failed to fetch Google Calendar events.' });
+  }
+});
+
 // @POST /api/calendar/sync-all
 router.post('/sync-all', async (req, res) => {
   try {

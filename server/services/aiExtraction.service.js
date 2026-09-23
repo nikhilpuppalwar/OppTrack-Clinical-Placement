@@ -235,11 +235,15 @@ const extract = async (rawText, userSettings = {}) => {
   let provider = (userSettings?.llmProvider || 'groq').toLowerCase().trim();
   const apiKey = userSettings?.llmApiKey;
   let model = userSettings?.llmModel?.trim();
+  const baseUrl = userSettings?.llmBaseUrl?.trim() || '';
 
-  if (apiKey && apiKey.startsWith('gsk_')) provider = 'groq';
-  else if (apiKey && apiKey.startsWith('sk-or-')) provider = 'openrouter';
-  else if (apiKey && apiKey.startsWith('AIzaSy')) provider = 'gemini';
-  else if (apiKey && apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
+  // Only auto-detect if provider was not explicitly configured
+  if (!userSettings?.llmProvider) {
+    if (apiKey && apiKey.startsWith('gsk_')) provider = 'groq';
+    else if (apiKey && apiKey.startsWith('sk-or-')) provider = 'openrouter';
+    else if (apiKey && apiKey.startsWith('AIzaSy')) provider = 'gemini';
+    else if (apiKey && apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
+  }
 
   if (!apiKey || apiKey === 'your_llm_api_key_here') {
     const err = new Error('AI API Key is missing. Please configure your LLM API Key in Settings.');
@@ -248,17 +252,21 @@ const extract = async (rawText, userSettings = {}) => {
     throw err;
   }
 
-  // Model safety validation per provider
+  // Model safety validation per provider: gracefully migrate known decommissioned models
   if (provider === 'groq') {
-    const deprecatedGroqModels = ['llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+    const deprecatedGroqModels = [
+      'llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it',
+      'llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'qwen/qwen3.8-27b'
+    ];
     if (!model || model === 'other' || deprecatedGroqModels.includes(model)) model = 'openai/gpt-oss-120b';
   } else if (provider === 'gemini') {
-    const deprecatedGeminiModels = ['gemini-2.0-flash-exp'];
+    const deprecatedGeminiModels = ['gemini-2.0-flash-exp', 'gemini-1.0-pro', 'gemini-1.0-pro-vision'];
     if (!model || model === 'other' || deprecatedGeminiModels.includes(model)) model = 'gemini-2.0-flash';
   } else if (provider === 'openai') {
-    if (!model || model === 'other') model = 'gpt-4o-mini';
+    const deprecatedOpenAiModels = ['gpt-3.5-turbo', 'gpt-3.5-turbo-instruct', 'gpt-4-0613', 'gpt-4-1106-preview'];
+    if (!model || model === 'other' || deprecatedOpenAiModels.includes(model)) model = 'gpt-4o-mini';
   } else if (provider === 'openrouter') {
-    if (!model || !model.includes('/') || model === 'other') model = 'meta-llama/llama-3.3-70b-instruct';
+    if (!model || model === 'other') model = 'meta-llama/llama-3.3-70b-instruct';
   }
 
   let result;
@@ -269,11 +277,12 @@ const extract = async (rawText, userSettings = {}) => {
   } else if (provider === 'openai') {
     result = await extractWithOpenAI(rawText, apiKey, model);
   } else if (provider === 'anthropic') {
-    result = await extractWithAnthropic(rawText, apiKey, model || 'claude-3-haiku-20240307');
+    result = await extractWithAnthropic(rawText, apiKey, model || 'claude-3-5-haiku-latest');
   } else if (provider === 'openrouter') {
     result = await extractWithOpenRouter(rawText, apiKey, model);
   } else {
-    result = await extractWithOpenAICompatible(rawText, apiKey, model || 'llama-3.1-8b-instant', provider);
+    // Custom Provider or OpenAI-compatible endpoint (DeepSeek, Together, Mistral, Ollama, LM Studio, etc.)
+    result = await extractWithOpenAICompatible(rawText, apiKey, model || 'gpt-4o-mini', provider, baseUrl);
   }
 
   return result;
@@ -334,9 +343,8 @@ function cleanAndParseJSON(text) {
 const GROQ_FALLBACK_MODELS = [
   'openai/gpt-oss-120b',
   'openai/gpt-oss-20b',
-  'qwen/qwen3.8-27b',
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
+  'llama-3.3-70b-specdec',
+  'llama-3.1-70b-versatile',
 ];
 
 const extractWithGroq = async (rawText, apiKey, preferredModel) => {
@@ -487,17 +495,27 @@ const extractWithAnthropic = async (rawText, apiKey, model) => {
   return JSON.parse(jsonMatch[0]);
 };
 
-const extractWithOpenAICompatible = async (rawText, apiKey, model, providerName) => {
+const extractWithOpenAICompatible = async (rawText, apiKey, model, providerName = '', customBaseUrl = '') => {
   let baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
-  if (providerName.includes('together')) baseUrl = 'https://api.together.xyz/v1/chat/completions';
-  if (providerName.includes('deepseek')) baseUrl = 'https://api.deepseek.com/chat/completions';
-  if (providerName.includes('mistral')) baseUrl = 'https://api.mistral.ai/v1/chat/completions';
+  if (customBaseUrl) {
+    baseUrl = customBaseUrl.endsWith('/chat/completions')
+      ? customBaseUrl
+      : customBaseUrl.replace(/\/+$/, '') + '/chat/completions';
+  } else if (providerName.includes('together')) baseUrl = 'https://api.together.xyz/v1/chat/completions';
+  else if (providerName.includes('deepseek')) baseUrl = 'https://api.deepseek.com/chat/completions';
+  else if (providerName.includes('mistral')) baseUrl = 'https://api.mistral.ai/v1/chat/completions';
+  else if (providerName.includes('perplexity')) baseUrl = 'https://api.perplexity.ai/chat/completions';
+  else if (providerName.includes('ollama')) baseUrl = 'http://localhost:11434/v1/chat/completions';
+  else if (providerName.includes('openrouter')) baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
   const response = await fetch(baseUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: apiKey ? `Bearer ${apiKey}` : undefined,
+    },
     body: JSON.stringify({
-      model,
+      model: model || 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'You are a JSON-only extraction assistant. Return only valid JSON.' },
         { role: 'user', content: SCHEMA_PROMPT + rawText },
@@ -506,11 +524,9 @@ const extractWithOpenAICompatible = async (rawText, apiKey, model, providerName)
     }),
   });
   const data = await response.json();
-  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  const content = data.choices[0].message.content;
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Could not parse JSON from custom LLM response');
-  return JSON.parse(jsonMatch[0]);
+  if (data.error) throw new Error(data.error.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error)));
+  const content = data.choices?.[0]?.message?.content || '';
+  return cleanAndParseJSON(content);
 };
 
 const getMockExtraction = (rawText) => {
@@ -662,7 +678,7 @@ const updateExtraction = async (rawText, existingCustomFields = [], existingDead
   } else if (provider === 'openrouter') {
     result = await extractUpdateWithOpenRouter(contextPrompt, apiKey, model || 'meta-llama/llama-3.3-70b-instruct');
   } else {
-    result = await extractUpdateWithOpenAI(contextPrompt, apiKey, model || 'gpt-4o-mini');
+    result = await extractWithOpenAICompatible(contextPrompt, apiKey, model || 'gpt-4o-mini', provider, userSettings?.llmBaseUrl);
   }
 
   return result;

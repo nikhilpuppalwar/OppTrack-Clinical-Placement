@@ -94,6 +94,8 @@ export const gmailAPI = {
 // Google Calendar Sync
 export const calendarAPI = {
   syncAll: () => api.post('/calendar/sync-all'),
+  getGoogleEvents: (params) => api.get('/calendar/events', { params }),
+  syncOpportunity: (oppId) => api.post(`/calendar/sync/${oppId}`),
 };
 
 // Google OAuth Tester Requests (100-User Cap)

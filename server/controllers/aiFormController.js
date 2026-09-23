@@ -13,27 +13,34 @@ function resolveApiKeyAndProvider(userSettings = {}) {
   let provider = (userSettings.llmProvider || process.env.LLM_PROVIDER || 'groq').toLowerCase().trim();
   let apiKey = (userSettings.llmApiKey || process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)?.trim();
   let model = (userSettings.llmModel || process.env.LLM_MODEL)?.trim();
+  let baseUrl = userSettings.llmBaseUrl?.trim() || '';
 
-  if (apiKey) {
-    if (apiKey.startsWith('gsk_')) provider = 'groq';
-    else if (apiKey.startsWith('sk-or-')) provider = 'openrouter';
-    else if (apiKey.startsWith('AIzaSy')) provider = 'gemini';
-    else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
+  if (!userSettings.llmProvider) {
+    if (apiKey) {
+      if (apiKey.startsWith('gsk_')) provider = 'groq';
+      else if (apiKey.startsWith('sk-or-')) provider = 'openrouter';
+      else if (apiKey.startsWith('AIzaSy')) provider = 'gemini';
+      else if (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-')) provider = 'openai';
+    }
   }
 
   // Model safety validation per provider according to official documentation
   if (provider === 'groq') {
-    const deprecatedGroqModels = ['llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
+    const deprecatedGroqModels = [
+      'llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it',
+      'llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'qwen/qwen3.8-27b'
+    ];
     if (!model || model === 'other' || deprecatedGroqModels.includes(model)) {
-      model = 'llama-3.3-70b-versatile';
+      model = 'openai/gpt-oss-120b';
     }
   } else if (provider === 'gemini') {
-    const deprecatedGeminiModels = ['gemini-2.0-flash-exp'];
+    const deprecatedGeminiModels = ['gemini-2.0-flash-exp', 'gemini-1.0-pro'];
     if (!model || model === 'other' || deprecatedGeminiModels.includes(model)) {
       model = 'gemini-2.0-flash';
     }
   } else if (provider === 'openai') {
-    if (!model || model === 'other') {
+    const deprecatedOpenAiModels = ['gpt-3.5-turbo', 'gpt-3.5-turbo-instruct', 'gpt-4-0613', 'gpt-4-1106-preview'];
+    if (!model || model === 'other' || deprecatedOpenAiModels.includes(model)) {
       model = 'gpt-4o-mini';
     }
   } else if (provider === 'openrouter') {
@@ -42,14 +49,14 @@ function resolveApiKeyAndProvider(userSettings = {}) {
     }
   }
 
-  return { apiKey, provider, model };
+  return { apiKey, provider, model, baseUrl };
 }
 
 /**
  * Call configured LLM API to process form questions
  */
 async function callLLM(prompt, userSettings) {
-  const { apiKey, provider, model } = resolveApiKeyAndProvider(userSettings);
+  const { apiKey, provider, model, baseUrl: customBaseUrl } = resolveApiKeyAndProvider(userSettings);
 
   if (!apiKey) {
     const err = new Error('AI API Key is missing. Please configure your LLM API Key in Settings or Extension Settings.');
@@ -62,7 +69,7 @@ async function callLLM(prompt, userSettings) {
     'You are an expert AI form-filling assistant. Understand form questions, map them to candidate database values or generate concise accurate answers, and return valid JSON only.';
 
   if (provider === 'gemini') {
-    const selectedModel = model || 'gemini-1.5-flash';
+    const selectedModel = model || 'gemini-2.0-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
@@ -93,14 +100,24 @@ async function callLLM(prompt, userSettings) {
   }
 
   let baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
-  if (provider === 'openai') baseUrl = 'https://api.openai.com/v1/chat/completions';
-  if (provider === 'openrouter') baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  if (customBaseUrl) {
+    baseUrl = customBaseUrl.endsWith('/chat/completions')
+      ? customBaseUrl
+      : customBaseUrl.replace(/\/+$/, '') + '/chat/completions';
+  } else if (provider === 'openai') baseUrl = 'https://api.openai.com/v1/chat/completions';
+  else if (provider === 'openrouter') baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  else if (provider === 'deepseek') baseUrl = 'https://api.deepseek.com/chat/completions';
+  else if (provider === 'together') baseUrl = 'https://api.together.xyz/v1/chat/completions';
+  else if (provider === 'mistral') baseUrl = 'https://api.mistral.ai/v1/chat/completions';
+  else if (provider === 'ollama') baseUrl = 'http://localhost:11434/v1/chat/completions';
 
   if (provider === 'groq') {
     const modelsToTry = [
       model,
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant',
+      'openai/gpt-oss-120b',
+      'openai/gpt-oss-20b',
+      'llama-3.3-70b-specdec',
+      'llama-3.1-70b-versatile',
     ].filter((m, i, arr) => m && arr.indexOf(m) === i);
 
     let lastErr = null;

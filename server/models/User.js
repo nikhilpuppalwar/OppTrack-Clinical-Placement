@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema(
       llmProvider: { type: String, default: 'groq' },
       llmApiKey: { type: String, default: '' },
       llmModel: { type: String, default: 'openai/gpt-oss-120b' },
+      llmBaseUrl: { type: String, default: '' },
 
       // SMTP Custom Credentials
       smtpHost: { type: String, default: 'smtp.gmail.com' },
