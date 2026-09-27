@@ -699,6 +699,50 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* ── CAMPUS PLACEMENT TOPICS & KEYWORDS ── */}
+        <section style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0', padding: '36px 24px' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', marginBottom: 12 }}>
+              Campus Placements &amp; PCCOE Student Resources
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {[
+                'PCCOE Placements',
+                'Pimpri Chinchwad College of Engineering',
+                'Nikhil Puppalwar',
+                'PCCOE Placement Help',
+                'PCCOE T&P Cell',
+                'PCCOE Pune Campus Drives',
+                'PCCOE Nigdi & Akurdi',
+                'Engineering Placement Tracker',
+                'Google Forms Placement Autofill',
+                'Profile Vault for Students',
+                'B.Tech Pune Placements',
+                'SPPU Engineering Campus Drives',
+                'Automated Resume Import',
+                'Online Assessment Deadline Sync',
+                'Campus Recruitment Automation',
+                'PCCOE Training & Placement Portal'
+              ].map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #CBD5E1',
+                    borderRadius: 20,
+                    padding: '4px 12px',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: '#334155',
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
       </main>
 
       {/* ── FOOTER ── */}
