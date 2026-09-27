@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Disallow: /dashboard
+Disallow: /opportunities
+Disallow: /profile
+Disallow: /settings
+Disallow: /history
+Disallow: /help
+
+Sitemap: https://opp-track-clinical-placement.vercel.app/sitemap.xml
