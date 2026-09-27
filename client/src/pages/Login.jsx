@@ -1,42 +1,108 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck, Clock, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function Login() {
-  const [form, setForm] = useState({ email: '', password: '', rememberMe: true });
+  const [searchParams] = useSearchParams();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ email: '', password: '', form: '' });
+  const [touched, setTouched] = useState({ email: false, password: false });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (searchParams.get('expired') === 'true') {
+      setSessionExpired(true);
+    }
+  }, [searchParams]);
+
+  const validateEmail = (val) => {
+    const trimmed = val.trim();
+    if (!trimmed) return 'Email address is required.';
+    if (!EMAIL_REGEX.test(trimmed)) return 'Enter a valid email address.';
+    return '';
+  };
+
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    if (field === 'email') {
+      const err = validateEmail(form.email);
+      setErrors((prev) => ({ ...prev, email: err }));
+    }
+  };
+
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: '', form: '' }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+
+    const emailErr = validateEmail(form.email);
+    const pwErr = !form.password ? 'Password is required.' : '';
+
+    if (emailErr || pwErr) {
+      setTouched({ email: true, password: true });
+      setErrors({ email: emailErr, password: pwErr, form: '' });
+      return;
+    }
+
     setLoading(true);
+    setErrors({ email: '', password: '', form: '' });
+
     try {
-      await login(form.email, form.password);
+      await login(form.email.trim(), form.password);
       toast.success('Welcome back to OppTrack!');
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed. Check your email and password.');
+      let message = 'Email or password is incorrect.';
+      if (!err.response) {
+        message = "We couldn't connect to the server. Check your connection and try again.";
+      } else if (err.response.status === 429) {
+        message = 'Too many attempts. Please wait a few minutes before trying again.';
+      } else if (err.response.status >= 500) {
+        message = "We couldn't sign you in right now. Please try again shortly.";
+      } else if (err.response.data?.message) {
+        message = err.response.data.message;
+      }
+      setErrors((prev) => ({ ...prev, form: message }));
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F9FC', color: '#172033', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#F8FAFC', color: '#0F172A', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
       
-      {/* ── MINIMAL TOP BAR ── */}
-      <header style={{ height: 60, borderBottom: '1px solid #E5EAF0', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', padding: '0 24px' }}>
-        <div style={{ maxWidth: 1240, width: '100%', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* ── TOP NAVIGATION ── */}
+      <header
+        style={{
+          height: 60,
+          borderBottom: '1px solid #E2E8F0',
+          background: '#FFFFFF',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 24px',
+        }}
+      >
+        <div style={{ maxWidth: 1200, width: '100%', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src={logoImg} alt="OppTrack Logo" style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: 8 }} />
-            <span style={{ fontSize: 18, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em' }}>OppTrack</span>
-            <span style={{ color: '#94A3B8', fontSize: 13, userSelect: 'none' }}>|</span>
-            <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 500 }}>Your placement journey, organized.</span>
+            <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
+            <span style={{ fontSize: 18, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em' }}>OppTrack</span>
+            <span style={{ color: '#CBD5E1', fontSize: 13, userSelect: 'none' }}>|</span>
+            <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 500 }}>Placement Tracking Console</span>
           </Link>
 
           <Link
@@ -44,284 +110,409 @@ export default function Login() {
             style={{
               fontSize: 13,
               fontWeight: 600,
-              color: '#087F71',
+              color: '#2563EB',
               textDecoration: 'none',
-              padding: '6px 12px',
+              padding: '6px 14px',
               borderRadius: 6,
-              background: '#E8F8F5',
-              border: '1px solid rgba(24, 183, 160, 0.3)'
+              background: '#EFF6FF',
+              border: '1px solid #BFDBFE',
+              transition: 'background-color 0.15s ease',
             }}
           >
-            Create Free Account →
+            Create an account →
           </Link>
         </div>
       </header>
 
-      {/* ── MAIN 2-COLUMN AUTH CONSOLE ── */}
-      <main style={{ maxWidth: 1240, margin: '0 auto', padding: '40px 24px 60px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 36, alignItems: 'stretch' }}>
-          
-          {/* LEFT COLUMN: AUTHENTICATION CONSOLE */}
+      {/* ── MAIN 2-COLUMN AUTH LAYOUT ── */}
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px 60px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: 36,
+            alignItems: 'center',
+          }}
+        >
+          {/* LEFT: AUTHENTICATION FORM */}
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div
               style={{
                 width: '100%',
-                maxWidth: 500,
+                maxWidth: 460,
                 margin: '0 auto',
                 background: '#FFFFFF',
-                borderRadius: 16,
-                border: '1px solid #E5EAF0',
-                padding: '36px 36px',
-                boxShadow: '0 8px 30px rgba(11, 31, 58, 0.06)',
-                position: 'relative',
-                overflow: 'hidden'
+                borderRadius: 12,
+                border: '1px solid #E2E8F0',
+                padding: '36px 32px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
               }}
             >
-              {/* Subtle Top Gradient Aura */}
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #3B5E97 0%, #18B7A0 50%, #2563EB 100%)' }} />
-
-              {/* Header Titles */}
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <img src={logoImg} alt="OppTrack" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12, background: '#EAF2FF', color: '#2563EB' }}>
-                    Student Console
-                  </span>
+              {/* Session Expired Notice */}
+              {sessionExpired && (
+                <div
+                  role="alert"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    background: '#FEF3C7',
+                    border: '1px solid #FDE68A',
+                    color: '#92400E',
+                    fontSize: 13,
+                    marginBottom: 20,
+                  }}
+                >
+                  <AlertCircle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <div>
+                    <strong>Session expired.</strong>
+                    <div style={{ fontSize: 12.5, marginTop: 2 }}>Your session has expired. Please sign in again.</div>
+                  </div>
                 </div>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
-                  Welcome back to OppTrack
+              )}
+
+              {/* Header */}
+              <div style={{ marginBottom: 28 }}>
+                <h1 style={{ fontSize: '1.65rem', fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
+                  Welcome back
                 </h1>
                 <p style={{ fontSize: 13.5, color: '#64748B', margin: 0, lineHeight: 1.5 }}>
                   Sign in to manage your placement applications, deadlines, and Profile Vault.
                 </p>
               </div>
 
-              {/* Login Form */}
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Form Global Error Banner */}
+              {errors.form && (
+                <div
+                  role="alert"
+                  aria-live="polite"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    background: '#FEF2F2',
+                    border: '1px solid #FEE2E2',
+                    color: '#B91C1C',
+                    fontSize: 13,
+                    marginBottom: 18,
+                  }}
+                >
+                  <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                  <span>{errors.form}</span>
+                </div>
+              )}
+
+              {/* Sign In Form */}
+              <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 
-                {/* Email Input */}
+                {/* Email Field */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: '#0B1F3A', marginBottom: 6 }}>
-                    College or Personal Email
+                  <label
+                    htmlFor="email"
+                    style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}
+                  >
+                    Email address
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: 12,
+                        color: errors.email && touched.email ? '#EF4444' : '#94A3B8',
+                        display: 'flex',
+                        pointerEvents: 'none',
+                      }}
+                    >
                       <Mail size={16} />
                     </span>
                     <input
+                      id="email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
                       required
-                      placeholder="name@college.edu or personal@gmail.com"
+                      placeholder="student@example.com"
                       value={form.email}
-                      onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      onBlur={() => handleBlur('email')}
+                      aria-invalid={touched.email && !!errors.email}
+                      aria-describedby={touched.email && errors.email ? 'email-error' : undefined}
                       style={{
                         width: '100%',
                         height: 44,
                         paddingLeft: 38,
                         paddingRight: 12,
-                        background: '#F8FAFD',
-                        border: '1px solid #CBD5E1',
+                        background: '#FFFFFF',
+                        border: `1px solid ${touched.email && errors.email ? '#EF4444' : '#CBD5E1'}`,
                         borderRadius: 8,
-                        fontSize: 13.5,
-                        color: '#0B1F3A',
+                        fontSize: 14,
+                        color: '#0F172A',
                         outline: 'none',
-                        transition: 'all 0.15s ease',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                   </div>
+                  {touched.email && errors.email && (
+                    <p id="email-error" role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '5px 0 0' }}>
+                      {errors.email}
+                    </p>
+                  )}
                 </div>
 
-                {/* Password Input */}
+                {/* Password Field */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <label style={{ fontSize: 12.5, fontWeight: 600, color: '#0B1F3A' }}>
+                    <label
+                      htmlFor="password"
+                      style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}
+                    >
                       Password
                     </label>
                     <Link
                       to="/forgot-password"
-                      style={{ fontSize: 11.5, color: '#2563EB', textDecoration: 'none', fontWeight: 600 }}
+                      style={{ fontSize: 12, color: '#2563EB', textDecoration: 'none', fontWeight: 500 }}
                     >
                       Forgot password?
                     </Link>
                   </div>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: 12,
+                        color: errors.password && touched.password ? '#EF4444' : '#94A3B8',
+                        display: 'flex',
+                        pointerEvents: 'none',
+                      }}
+                    >
                       <Lock size={16} />
                     </span>
                     <input
+                      id="password"
+                      name="password"
                       type={showPw ? 'text' : 'password'}
+                      autoComplete="current-password"
                       required
                       placeholder="••••••••••••"
                       value={form.password}
-                      onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                      onChange={(e) => handleChange('password', e.target.value)}
+                      onBlur={() => handleBlur('password')}
+                      aria-invalid={touched.password && !!errors.password}
+                      aria-describedby={touched.password && errors.password ? 'password-error' : undefined}
                       style={{
                         width: '100%',
                         height: 44,
                         paddingLeft: 38,
-                        paddingRight: 40,
-                        background: '#F8FAFD',
-                        border: '1px solid #CBD5E1',
+                        paddingRight: 42,
+                        background: '#FFFFFF',
+                        border: `1px solid ${touched.password && errors.password ? '#EF4444' : '#CBD5E1'}`,
                         borderRadius: 8,
-                        fontSize: 13.5,
-                        color: '#0B1F3A',
+                        fontSize: 14,
+                        color: '#0F172A',
                         outline: 'none',
-                        transition: 'all 0.15s ease',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPw(s => !s)}
-                      style={{ position: 'absolute', right: 10, background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer', padding: 4 }}
-                      title={showPw ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowPw((s) => !s)}
+                      aria-label={showPw ? 'Hide password' : 'Show password'}
+                      style={{
+                        position: 'absolute',
+                        right: 8,
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#64748B',
+                        cursor: 'pointer',
+                        padding: 6,
+                        borderRadius: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
                     >
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                  {touched.password && errors.password && (
+                    <p id="password-error" role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '5px 0 0' }}>
+                      {errors.password}
+                    </p>
+                  )}
                 </div>
 
-                {/* Remember Device Checkbox */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 2 }}>
-                  <input
-                    type="checkbox"
-                    id="rememberDevice"
-                    checked={form.rememberMe}
-                    onChange={e => setForm(f => ({ ...f, rememberMe: e.target.checked }))}
-                    style={{ width: 16, height: 16, accentColor: '#18B7A0', cursor: 'pointer' }}
-                  />
-                  <label htmlFor="rememberDevice" style={{ fontSize: 12.5, color: '#475569', cursor: 'pointer', userSelect: 'none' }}>
-                    Remember this device for 30 days
-                  </label>
-                </div>
-
-                {/* Submit Button */}
+                {/* Submit Action */}
                 <button
                   type="submit"
                   disabled={loading}
                   style={{
                     width: '100%',
-                    height: 46,
-                    background: '#0B1F3A',
+                    height: 44,
+                    background: '#2563EB',
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: 8,
                     fontSize: 14,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     cursor: loading ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
-                    boxShadow: '0 4px 12px rgba(11, 31, 58, 0.2)',
-                    transition: 'all 0.15s ease',
-                    marginTop: 6
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    transition: 'background-color 0.15s ease',
+                    marginTop: 4,
+                    opacity: loading ? 0.8 : 1,
                   }}
                 >
-                  <span>{loading ? 'Authenticating…' : 'Sign In to Workspace'}</span>
+                  <span>{loading ? 'Signing in...' : 'Sign In'}</span>
                   {!loading && <ArrowRight size={16} />}
                 </button>
               </form>
 
-              {/* Security Badge */}
+              {/* Factual Security Footnote */}
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 22 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 20, background: '#F8FAFD', border: '1px solid #E5EAF0', fontSize: 11, color: '#64748B', fontWeight: 500 }}>
-                  <ShieldCheck size={14} color="#18B7A0" />
-                  <span>256-bit encrypted • Profile Vault secured</span>
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    background: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    fontSize: 11.5,
+                    color: '#64748B',
+                    fontWeight: 500,
+                  }}
+                >
+                  <ShieldCheck size={14} color="#0D9488" />
+                  <span>Secure authentication • Passwords hashed with bcrypt</span>
                 </div>
               </div>
 
-              {/* Bottom Footer */}
-              <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #F0F4F8', textAlign: 'center', fontSize: 13, color: '#64748B' }}>
-                Don't have an OppTrack account?{' '}
-                <Link to="/register" style={{ color: '#087F71', fontWeight: 700, textDecoration: 'none' }}>
-                  Create an account Free
+              {/* Footer Switch to Register */}
+              <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid #F1F5F9', textAlign: 'center', fontSize: 13, color: '#64748B' }}>
+                Don't have an account?{' '}
+                <Link to="/register" style={{ color: '#2563EB', fontWeight: 600, textDecoration: 'none' }}>
+                  Create an account
                 </Link>
               </div>
 
             </div>
           </div>
 
-          {/* RIGHT COLUMN: PRECISION DASHBOARD SNAPSHOT / CONTEXT */}
+          {/* RIGHT: REFINED PRODUCT CONTEXT / WORKSPACE PREVIEW */}
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div
               style={{
                 width: '100%',
-                background: '#0B1F3A',
-                borderRadius: 20,
-                padding: '40px 36px',
+                background: '#0F172A',
+                borderRadius: 14,
+                padding: '36px 32px',
                 color: '#FFFFFF',
-                boxShadow: '0 20px 48px rgba(11, 31, 58, 0.25)',
-                position: 'relative',
-                overflow: 'hidden',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                minHeight: 520
+                minHeight: 480,
               }}
             >
-              {/* Background Ambient Glows */}
-              <div style={{ position: 'absolute', top: -50, right: -50, width: 220, height: 220, borderRadius: '50%', background: 'rgba(24, 183, 160, 0.14)', filter: 'blur(50px)', pointerEvents: 'none' }} />
-              <div style={{ position: 'absolute', bottom: -50, left: -50, width: 220, height: 220, borderRadius: '50%', background: 'rgba(59, 94, 151, 0.25)', filter: 'blur(50px)', pointerEvents: 'none' }} />
-
-              {/* Top Telemetry & Status */}
-              <div style={{ position: 'relative', zIndex: 2 }}>
+              <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 20, background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#72F8DF' }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#72F8DF', animation: 'pulse 1.5s infinite' }} />
-                    Placement Radar Active
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '3px 10px',
+                      borderRadius: 4,
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                      color: '#93C5FD',
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#38BDF8' }} />
+                    Workspace Preview
                   </div>
-                  <span style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600 }}>Batch 2026 • CSE</span>
+                  <span style={{ fontSize: 12, color: '#94A3B8' }}>Student Portal</span>
                 </div>
 
-                <span style={{ fontSize: 11, color: '#9DBFFE', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Workspace Synchronized
-                </span>
-                <h2 style={{ fontSize: '1.65rem', fontWeight: 800, margin: '4px 0 16px', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
-                  Autumn Placement Season
+                <h2 style={{ fontSize: '1.45rem', fontWeight: 700, margin: '0 0 10px', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                  Placement Opportunity Tracker
                 </h2>
-
-                {/* Priority Deadlines Pulse Card */}
-                <div style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(12px)', borderRadius: 12, padding: 18, border: '1px solid rgba(255, 255, 255, 0.12)', marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Clock size={14} color="#72F8DF" /> 3 Priority Deadlines This Week
-                    </span>
-                    <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 10, background: '#FEF3C7', color: '#92400E' }}>
-                      Urgent
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {/* Item 1 */}
-                    <div style={{ background: 'rgba(255, 255, 255, 0.06)', borderRadius: 8, padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#FFFFFF' }}>Google India • Software Engineer</div>
-                        <div style={{ fontSize: 11, color: '#94A3B8' }}>OA link expires in 18 hrs</div>
-                      </div>
-                      <span style={{ fontSize: 11, color: '#72F8DF', fontWeight: 700 }}>Sep 25</span>
-                    </div>
-
-                    {/* Item 2 */}
-                    <div style={{ background: 'rgba(255, 255, 255, 0.06)', borderRadius: 8, padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#FFFFFF' }}>Microsoft • SDE-1 Core</div>
-                        <div style={{ fontSize: 11, color: '#94A3B8' }}>Round 2 Technical • Tomorrow 10:00 AM</div>
-                      </div>
-                      <span style={{ fontSize: 11, color: '#9DBFFE', fontWeight: 700 }}>Sep 26</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Student Quote / Trust */}
-              <div style={{ position: 'relative', zIndex: 2, paddingTop: 16, borderTop: '1px solid rgba(255, 255, 255, 0.12)' }}>
-                <p style={{ fontSize: 13, color: '#CBD5E1', fontStyle: 'italic', lineHeight: 1.6, margin: '0 0 12px' }}>
-                  "OppTrack saved me from missing 2 critical campus drives when emails got buried in my inbox. The Chrome extension auto-filled Google Forms in seconds."
+                <p style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, margin: '0 0 24px' }}>
+                  Organize drives, maintain verified academics in your Profile Vault, and auto-complete company forms via the Chrome extension.
                 </p>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#FFFFFF' }}>
-                  Rahul Sharma <span style={{ color: '#72F8DF', fontWeight: 500 }}>• PCCOE, Pune (Batch 2026)</span>
+
+                {/* Real UI Telemetry Preview */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    borderRadius: 8,
+                    padding: 16,
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    marginBottom: 16,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Clock size={14} color="#60A5FA" /> Active Deadlines
+                    </span>
+                    <span style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, background: '#1E293B', color: '#93C5FD' }}>
+                      2 upcoming
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: 6,
+                        padding: '10px 12px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#F8FAFC' }}>Software Engineer Assessment</div>
+                        <div style={{ fontSize: 11, color: '#94A3B8' }}>Google Forms Application</div>
+                      </div>
+                      <span style={{ fontSize: 11, color: '#FCD34D', fontWeight: 600 }}>Next 48 hrs</span>
+                    </div>
+
+                    <div
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: 6,
+                        padding: '10px 12px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#F8FAFC' }}>Technical Interview Round</div>
+                        <div style={{ fontSize: 11, color: '#94A3B8' }}>Calendar Synced</div>
+                      </div>
+                      <span style={{ fontSize: 11, color: '#38BDF8', fontWeight: 600 }}>Scheduled</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* Bottom Info */}
+              <div style={{ paddingTop: 16, borderTop: '1px solid rgba(255, 255, 255, 0.08)', fontSize: 12, color: '#94A3B8', lineHeight: 1.5 }}>
+                Need access or technical assistance? Contact your campus placement coordinator.
+              </div>
             </div>
           </div>
 

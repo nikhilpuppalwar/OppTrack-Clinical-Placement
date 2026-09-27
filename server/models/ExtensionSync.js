@@ -6,6 +6,8 @@ const extensionSyncSchema = new mongoose.Schema(
     source: { type: String, default: 'Chrome Extension' },
     formUrl: { type: String, default: '' },
     formTitle: { type: String, default: '' },
+    fileName: { type: String, default: '' },
+    metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
 
     // Raw incoming items from extension or form scan
     rawFields: [
@@ -16,6 +18,7 @@ const extensionSyncSchema = new mongoose.Schema(
         fieldType: String,
         section: String,
         reason: String,
+        confidence: Number,
       },
     ],
 
@@ -27,12 +30,13 @@ const extensionSyncSchema = new mongoose.Schema(
         currentValue: { type: String, default: '' },
         incomingValue: { type: String, default: '' },
         suggestedValue: { type: String, default: '' },
-        status: { type: String, enum: ['new', 'updated', 'identical'], default: 'new' },
+        status: { type: String, enum: ['new', 'updated', 'identical', 'conflict'], default: 'new' },
         action: { type: String, enum: ['accept', 'keep', 'append'], default: 'accept' },
         reason: { type: String, default: '' },
         section: { type: String, default: 'personal' },
         fieldType: { type: String, default: 'short_text' },
         approved: { type: Boolean, default: true },
+        confidence: { type: Number, default: 0.95 },
       },
     ],
 

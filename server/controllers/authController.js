@@ -7,24 +7,122 @@ const Profile = require('../models/Profile');
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validatePasswordPolicy = (password) => {
+  if (!password || password.length < 8) return 'Password must be at least 8 characters long.';
+  if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.';
+  if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.';
+  if (!/[0-9]/.test(password)) return 'Password must contain at least one number.';
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return 'Password must contain at least one special character.';
+  return null;
+};
+
+const isAllowedClientUrl = (urlStr) => {
+  if (!urlStr) return false;
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+
+    const hostname = parsed.hostname.toLowerCase();
+
+    // 1. Allow localhost and 127.0.0.1 for local development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+
+    // 2. Allow any Vercel deployment (*.vercel.app)
+    if (hostname === 'vercel.app' || hostname.endsWith('.vercel.app')) return true;
+
+    // 3. Allow origins configured in environment variables (CLIENT_URL, FRONTEND_URL, VERCEL_URL)
+    const envOrigins = [
+      process.env.CLIENT_URL,
+      process.env.FRONTEND_URL,
+      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+    ]
+      .filter(Boolean)
+      .flatMap((s) => s.split(','))
+      .map((s) => s.trim().toLowerCase().replace(/\/+$/, ''));
+
+    const originWithoutTrailing = `${parsed.protocol}//${parsed.host}`.toLowerCase();
+    for (const envOrigin of envOrigins) {
+      if (!envOrigin) continue;
+      if (envOrigin === originWithoutTrailing || envOrigin.includes(hostname)) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+const getClientBaseUrl = (req) => {
+  // 1. Check if client explicitly sent clientUrl in body (e.g. from Vercel frontend)
+  if (req?.body?.clientUrl && isAllowedClientUrl(req.body.clientUrl)) {
+    const parsed = new URL(req.body.clientUrl);
+    return `${parsed.protocol}//${parsed.host}`;
+  }
+
+  // 2. Check Origin header from the browser
+  const origin = req?.headers?.origin;
+  if (origin && origin !== 'null' && isAllowedClientUrl(origin)) {
+    const parsed = new URL(origin);
+    return `${parsed.protocol}//${parsed.host}`;
+  }
+
+  // 3. Check Referer header
+  const referer = req?.headers?.referer;
+  if (referer && isAllowedClientUrl(referer)) {
+    const parsed = new URL(referer);
+    return `${parsed.protocol}//${parsed.host}`;
+  }
+
+  // 4. Fallback to CLIENT_URL or FRONTEND_URL or VERCEL_URL environment variable
+  const envUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+  if (envUrl) {
+    const primary = envUrl.split(',')[0].trim().replace(/\/+$/, '');
+    if (primary) return primary;
+  }
+
+  // 5. Default production fallback for OppTrack Vercel deployment
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://opp-track-clinical-placement.vercel.app';
+  }
+
+  return 'http://localhost:5173';
+};
+
 // @POST /api/auth/register
 const register = async (req, res, next) => {
   try {
     const { name, email, password, collegeName, branch, batch } = req.body;
     if (!name || !email || !password)
-      return res.status(400).json({ message: 'Name, email, and password are required.' });
+      return res.status(400).json({ message: 'Full name, email address, and password are required.' });
 
     const cleanEmail = email.trim().toLowerCase();
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return res.status(400).json({ message: 'Enter a valid email address.' });
+    }
+
+    const pwError = validatePasswordPolicy(password);
+    if (pwError) {
+      return res.status(400).json({ message: pwError });
+    }
+
     const exists = await User.findOne({ email: cleanEmail });
-    if (exists) return res.status(400).json({ message: 'Email already registered.' });
+    if (exists) {
+      return res.status(400).json({
+        message: 'An account may already exist with this email. Try signing in or resetting your password.'
+      });
+    }
 
     const user = await User.create({
-      name,
+      name: name.trim(),
       email: cleanEmail,
       passwordHash: password,
-      collegeName: collegeName || '',
-      branch: branch || '',
-      batch: batch || '',
+      collegeName: collegeName ? collegeName.trim() : '',
+      branch: branch ? branch.trim() : '',
+      batch: batch ? batch.trim() : '',
     });
 
     // Create empty profile (upsert if exists)
@@ -47,7 +145,7 @@ const register = async (req, res, next) => {
     });
   } catch (err) {
     console.error('Registration error:', err);
-    res.status(500).json({ message: err.message || 'Registration failed.' });
+    res.status(500).json({ message: 'We couldn\'t create your account right now. Please try again shortly.' });
   }
 };
 
@@ -61,7 +159,7 @@ const login = async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const user = await User.findOne({ email: cleanEmail });
     if (!user || !(await user.matchPassword(password)))
-      return res.status(401).json({ message: 'Invalid email or password.' });
+      return res.status(401).json({ message: 'Email or password is incorrect.' });
 
     const token = generateToken(user._id);
 
@@ -76,7 +174,7 @@ const login = async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ message: err.message || 'Login failed.' });
+    res.status(500).json({ message: 'We couldn\'t sign you in right now. Please try again shortly.' });
   }
 };
 
@@ -103,14 +201,23 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).json({ message: 'Please provide your registered email address.' });
+      return res.status(400).json({ message: 'Enter a valid email address.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return res.status(400).json({ message: 'Enter a valid email address.' });
+    }
+
+    const genericMessage = "If an account exists for this email, you'll receive password reset instructions shortly.";
     const user = await User.findOne({ email: cleanEmail });
 
+    // Prevent account enumeration: return identical success message if user not found
     if (!user) {
-      return res.status(404).json({ message: 'No account found with this email address.' });
+      return res.json({
+        success: true,
+        message: genericMessage,
+      });
     }
 
     // Generate random 40-char token and its hash
@@ -121,8 +228,8 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
     await user.save({ validateBeforeSave: false });
 
-    // Client Reset URL
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    // Dynamic Client Reset URL (resolves to Vercel production/preview domain, CLIENT_URL, or localhost)
+    const clientUrl = getClientBaseUrl(req);
     const resetUrl = `${clientUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(cleanEmail)}`;
 
     // Transporter
@@ -181,11 +288,10 @@ const forgotPassword = async (req, res) => {
         await transporter.sendMail(mailOptions);
       } catch (mailErr) {
         console.error('SMTP sendMail error:', mailErr);
-        // We still inform user or provide resetUrl in development
         if (process.env.NODE_ENV !== 'production') {
           return res.json({
             success: true,
-            message: 'Password reset link generated. (SMTP error logged).',
+            message: genericMessage,
             debugResetUrl: resetUrl,
           });
         }
@@ -195,7 +301,7 @@ const forgotPassword = async (req, res) => {
       if (process.env.NODE_ENV !== 'production') {
         return res.json({
           success: true,
-          message: 'Password reset initiated. Reset link generated.',
+          message: genericMessage,
           debugResetUrl: resetUrl,
         });
       }
@@ -203,11 +309,12 @@ const forgotPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Password reset link has been sent to your email! Please check your inbox and spam folder.',
+      message: genericMessage,
+      ...(process.env.NODE_ENV !== 'production' ? { debugResetUrl: resetUrl } : {}),
     });
   } catch (err) {
     console.error('Forgot password error:', err);
-    res.status(500).json({ message: err.message || 'Failed to process password reset request.' });
+    res.status(500).json({ message: 'Failed to process password reset request. Please try again shortly.' });
   }
 };
 
@@ -219,8 +326,9 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Token, email, and new password are required.' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+    const pwError = validatePasswordPolicy(newPassword);
+    if (pwError) {
+      return res.status(400).json({ message: pwError });
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -243,11 +351,11 @@ const resetPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Password has been successfully updated! You can now log in.',
+      message: 'Your password has been updated.',
     });
   } catch (err) {
     console.error('Reset password error:', err);
-    res.status(500).json({ message: err.message || 'Failed to reset password.' });
+    res.status(500).json({ message: 'Failed to reset password. Please try again shortly.' });
   }
 };
 

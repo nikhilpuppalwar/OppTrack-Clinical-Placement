@@ -91,10 +91,10 @@ export default function Dashboard() {
       {/* Header */}
       <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 24, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0B1F3A', margin: '0 0 6px 0', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-            {greeting}, {studentName} 👋
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+            {greeting}, {studentName}
           </h1>
-          <p style={{ margin: 0, fontSize: 14, color: '#667085' }}>
+          <p style={{ margin: 0, fontSize: 14, color: '#64748B' }}>
             Here is your placement pipeline, upcoming assessment dates, and recent activity.
           </p>
         </div>
@@ -103,9 +103,9 @@ export default function Dashboard() {
           <Link
             to="/opportunities/new"
             style={{
-              background: '#0B1F3A',
+              background: '#2563EB',
               color: '#FFFFFF',
-              fontSize: 13.5,
+              fontSize: 13,
               fontWeight: 600,
               padding: '9px 18px',
               textDecoration: 'none',
@@ -113,7 +113,7 @@ export default function Dashboard() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 7,
-              boxShadow: '0 2px 6px rgba(11, 31, 58, 0.12)',
+              boxShadow: '0 1px 2px rgba(37, 99, 235, 0.2)',
               transition: 'background 0.15s ease'
             }}
           >
@@ -128,23 +128,23 @@ export default function Dashboard() {
         <div className="stat-card">
           <div className="stat-label">Total Tracked</div>
           <div className="stat-value">{total}</div>
-          <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>In your placement pipeline</div>
+          <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>In your placement pipeline</div>
         </div>
 
         {/* Card 2: Active */}
         <div className="stat-card">
           <div className="stat-label">Active Applications</div>
-          <div className="stat-value" style={{ color: '#123C73' }}>{active}</div>
+          <div className="stat-value" style={{ color: '#2563EB' }}>{active}</div>
           <div style={{ fontSize: 12, color: '#2563EB', fontWeight: 600, marginTop: 2 }}>Currently in progress</div>
         </div>
 
         {/* Card 3: Offers Received */}
-        <div className="stat-card" style={{ borderTop: '3px solid #18B7A0' }}>
-          <div className="stat-label" style={{ color: '#087F71', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Trophy size={14} color="#18B7A0" /> Offers Received
+        <div className="stat-card" style={{ borderTop: '3px solid #16A34A' }}>
+          <div className="stat-label" style={{ color: '#15803D', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Trophy size={14} color="#16A34A" /> Offers Received
           </div>
           <div className="stat-value" style={{ color: '#16A34A' }}>{offers}</div>
-          <div style={{ fontSize: 12, color: '#16A34A', fontWeight: 600, marginTop: 2 }}>Offers locked in 🎉</div>
+          <div style={{ fontSize: 12, color: '#16A34A', fontWeight: 600, marginTop: 2 }}>Offers secured</div>
         </div>
 
         {/* Card 4: Rejection Rate */}

@@ -3,32 +3,61 @@ import { Link } from 'react-router-dom';
 import { authAPI } from '../api';
 import logoImg from '../assets/logo.png';
 import toast from 'react-hot-toast';
-import { Mail, ArrowLeft, ArrowRight, CheckCircle2, Shield, Loader2, KeyRound } from 'lucide-react';
+import { Mail, ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [debugUrl, setDebugUrl] = useState('');
 
+  const validateEmail = (val) => {
+    const trimmed = val.trim();
+    if (!trimmed) return 'Email address is required.';
+    if (!EMAIL_REGEX.test(trimmed)) return 'Enter a valid email address.';
+    return '';
+  };
+
+  const handleBlur = () => {
+    setTouched(true);
+    setError(validateEmail(email));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim()) {
-      toast.error('Please enter your email address');
+    if (loading) return;
+
+    const emailErr = validateEmail(email);
+    if (emailErr) {
+      setTouched(true);
+      setError(emailErr);
       return;
     }
 
     setLoading(true);
+    setError('');
     setDebugUrl('');
+
     try {
-      const res = await authAPI.forgotPassword({ email: email.trim() });
+      const clientUrl = typeof window !== 'undefined' ? window.location.origin : undefined;
+      const res = await authAPI.forgotPassword({ email: email.trim(), clientUrl });
       setSubmitted(true);
-      toast.success(res.data.message || 'Reset link sent to your email!');
-      if (res.data.debugResetUrl) {
+      if (res.data?.debugResetUrl) {
         setDebugUrl(res.data.debugResetUrl);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to send reset email. Please try again.';
+      // In accordance with account enumeration protection, show friendly generic or error
+      let msg = "We couldn't connect to the server. Check your connection and try again.";
+      if (err.response?.status === 429) {
+        msg = 'Too many attempts. Please wait a few minutes before trying again.';
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      }
+      setError(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -39,80 +68,56 @@ export default function ForgotPassword() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#F7F9FC',
+        background: '#F8FAFC',
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-        color: '#0B1F3A',
+        color: '#0F172A',
         display: 'flex',
         flexDirection: 'column',
-        position: 'relative',
-        overflowX: 'hidden',
       }}
     >
-      {/* Ambient Top Glow */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '1000px',
-          height: '380px',
-          background: 'radial-gradient(ellipse at 50% 0%, rgba(24, 183, 160, 0.12) 0%, rgba(11, 31, 58, 0.04) 50%, transparent 80%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-
-      {/* Top Navigation */}
+      {/* Top Header */}
       <header
         style={{
-          padding: '18px 32px',
+          height: 60,
+          borderBottom: '1px solid #E2E8F0',
+          background: '#FFFFFF',
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
-          position: 'relative',
-          zIndex: 10,
-          borderBottom: '1px solid rgba(229, 234, 240, 0.6)',
-          background: 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(8px)',
+          padding: '0 24px',
         }}
       >
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src={logoImg} alt="OppTrack Logo" style={{ height: 26, width: 'auto' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 17, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.3px' }}>
-              OppTrack
-            </span>
-            <span style={{ height: 12, width: 1, background: '#CBD5E1' }} />
-            <span style={{ fontSize: 12, color: '#64748B', fontWeight: 500 }}>
-              Password Recovery
-            </span>
-          </div>
-        </Link>
+        <div style={{ maxWidth: 1200, width: '100%', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
+            <span style={{ fontSize: 18, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em' }}>OppTrack</span>
+            <span style={{ color: '#CBD5E1', fontSize: 13, userSelect: 'none' }}>|</span>
+            <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 500 }}>Reset Password</span>
+          </Link>
 
-        <Link
-          to="/login"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 13,
-            fontWeight: 600,
-            color: '#3B5E97',
-            textDecoration: 'none',
-            padding: '8px 14px',
-            borderRadius: 8,
-            border: '1px solid #E5EAF0',
-            background: '#FFFFFF',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <ArrowLeft size={14} />
-          <span>Back to Sign In</span>
-        </Link>
+          <Link
+            to="/login"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#0F172A',
+              textDecoration: 'none',
+              padding: '6px 14px',
+              borderRadius: 6,
+              border: '1px solid #E2E8F0',
+              background: '#FFFFFF',
+              transition: 'background-color 0.15s ease',
+            }}
+          >
+            <ArrowLeft size={14} />
+            <span>Back to Sign In</span>
+          </Link>
+        </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Body */}
       <main
         style={{
           flex: 1,
@@ -120,67 +125,107 @@ export default function ForgotPassword() {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '40px 20px',
-          position: 'relative',
-          zIndex: 5,
         }}
       >
         <div
           style={{
             width: '100%',
-            maxWidth: 460,
+            maxWidth: 440,
             background: '#FFFFFF',
-            borderRadius: 18,
-            border: '1px solid #E5EAF0',
-            boxShadow: '0 20px 45px -10px rgba(11, 31, 58, 0.08), 0 1px 3px rgba(0,0,0,0.02)',
+            borderRadius: 12,
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
             padding: '36px 32px',
           }}
         >
-          {/* Badge */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: '#E8F8F5', color: '#087F71', fontSize: 11.5, fontWeight: 700, marginBottom: 20 }}>
-            <KeyRound size={13} />
-            <span>ACCOUNT SECURITY</span>
-          </div>
-
           {!submitted ? (
             <>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0B1F3A', letterSpacing: '-0.5px', margin: '0 0 10px' }}>
-                Forgot your password?
-              </h1>
-              <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 28px' }}>
-                Enter the email address registered with your OppTrack account. We'll send you an encrypted link to safely choose a new password.
-              </p>
+              {/* Header */}
+              <div style={{ marginBottom: 24 }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
+                  Reset your password
+                </h1>
+                <p style={{ fontSize: 13.5, color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                  Enter your email address and we'll send reset instructions if an account exists.
+                </p>
+              </div>
 
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Error Alert */}
+              {error && (
+                <div
+                  role="alert"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    background: '#FEF2F2',
+                    border: '1px solid #FEE2E2',
+                    color: '#B91C1C',
+                    fontSize: 13,
+                    marginBottom: 16,
+                  }}
+                >
+                  <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#0B1F3A', marginBottom: 8 }}>
-                    College or Personal Email
+                  <label
+                    htmlFor="forgot-email"
+                    style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}
+                  >
+                    Email address
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: 12,
+                        color: touched && error ? '#EF4444' : '#94A3B8',
+                        display: 'flex',
+                        pointerEvents: 'none',
+                      }}
+                    >
                       <Mail size={16} />
                     </span>
                     <input
+                      id="forgot-email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
                       required
-                      autoFocus
-                      placeholder="student@college.edu or personal@gmail.com"
+                      placeholder="student@example.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (error) setError('');
+                      }}
+                      onBlur={handleBlur}
+                      aria-invalid={touched && !!error}
                       style={{
                         width: '100%',
                         height: 44,
                         paddingLeft: 38,
-                        paddingRight: 14,
-                        background: '#F8FAFD',
-                        border: '1px solid #CBD5E1',
+                        paddingRight: 12,
+                        background: '#FFFFFF',
+                        border: `1px solid ${touched && error ? '#EF4444' : '#CBD5E1'}`,
                         borderRadius: 8,
-                        fontSize: 13.5,
-                        color: '#0B1F3A',
+                        fontSize: 14,
+                        color: '#0F172A',
                         outline: 'none',
-                        transition: 'all 0.15s ease',
                       }}
                     />
                   </div>
+                  {touched && error && (
+                    <p role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '4px 0 0' }}>
+                      {error}
+                    </p>
+                  )}
                 </div>
 
                 <button
@@ -189,7 +234,7 @@ export default function ForgotPassword() {
                   style={{
                     width: '100%',
                     height: 44,
-                    background: '#0B1F3A',
+                    background: '#2563EB',
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: 8,
@@ -200,92 +245,75 @@ export default function ForgotPassword() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
-                    boxShadow: '0 4px 14px rgba(11, 31, 58, 0.25)',
-                    transition: 'all 0.15s ease',
-                    opacity: loading ? 0.75 : 1,
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    opacity: loading ? 0.8 : 1,
                   }}
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 size={16} className="spinner" />
-                      <span>Sending reset link...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Send Password Reset Link</span>
-                      <ArrowRight size={15} />
-                    </>
-                  )}
+                  <span>{loading ? 'Sending reset link...' : 'Send Reset Link'}</span>
+                  {!loading && <ArrowRight size={16} />}
                 </button>
               </form>
             </>
           ) : (
-            <div style={{ textAlign: 'center' }}>
+            <div>
               <div
                 style={{
-                  width: 56,
-                  height: 56,
+                  width: 48,
+                  height: 48,
                   borderRadius: '50%',
-                  background: '#E8F8F5',
-                  color: '#18B7A0',
+                  background: '#F0FDF4',
+                  color: '#16A34A',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '0 auto 20px',
+                  marginBottom: 16,
                 }}
               >
-                <CheckCircle2 size={32} />
+                <CheckCircle2 size={28} />
               </div>
 
-              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0B1F3A', margin: '0 0 10px' }}>
-                Check your inbox
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0F172A', margin: '0 0 8px' }}>
+                Check your email
               </h2>
               <p style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.6, margin: '0 0 20px' }}>
-                We've dispatched password recovery instructions to:
-                <br />
-                <strong style={{ color: '#0B1F3A', wordBreak: 'break-all' }}>{email}</strong>
+                If an account exists for <strong>{email}</strong>, you'll receive password reset instructions shortly.
               </p>
 
               <div
                 style={{
-                  background: '#F8FAFD',
-                  borderRadius: 10,
-                  border: '1px solid #E5EAF0',
-                  padding: '14px 16px',
+                  background: '#F8FAFC',
+                  borderRadius: 8,
+                  border: '1px solid #E2E8F0',
+                  padding: '12px 14px',
                   fontSize: 12.5,
                   color: '#64748B',
-                  textAlign: 'left',
                   lineHeight: 1.5,
-                  marginBottom: 24,
+                  marginBottom: 20,
                 }}
               >
-                <strong>💡 Didn't see the email?</strong>
-                <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
-                  <li>Check your spam or junk circular folder.</li>
-                  <li>The reset link is active for <strong>60 minutes</strong>.</li>
-                </ul>
+                Please check your inbox as well as your spam folder. The reset link is valid for 60 minutes.
               </div>
 
               {debugUrl && (
-                <div style={{ marginBottom: 20, textAlign: 'left' }}>
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: '#087F71', marginBottom: 6 }}>
-                    DEVELOPMENT RESET LINK:
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 600, color: '#0D9488', marginBottom: 4 }}>
+                    Development Reset Link:
                   </div>
                   <a
                     href={debugUrl}
                     style={{
                       display: 'block',
-                      background: '#E8F8F5',
-                      color: '#087F71',
-                      border: '1px solid #A3E5D9',
+                      background: '#F0FDFA',
+                      color: '#0F766E',
+                      border: '1px solid #CCFBF1',
                       borderRadius: 6,
-                      padding: '8px 12px',
-                      fontSize: 11.5,
+                      padding: '8px 10px',
+                      fontSize: 12,
                       textDecoration: 'none',
                       wordBreak: 'break-all',
                     }}
                   >
-                    Open Password Reset Link →
+                    Open Password Reset URL →
                   </a>
                 </div>
               )}
@@ -293,15 +321,18 @@ export default function ForgotPassword() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <button
                   type="button"
-                  onClick={() => setSubmitted(false)}
+                  onClick={() => {
+                    setSubmitted(false);
+                    setEmail('');
+                  }}
                   style={{
-                    background: 'transparent',
+                    background: '#FFFFFF',
                     border: '1px solid #CBD5E1',
                     borderRadius: 8,
                     height: 40,
                     fontSize: 13,
                     fontWeight: 600,
-                    color: '#3B5E97',
+                    color: '#475569',
                     cursor: 'pointer',
                   }}
                 >
@@ -316,7 +347,7 @@ export default function ForgotPassword() {
                     justifyContent: 'center',
                     gap: 6,
                     height: 40,
-                    background: '#0B1F3A',
+                    background: '#2563EB',
                     color: '#FFFFFF',
                     borderRadius: 8,
                     fontSize: 13,
@@ -331,12 +362,12 @@ export default function ForgotPassword() {
             </div>
           )}
 
-          {/* Security footnote */}
+          {/* Security Footnote */}
           <div
             style={{
-              marginTop: 28,
-              paddingTop: 18,
-              borderTop: '1px solid #E5EAF0',
+              marginTop: 24,
+              paddingTop: 16,
+              borderTop: '1px solid #F1F5F9',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -345,8 +376,8 @@ export default function ForgotPassword() {
               color: '#64748B',
             }}
           >
-            <Shield size={14} color="#18B7A0" />
-            <span>256-bit encrypted authentication</span>
+            <ShieldCheck size={14} color="#0D9488" />
+            <span>Secure authentication • Passwords hashed with bcrypt</span>
           </div>
         </div>
       </main>

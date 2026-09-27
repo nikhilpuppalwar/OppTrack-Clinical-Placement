@@ -2,43 +2,44 @@
 
 :root {
   /* OppTrack Professional SaaS Design System */
-  --primary-navy: #0B1F3A;
-  --primary-blue: #123C73;
-  --teal: #18B7A0;
-  --teal-hover: #22C7AE;
-  --teal-light: #E8F8F5;
-  --teal-text: #087F71;
+  --primary-navy: #0F172A; /* Slate 900 */
+  --primary-blue: #2563EB; /* Blue 600 */
+  --teal: #0D9488;         /* Teal 600 */
+  --teal-hover: #0F766E;   /* Teal 700 */
+  --teal-light: #F0FDFA;   /* Teal 50 */
+  --teal-text: #0F766E;    /* Teal 700 */
 
-  --bg: #F7F9FC;
+  --bg: #F8FAFC;           /* Slate 50 */
   --surface: #FFFFFF;
   --card: #FFFFFF;
-  --border: #E5EAF0;
-  --border-hover: #CBD5E1;
+  --border: #E2E8F0;       /* Slate 200 */
+  --border-hover: #CBD5E1; /* Slate 300 */
 
-  --text-primary: #172033;
-  --text-secondary: #667085;
-  --text-muted: #94A3B8;
+  --text-primary: #0F172A;   /* Slate 900 */
+  --text-secondary: #64748B; /* Slate 500 */
+  --text-muted: #94A3B8;     /* Slate 400 */
 
   /* Status Colors */
   --success: #16A34A;
-  --success-bg: #EAF8EF;
-  --warning: #F59E0B;
-  --warning-bg: #FFF7E6;
-  --danger: #DC3545;
-  --danger-bg: #FEF0F0;
+  --success-bg: #F0FDF4;
+  --warning: #D97706;
+  --warning-bg: #FFFBEB;
+  --danger: #DC2626;
+  --danger-bg: #FEF2F2;
   --info: #2563EB;
-  --info-bg: #EAF2FF;
+  --info-bg: #EFF6FF;
 
   /* Geometry & Elevation */
+  --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius: 12px;
-  --radius-lg: 16px;
-  --shadow-sm: 0 1px 3px rgba(11, 31, 58, 0.04);
-  --shadow: 0 2px 8px rgba(11, 31, 58, 0.04), 0 1px 2px rgba(11, 31, 58, 0.02);
-  --shadow-md: 0 8px 24px rgba(11, 31, 58, 0.06);
-  --shadow-lg: 0 16px 40px rgba(11, 31, 58, 0.08);
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
 
-  --transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition: all 0.15s ease-in-out;
 }
 
 *, *::before, *::after {
@@ -47,13 +48,18 @@
   padding: 0;
 }
 
+:focus-visible {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
 html {
   scroll-behavior: smooth;
   font-size: 15px;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background: var(--bg);
   color: var(--text-primary);
   line-height: 1.55;
@@ -364,8 +370,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px;
-  border-radius: 999px;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
   font-size: 11.5px;
   font-weight: 600;
   white-space: nowrap;

@@ -45,6 +45,16 @@ const profileSchema = new mongoose.Schema(
     personalAchievements: String,
     technicalAchievements: String,
     resumeLink: String,
+    githubLink: String,
+    linkedinLink: String,
+    portfolioUrl: String,
+    currentCity: String,
+    currentAddressLine1: String,
+    technicalSkills: String,
+    programmingLanguages: String,
+    frameworks: String,
+    tools: String,
+    softSkills: String,
 
     // Dynamic Unified Fields (Stores built-in + custom fields with labels, fieldTypes, values, and hidden state)
     fields: [
@@ -62,6 +72,7 @@ const profileSchema = new mongoose.Schema(
         hidden: { type: Boolean, default: false },
         isCustom: { type: Boolean, default: false },
         sensitive: { type: Boolean, default: false },
+        provenance: { type: mongoose.Schema.Types.Mixed, default: null },
       },
     ],
     deletedFieldIds: { type: [String], default: [] },

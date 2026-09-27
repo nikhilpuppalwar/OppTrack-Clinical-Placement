@@ -16,10 +16,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const isAuthRoute = err.config?.url && (
+      err.config.url.includes('/auth/login') ||
+      err.config.url.includes('/auth/register') ||
+      err.config.url.includes('/auth/forgot-password') ||
+      err.config.url.includes('/auth/reset-password')
+    );
+
+    if (err.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem('opptrack_token');
       localStorage.removeItem('opptrack_user');
-      window.location.href = '/login';
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login?expired=true';
+      }
     }
     return Promise.reject(err);
   }

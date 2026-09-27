@@ -298,7 +298,7 @@ export default function Settings() {
     // Check URL parameters for OAuth return
     const params = new URLSearchParams(window.location.search);
     if (params.get('google') === 'connected') {
-      toast.success('🎉 Google Account connected successfully!');
+      toast.success('Google Account connected successfully.');
       window.history.replaceState({}, document.title, window.location.pathname);
       setActiveTab('google');
       fetchGoogleStatus();
@@ -412,7 +412,7 @@ export default function Settings() {
 
       // Trigger native desktop notification
       const desktopFired = sendDesktopNotification({
-        title: data?.notification?.title || '🎯 Test Reminder: Google Online Assessment',
+        title: data?.notification?.title || 'Test Reminder: Online Assessment Alert',
         body: data?.notification?.body || 'Upcoming assessment alert test.',
       });
 
@@ -1328,7 +1328,7 @@ export default function Settings() {
                     onChange={e => setSettings(s => ({ ...s, notifyTests: e.target.checked }))}
                     style={{ accentColor: '#D97706', width: 16, height: 16 }}
                   />
-                  <span>🎯 Online Assessments & Tests</span>
+                  <span>Online Assessments &amp; Tests</span>
                 </label>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033', cursor: 'pointer' }}>
@@ -1338,7 +1338,7 @@ export default function Settings() {
                     onChange={e => setSettings(s => ({ ...s, notifyDeadlines: e.target.checked }))}
                     style={{ accentColor: '#D97706', width: 16, height: 16 }}
                   />
-                  <span>⏳ Application Deadlines</span>
+                  <span>Application Deadlines</span>
                 </label>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033', cursor: 'pointer' }}>
@@ -1348,7 +1348,7 @@ export default function Settings() {
                     onChange={e => setSettings(s => ({ ...s, notifyDrives: e.target.checked }))}
                     style={{ accentColor: '#D97706', width: 16, height: 16 }}
                   />
-                  <span>🏢 Campus Drive Dates</span>
+                  <span>Campus Drive Dates</span>
                 </label>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033', cursor: 'pointer' }}>
@@ -1358,7 +1358,7 @@ export default function Settings() {
                     onChange={e => setSettings(s => ({ ...s, notifyInterviews: e.target.checked }))}
                     style={{ accentColor: '#D97706', width: 16, height: 16 }}
                   />
-                  <span>💼 Interview & Selection Rounds</span>
+                  <span>Interview &amp; Selection Rounds</span>
                 </label>
               </div>
             </div>
@@ -1380,7 +1380,7 @@ export default function Settings() {
 
               {upcomingReminders.length === 0 ? (
                 <div style={{ padding: '16px', background: '#F8FAFD', borderRadius: 8, textAlign: 'center', color: '#667085', fontSize: 12.5 }}>
-                  🎉 No pending milestones due in the next 14 days. When new placement tests or drive dates arrive, they will automatically be tracked here.
+                  No pending milestones due in the next 14 days. When new placement tests or drive dates arrive, they will appear here.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

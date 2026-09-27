@@ -3,7 +3,8 @@ import { profileAPI } from '../api';
 import { 
   Edit, Save, Plus, Trash2, Check, Copy, ExternalLink, X, RotateCcw, 
   Sparkles, Puzzle, ArrowRight, ShieldAlert, CheckCircle2, AlertCircle, 
-  RefreshCw, CheckCheck, Eye, HelpCircle, FileText
+  RefreshCw, CheckCheck, Eye, HelpCircle, FileText, UploadCloud,
+  History, CheckSquare, Square, AlertTriangle, FileUp, Undo2, ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -151,6 +152,25 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
               Custom
             </span>
           )}
+          {field.provenance && (
+            <span
+              title={`Source: ${field.provenance.fileName || field.provenance.source}`}
+              style={{
+                fontSize: 9.5,
+                fontWeight: 700,
+                padding: '1px 6px',
+                borderRadius: 4,
+                background: '#F0FDF4',
+                color: '#15803D',
+                border: '1px solid #BBF7D0',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+              }}
+            >
+              <FileText size={9} /> {field.provenance.source?.includes('Resume') ? 'Resume' : 'Imported'}
+            </span>
+          )}
         </div>
 
         {/* Action icons: Copy, Edit, Delete */}
@@ -291,13 +311,28 @@ export default function Profile() {
   const [loadingSyncs, setLoadingSyncs] = useState(false);
   const [selectedSyncIndex, setSelectedSyncIndex] = useState(0);
   const [syncEdits, setSyncEdits] = useState({});
+  const [syncSelected, setSyncSelected] = useState({});
   const [verifyingSync, setVerifyingSync] = useState(false);
   const [dismissingSync, setDismissingSync] = useState(false);
+  const [showConfirmMergeModal, setShowConfirmMergeModal] = useState(false);
 
   // AI manual text / form scan modal
   const [showImportModal, setShowImportModal] = useState(false);
   const [importText, setImportText] = useState('');
   const [analyzingText, setAnalyzingText] = useState(false);
+
+  // AI resume import modal & progressive state
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeDragOver, setResumeDragOver] = useState(false);
+  const [analyzingResume, setAnalyzingResume] = useState(false);
+  const [resumeStep, setResumeStep] = useState(1);
+
+  // Sync / Import history & rollback state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [syncHistory, setSyncHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [rollingBackId, setRollingBackId] = useState(null);
 
   // Field CRUD state
   const [deletedFieldIds, setDeletedFieldIds] = useState([]);
@@ -388,17 +423,20 @@ export default function Profile() {
       const syncs = data?.syncs || [];
       setPendingSyncs(syncs);
 
-      // Initialize syncEdits
+      // Initialize syncEdits and syncSelected
       if (syncs.length > 0) {
         const active = syncs[0];
         const initial = {};
+        const initialSelected = {};
         (active.analysis || []).forEach(item => {
           initial[item.fieldId] = {
-            action: item.status === 'identical' ? 'keep' : 'accept',
+            action: item.action || (item.status === 'identical' ? 'keep' : 'accept'),
             value: item.suggestedValue || item.incomingValue,
           };
+          initialSelected[item.fieldId] = item.status !== 'identical';
         });
         setSyncEdits(initial);
+        setSyncSelected(initialSelected);
       }
     } catch (err) {
       console.warn('Failed to fetch pending syncs:', err);
@@ -418,17 +456,20 @@ export default function Profile() {
     const active = pendingSyncs[idx];
     if (active) {
       const initial = {};
+      const initialSelected = {};
       (active.analysis || []).forEach(item => {
         initial[item.fieldId] = {
-          action: item.status === 'identical' ? 'keep' : 'accept',
+          action: item.action || (item.status === 'identical' ? 'keep' : 'accept'),
           value: item.suggestedValue || item.incomingValue,
         };
+        initialSelected[item.fieldId] = item.status !== 'identical';
       });
       setSyncEdits(initial);
+      setSyncSelected(initialSelected);
     }
   };
 
-  // Toggle field action (accept vs keep vs append)
+  // Toggle field action (accept vs keep vs append/merge)
   const handleSetFieldAction = (fieldId, action) => {
     setSyncEdits(prev => ({
       ...prev,
@@ -437,6 +478,9 @@ export default function Profile() {
         action,
       }
     }));
+    if (action !== 'keep') {
+      setSyncSelected(prev => ({ ...prev, [fieldId]: true }));
+    }
   };
 
   // Change suggested value manually before merging
@@ -450,12 +494,32 @@ export default function Profile() {
     }));
   };
 
-  // Verify and merge approved extension fields into the database Profile Vault
+  // Checkbox toggle for selective saving
+  const toggleSelectField = (fieldId) => {
+    setSyncSelected(prev => ({
+      ...prev,
+      [fieldId]: !prev[fieldId],
+    }));
+  };
+
+  // Select / Deselect all fields for current staged submission
+  const handleSelectAllSyncFields = (selectAll) => {
+    const currentSync = pendingSyncs[selectedSyncIndex];
+    if (!currentSync) return;
+    const updated = {};
+    (currentSync.analysis || []).forEach(item => {
+      updated[item.fieldId] = selectAll;
+    });
+    setSyncSelected(updated);
+  };
+
+  // Verify and merge approved extension / resume fields into database Profile Vault
   const handleVerifyAndMerge = async () => {
     const currentSync = pendingSyncs[selectedSyncIndex];
     if (!currentSync) return;
 
     const approvedFields = (currentSync.analysis || [])
+      .filter(item => syncSelected[item.fieldId] !== false)
       .map(item => {
         const edit = syncEdits[item.fieldId] || {};
         const action = edit.action !== undefined ? edit.action : item.action;
@@ -472,7 +536,7 @@ export default function Profile() {
       .filter(f => f.action !== 'keep');
 
     if (approvedFields.length === 0) {
-      return toast.error('All fields are set to "Keep Current". Select at least one field to merge.');
+      return toast.error('No fields selected to merge. Check at least one field set to Accept or Merge.');
     }
 
     setVerifyingSync(true);
@@ -481,7 +545,7 @@ export default function Profile() {
       const { data } = await profileAPI.verifySync(currentSync._id, { approvedFields });
       toast.success(data.message || 'Profile Vault updated with verified data!', { id: toastId });
 
-      // Refresh profile view and remaining sync queue
+      setShowConfirmMergeModal(false);
       await loadProfile();
       await fetchPendingSyncs();
       setSelectedSyncIndex(0);
@@ -492,7 +556,7 @@ export default function Profile() {
     }
   };
 
-  // Dismiss / reject staged extension capture
+  // Dismiss / reject staged extension or resume capture
   const handleRejectSync = async () => {
     const currentSync = pendingSyncs[selectedSyncIndex];
     if (!currentSync) return;
@@ -502,7 +566,7 @@ export default function Profile() {
     setDismissingSync(true);
     try {
       await profileAPI.rejectSync(currentSync._id);
-      toast.success('Incoming extension data dismissed.');
+      toast.success('Incoming data submission dismissed.');
       await fetchPendingSyncs();
       setSelectedSyncIndex(0);
     } catch (err) {
@@ -530,6 +594,79 @@ export default function Profile() {
       toast.error(err.response?.data?.message || 'Failed to analyze text with AI', { id: toastId });
     } finally {
       setAnalyzingText(false);
+    }
+  };
+
+  // Handle AI Resume Upload & Extraction
+  const handleAnalyzeResume = async (e) => {
+    if (e) e.preventDefault();
+    if (!resumeFile) {
+      return toast.error('Please select a PDF or DOCX resume file.');
+    }
+
+    const ext = resumeFile.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'docx', 'doc'].includes(ext)) {
+      return toast.error('Unsupported file format. Please upload a PDF or DOCX resume.');
+    }
+    if (resumeFile.size > 10 * 1024 * 1024) {
+      return toast.error('File size exceeds the 10MB limit.');
+    }
+
+    setAnalyzingResume(true);
+    setResumeStep(1);
+
+    const stepInterval = setInterval(() => {
+      setResumeStep(prev => (prev < 4 ? prev + 1 : prev));
+    }, 1200);
+
+    const formData = new FormData();
+    formData.append('resume', resumeFile);
+
+    try {
+      const { data } = await profileAPI.analyzeResume(formData);
+      clearInterval(stepInterval);
+      setResumeStep(5);
+      toast.success(data.message || 'AI resume extraction complete! Review fields below.');
+      setShowResumeModal(false);
+      setResumeFile(null);
+      await fetchPendingSyncs();
+      setSelectedSyncIndex(0);
+    } catch (err) {
+      clearInterval(stepInterval);
+      toast.error(err.response?.data?.message || err.message || 'Failed to analyze resume with AI');
+    } finally {
+      setAnalyzingResume(false);
+    }
+  };
+
+  // Open import & sync history modal
+  const handleOpenHistoryModal = async () => {
+    setShowHistoryModal(true);
+    setLoadingHistory(true);
+    try {
+      const { data } = await profileAPI.getSyncHistory();
+      setSyncHistory(data?.history || []);
+    } catch {
+      toast.error('Failed to load import history');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  // Rollback profile vault to previous snapshot
+  const handleUndoUpdate = async (logId) => {
+    if (!window.confirm('Restore previous values for this update? Modified fields will revert to their prior values.')) return;
+    setRollingBackId(logId);
+    const toastId = toast.loading('Restoring previous profile vault values…');
+    try {
+      const { data } = await profileAPI.undoUpdate(logId);
+      toast.success(data.message || 'Profile restored to previous state!', { id: toastId });
+      await loadProfile();
+      await handleOpenHistoryModal();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to rollback profile values', { id: toastId });
+    } finally {
+      setRollingBackId(null);
     }
   };
 
@@ -681,7 +818,7 @@ export default function Profile() {
   const currentSync = pendingSyncs[selectedSyncIndex];
 
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto', paddingBottom: 80, fontFamily: 'Manrope, sans-serif' }}>
+    <div style={{ maxWidth: 980, margin: '0 auto', paddingBottom: 80 }}>
       
       {/* ── HEADER ── */}
       <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 24, marginBottom: 24 }}>
@@ -695,7 +832,7 @@ export default function Profile() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={() => setShowImportModal(true)}
@@ -703,18 +840,60 @@ export default function Profile() {
                 background: '#FFFFFF',
                 color: '#087F71',
                 border: '1px solid #A3E5D9',
-                padding: '9px 16px',
+                padding: '9px 15px',
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 7,
+                gap: 6,
                 boxShadow: '0 1px 2px rgba(8, 127, 113, 0.06)'
               }}
             >
               <Sparkles size={14} /> AI Form Import
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowResumeModal(true)}
+              style={{
+                background: '#F0FDF4',
+                color: '#15803D',
+                border: '1px solid #BBF7D0',
+                padding: '9px 15px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: '0 1px 2px rgba(21, 128, 61, 0.06)'
+              }}
+            >
+              <FileUp size={14} /> Import Resume
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenHistoryModal}
+              style={{
+                background: '#FFFFFF',
+                color: '#475569',
+                border: '1px solid #E2E8F0',
+                padding: '9px 13px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+              title="View import history & rollback"
+            >
+              <History size={14} /> History
             </button>
 
             {editing ? (
@@ -810,305 +989,469 @@ export default function Profile() {
       {/* ═══════════════════════════════════════════════════════════════════════════ */}
       {/* ── PENDING EXTENSION REVIEW SECTION (STAGING & USER VERIFICATION) ── */}
       {/* ═══════════════════════════════════════════════════════════════════════════ */}
-      {pendingSyncs.length > 0 && currentSync && (
-        <div
-          style={{
-            background: '#FFFFFF',
-            border: '2px solid #2563EB',
-            borderRadius: 14,
-            padding: 24,
-            marginBottom: 28,
-            boxShadow: '0 4px 20px rgba(37, 99, 235, 0.1)',
-            animation: 'fadeIn 0.2s ease-out',
-          }}
-        >
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 42, height: 42, borderRadius: 10,
-                background: '#EAF2FF', border: '1px solid #BFDBFE',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB'
-              }}>
-                <Puzzle size={22} />
-              </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0B1F3A' }}>
-                    Incoming Data from {currentSync.source || 'Chrome Extension'}
-                  </h3>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12,
-                    background: '#E8F8F5', color: '#0D7A6B', border: '1px solid rgba(24,183,160,0.4)',
-                    display: 'inline-flex', alignItems: 'center', gap: 4
-                  }}>
-                    ✨ New data is present (comes from extension)
-                  </span>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
-                    background: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D'
-                  }}>
-                    {pendingSyncs.length} Submission{pendingSyncs.length > 1 ? 's' : ''} Queued
-                  </span>
+      {pendingSyncs.length > 0 && currentSync && (() => {
+        const isResume = currentSync.source === 'AI Resume Import';
+        const totalCount = currentSync.analysis?.length || 0;
+        const newCount = (currentSync.analysis || []).filter(i => i.status === 'new').length;
+        const updatedCount = (currentSync.analysis || []).filter(i => i.status === 'updated').length;
+        const conflictCount = (currentSync.analysis || []).filter(i => i.status === 'conflict').length;
+        const identicalCount = (currentSync.analysis || []).filter(i => i.status === 'identical').length;
+        const selectedApprovedCount = (currentSync.analysis || []).filter(
+          i => syncSelected[i.fieldId] !== false && (syncEdits[i.fieldId]?.action !== undefined ? syncEdits[i.fieldId].action : i.action) !== 'keep'
+        ).length;
+        const allSelected = totalCount > 0 && (currentSync.analysis || []).every(i => syncSelected[i.fieldId] !== false);
+
+        return (
+          <div
+            style={{
+              background: '#FFFFFF',
+              border: `2px solid ${isResume ? '#15803D' : '#2563EB'}`,
+              borderRadius: 14,
+              padding: 24,
+              marginBottom: 28,
+              boxShadow: `0 4px 24px ${isResume ? 'rgba(21, 128, 61, 0.1)' : 'rgba(37, 99, 235, 0.1)'}`,
+              animation: 'fadeIn 0.2s ease-out',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 10,
+                  background: isResume ? '#DCFCE7' : '#EAF2FF',
+                  border: `1px solid ${isResume ? '#BBF7D0' : '#BFDBFE'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: isResume ? '#15803D' : '#2563EB'
+                }}>
+                  {isResume ? <FileUp size={24} /> : <Puzzle size={22} />}
                 </div>
-                <p style={{ margin: '3px 0 0 0', fontSize: 12.5, color: '#667085' }}>
-                  Captured from <strong>{currentSync.formTitle || currentSync.formUrl || 'External Form'}</strong> • {new Date(currentSync.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-                </p>
-              </div>
-            </div>
-
-            {/* If multiple pending submissions */}
-            {pendingSyncs.length > 1 && (
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#667085' }}>Submission:</span>
-                {pendingSyncs.map((s, idx) => (
-                  <button
-                    key={s._id}
-                    onClick={() => handleSelectSync(idx)}
-                    style={{
-                      background: selectedSyncIndex === idx ? '#2563EB' : '#F1F5F9',
-                      color: selectedSyncIndex === idx ? '#FFFFFF' : '#475569',
-                      border: 'none',
-                      borderRadius: 6,
-                      padding: '4px 10px',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    #{idx + 1}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* AI Merge Explanation Box */}
-          <div style={{
-            background: '#F8FAFD',
-            border: '1px solid #E5EAF0',
-            borderRadius: 10,
-            padding: '12px 16px',
-            marginBottom: 20,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10
-          }}>
-            <Sparkles size={16} color="#2563EB" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: '#172033', lineHeight: 1.5 }}>
-              <strong>AI Analysis & Suggestions:</strong> We detected <strong>{currentSync.analysis?.length || 0} candidate field(s)</strong> from this form. Review the suggested actions below. Once you verify and merge, your <strong>AI Vector Database index will update automatically</strong> so the Chrome extension can use the new values on future forms. Previous data will <strong>never</strong> be removed unless you explicitly choose to replace it.
-            </span>
-          </div>
-
-          {/* Side-by-Side Verification Diff Table */}
-          <div style={{
-            border: '1px solid #E5EAF0',
-            borderRadius: 10,
-            overflow: 'hidden',
-            marginBottom: 20,
-          }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 2.5fr 2.5fr 2fr',
-              background: '#F1F5F9',
-              padding: '10px 16px',
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#475569',
-              borderBottom: '1px solid #E5EAF0',
-            }}>
-              <div>FIELD & SECTION</div>
-              <div>CURRENT VAULT VALUE</div>
-              <div>INCOMING FORM VALUE</div>
-              <div style={{ textAlign: 'right' }}>VERIFICATION ACTION</div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', divideY: '1px solid #F1F5F9' }}>
-              {(currentSync.analysis || []).map(item => {
-                const edit = syncEdits[item.fieldId] || {};
-                const currentAction = edit.action !== undefined ? edit.action : item.action;
-                const activeVal = edit.value !== undefined ? edit.value : (item.suggestedValue || item.incomingValue);
-
-                const isNew = item.status === 'new';
-                const isUpdated = item.status === 'updated';
-                const isIdentical = item.status === 'identical';
-
-                return (
-                  <div
-                    key={item.fieldId}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '2fr 2.5fr 2.5fr 2fr',
-                      padding: '14px 16px',
-                      background: currentAction === 'accept' ? '#FFFFFF' : '#F8FAFD',
-                      borderBottom: '1px solid #F1F5F9',
-                      alignItems: 'center',
-                      gap: 12,
-                      opacity: currentAction === 'keep' ? 0.65 : 1,
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    {/* Column 1: Field & Section */}
-                    <div>
-                      <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
-                        {item.label}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                          {item.section?.replace('_', ' ')}
-                        </span>
-                        {isNew && (
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#E8F8F5', color: '#087F71' }}>
-                            NEW FIELD
-                          </span>
-                        )}
-                        {isUpdated && (
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#FEF3C7', color: '#B45309' }}>
-                            UPDATED VALUE
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Column 2: Current Vault Value */}
-                    <div>
-                      {item.currentValue ? (
-                        <div style={{ fontSize: 13, color: '#172033', fontWeight: 500, wordBreak: 'break-word' }}>
-                          {item.currentValue}
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: 12, fontStyle: 'italic', color: '#98A2B3' }}>
-                          (Empty in Vault)
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Column 3: Incoming Form Value / Editable */}
-                    <div>
-                      <input
-                        type="text"
-                        value={activeVal}
-                        onChange={e => handleSetFieldValue(item.fieldId, e.target.value)}
-                        placeholder="Incoming value…"
-                        style={{
-                          width: '100%',
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: currentAction === 'accept' ? '#087F71' : '#667085',
-                          background: currentAction === 'accept' ? '#E8F8F5' : '#F1F5F9',
-                          border: `1px solid ${currentAction === 'accept' ? '#A3E5D9' : '#E2E8F0'}`,
-                          borderRadius: 6,
-                          padding: '6px 10px',
-                          boxSizing: 'border-box',
-                          outline: 'none',
-                        }}
-                      />
-                      {item.reason && (
-                        <div style={{ fontSize: 11, color: '#667085', marginTop: 4 }}>
-                          💡 {item.reason}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Column 4: Verification Action Toggles */}
-                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                      <button
-                        type="button"
-                        onClick={() => handleSetFieldAction(item.fieldId, 'accept')}
-                        style={{
-                          background: currentAction === 'accept' ? '#087F71' : '#FFFFFF',
-                          color: currentAction === 'accept' ? '#FFFFFF' : '#087F71',
-                          border: `1px solid ${currentAction === 'accept' ? '#087F71' : '#A3E5D9'}`,
-                          padding: '5px 10px',
-                          borderRadius: 6,
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4
-                        }}
-                      >
-                        <Check size={12} /> Accept
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleSetFieldAction(item.fieldId, 'keep')}
-                        style={{
-                          background: currentAction === 'keep' ? '#64748B' : '#FFFFFF',
-                          color: currentAction === 'keep' ? '#FFFFFF' : '#64748B',
-                          border: `1px solid ${currentAction === 'keep' ? '#64748B' : '#E2E8F0'}`,
-                          padding: '5px 10px',
-                          borderRadius: 6,
-                          fontSize: 11.5,
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Keep DB
-                      </button>
-                    </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0B1F3A' }}>
+                      Incoming Data from {currentSync.source || 'Import'}
+                    </h3>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4,
+                      background: isResume ? '#F0FDF4' : '#EFF6FF',
+                      color: isResume ? '#15803D' : '#1D4ED8',
+                      border: `1px solid ${isResume ? '#BBF7D0' : '#BFDBFE'}`,
+                      display: 'inline-flex', alignItems: 'center', gap: 5
+                    }}>
+                      {isResume ? <FileUp size={12} /> : <FileText size={12} />}
+                      {isResume ? 'Resume Extraction' : 'Form Extraction'}
+                    </span>
+                    {currentSync.fileName && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4,
+                        background: '#F1F5F9', color: '#475569', border: '1px solid #E2E8F0',
+                        display: 'inline-flex', alignItems: 'center', gap: 5
+                      }}>
+                        <FileText size={11} /> {currentSync.fileName}
+                      </span>
+                    )}
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4,
+                      background: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D'
+                    }}>
+                      {pendingSyncs.length} Submission{pendingSyncs.length > 1 ? 's' : ''} Queued
+                    </span>
                   </div>
-                );
-              })}
+                  <p style={{ margin: '4px 0 0 0', fontSize: 12.5, color: '#667085' }}>
+                    Captured from <strong>{currentSync.formTitle || currentSync.formUrl || currentSync.fileName || 'External Source'}</strong> • {new Date(currentSync.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Multi-submission queue selector */}
+              {pendingSyncs.length > 1 && (
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: '#667085' }}>Submission:</span>
+                  {pendingSyncs.map((s, idx) => (
+                    <button
+                      key={s._id}
+                      onClick={() => handleSelectSync(idx)}
+                      style={{
+                        background: selectedSyncIndex === idx ? (isResume ? '#15803D' : '#2563EB') : '#F1F5F9',
+                        color: selectedSyncIndex === idx ? '#FFFFFF' : '#475569',
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '4px 10px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      #{idx + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* AI Summary Breakdown Cards */}
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              marginBottom: 16,
+            }}>
+              <div style={{ background: '#F8FAFD', border: '1px solid #E2E8F0', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                <span style={{ color: '#64748B' }}>Total Detected: </span>
+                <strong style={{ color: '#0B1F3A' }}>{totalCount}</strong>
+              </div>
+              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                <span style={{ color: '#166534' }}>New Fields: </span>
+                <strong style={{ color: '#15803D' }}>{newCount}</strong>
+              </div>
+              <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                <span style={{ color: '#92400E' }}>Updated Values: </span>
+                <strong style={{ color: '#B45309' }}>{updatedCount}</strong>
+              </div>
+              {conflictCount > 0 && (
+                <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                  <span style={{ color: '#991B1B', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <AlertTriangle size={13} color="#DC2626" /> Conflicts:
+                  </span>{' '}
+                  <strong style={{ color: '#DC2626' }}>{conflictCount}</strong>
+                </div>
+              )}
+              <div style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                <span style={{ color: '#64748B' }}>Identical: </span>
+                <strong style={{ color: '#475569' }}>{identicalCount}</strong>
+              </div>
+            </div>
+
+            {/* AI Staging Notice */}
+            <div style={{
+              background: '#F8FAFD',
+              border: '1px solid #E5EAF0',
+              borderRadius: 10,
+              padding: '12px 16px',
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Sparkles size={16} color={isResume ? '#15803D' : '#2563EB'} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: '#172033', lineHeight: 1.5 }}>
+                  <strong>AI Review Staging:</strong> Review extracted candidate information below. Only selected and accepted fields will be saved into your active Profile Vault. Your existing credentials will <strong>never be silently overwritten</strong>.
+                </span>
+              </div>
+
+              {/* Master Select / Deselect All */}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectAllSyncFields(!allSelected)}
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #CBD5E1',
+                    borderRadius: 6,
+                    padding: '5px 10px',
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    color: '#475569',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                  }}
+                >
+                  {allSelected ? <CheckSquare size={13} color="#15803D" /> : <Square size={13} />}
+                  {allSelected ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+            </div>
+
+            {/* Side-by-Side Verification Diff Table */}
+            <div style={{
+              border: '1px solid #E5EAF0',
+              borderRadius: 10,
+              overflow: 'hidden',
+              marginBottom: 20,
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '36px 2.2fr 2.2fr 2.4fr 1.8fr',
+                background: '#F1F5F9',
+                padding: '10px 16px',
+                fontSize: 11.5,
+                fontWeight: 700,
+                color: '#475569',
+                borderBottom: '1px solid #E5EAF0',
+                alignItems: 'center',
+                gap: 10,
+              }}>
+                <div>SEL</div>
+                <div>FIELD & SECTION</div>
+                <div>CURRENT VAULT VALUE</div>
+                <div>EXTRACTED VALUE</div>
+                <div style={{ textAlign: 'right' }}>ACTION</div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {(currentSync.analysis || []).map(item => {
+                  const edit = syncEdits[item.fieldId] || {};
+                  const currentAction = edit.action !== undefined ? edit.action : item.action;
+                  const activeVal = edit.value !== undefined ? edit.value : (item.suggestedValue || item.incomingValue);
+                  const isSelected = syncSelected[item.fieldId] !== false;
+
+                  const isNew = item.status === 'new';
+                  const isUpdated = item.status === 'updated';
+                  const isConflict = item.status === 'conflict';
+                  const isIdentical = item.status === 'identical';
+                  const isLowConfidence = typeof item.confidence === 'number' && item.confidence < 0.70;
+
+                  return (
+                    <div
+                      key={item.fieldId}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '36px 2.2fr 2.2fr 2.4fr 1.8fr',
+                        padding: '12px 16px',
+                        background: !isSelected ? '#F8FAFD' : currentAction === 'accept' ? '#FFFFFF' : '#F8FAFD',
+                        borderBottom: '1px solid #F1F5F9',
+                        alignItems: 'center',
+                        gap: 10,
+                        opacity: !isSelected || currentAction === 'keep' ? 0.65 : 1,
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {/* Checkbox */}
+                      <div>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectField(item.fieldId)}
+                          style={{ width: 16, height: 16, cursor: 'pointer', accentColor: isResume ? '#15803D' : '#087F71' }}
+                          title="Include this field in save"
+                        />
+                      </div>
+
+                      {/* Column 1: Field, Section, Status, Confidence */}
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>
+                          {item.label}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            {item.section?.replace('_', ' ')}
+                          </span>
+
+                          {isNew && (
+                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#E8F8F5', color: '#087F71' }}>
+                              NEW FIELD
+                            </span>
+                          )}
+                          {isUpdated && (
+                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#FEF3C7', color: '#B45309' }}>
+                              UPDATED
+                            </span>
+                          )}
+                          {isConflict && (
+                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#FEE2E2', color: '#DC2626', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                              <AlertTriangle size={10} color="#DC2626" /> CONFLICT
+                            </span>
+                          )}
+                          {isIdentical && (
+                            <span style={{ fontSize: 9.5, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: '#F1F5F9', color: '#64748B' }}>
+                              IDENTICAL
+                            </span>
+                          )}
+
+                          {/* Confidence Score Pill */}
+                          {item.confidence !== undefined && item.confidence !== null && (
+                            <span style={{
+                              fontSize: 9.5,
+                              fontWeight: 700,
+                              padding: '1px 6px',
+                              borderRadius: 4,
+                              background: isLowConfidence ? '#FEF2F2' : '#ECFDF5',
+                              color: isLowConfidence ? '#DC2626' : '#059669',
+                              border: `1px solid ${isLowConfidence ? '#FECACA' : '#A7F3D0'}`,
+                            }}>
+                              {isLowConfidence ? `Low (${Math.round(item.confidence * 100)}%)` : `${Math.round(item.confidence * 100)}% conf`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Column 2: Current Vault Value */}
+                      <div>
+                        {item.currentValue ? (
+                          <div style={{ fontSize: 12.5, color: '#172033', fontWeight: 500, wordBreak: 'break-word' }}>
+                            {item.currentValue}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 12, fontStyle: 'italic', color: '#98A2B3' }}>
+                            (Empty in Vault)
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Column 3: Incoming / Suggested Value Editable */}
+                      <div>
+                        <input
+                          type="text"
+                          value={activeVal}
+                          onChange={e => handleSetFieldValue(item.fieldId, e.target.value)}
+                          placeholder="Extracted value…"
+                          style={{
+                            width: '100%',
+                            fontSize: 12.5,
+                            fontWeight: 600,
+                            color: currentAction === 'accept' ? '#087F71' : currentAction === 'append' ? '#2563EB' : '#667085',
+                            background: currentAction === 'accept' ? '#E8F8F5' : currentAction === 'append' ? '#EFF6FF' : '#F1F5F9',
+                            border: `1px solid ${currentAction === 'accept' ? '#A3E5D9' : currentAction === 'append' ? '#BFDBFE' : '#E2E8F0'}`,
+                            borderRadius: 6,
+                            padding: '6px 9px',
+                            boxSizing: 'border-box',
+                            outline: 'none',
+                          }}
+                        />
+                        {item.reason && (
+                          <div style={{ fontSize: 11, color: '#64748B', marginTop: 3 }}>
+                            {item.reason}
+                          </div>
+                        )}
+                        {isLowConfidence && (
+                          <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 2, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <AlertTriangle size={11} color="#DC2626" /> Low confidence. Verify before saving.
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Column 4: Verification Actions */}
+                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSetFieldAction(item.fieldId, 'accept')}
+                          style={{
+                            background: currentAction === 'accept' ? '#087F71' : '#FFFFFF',
+                            color: currentAction === 'accept' ? '#FFFFFF' : '#087F71',
+                            border: `1px solid ${currentAction === 'accept' ? '#087F71' : '#A3E5D9'}`,
+                            padding: '4px 8px',
+                            borderRadius: 5,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 3
+                          }}
+                          title="Save this extracted value to Profile Vault"
+                        >
+                          <Check size={11} /> Accept
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSetFieldAction(item.fieldId, 'append')}
+                          style={{
+                            background: currentAction === 'append' ? '#2563EB' : '#FFFFFF',
+                            color: currentAction === 'append' ? '#FFFFFF' : '#2563EB',
+                            border: `1px solid ${currentAction === 'append' ? '#2563EB' : '#BFDBFE'}`,
+                            padding: '4px 8px',
+                            borderRadius: 5,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 3
+                          }}
+                          title="Merge and append items (useful for skills and arrays)"
+                        >
+                          + Merge
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSetFieldAction(item.fieldId, 'keep')}
+                          style={{
+                            background: currentAction === 'keep' ? '#64748B' : '#FFFFFF',
+                            color: currentAction === 'keep' ? '#FFFFFF' : '#64748B',
+                            border: `1px solid ${currentAction === 'keep' ? '#64748B' : '#E2E8F0'}`,
+                            padding: '4px 8px',
+                            borderRadius: 5,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                          title="Keep current value from database"
+                        >
+                          Keep DB
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Action Footer */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ fontSize: 12.5, color: '#667085' }}>
+                Only selected fields marked with <strong style={{ color: '#087F71' }}>"Accept"</strong> or <strong style={{ color: '#2563EB' }}>"Merge"</strong> will be saved to your active Profile Vault.
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={handleRejectSync}
+                  disabled={dismissingSync || verifyingSync}
+                  style={{
+                    background: '#FFFFFF',
+                    color: '#DC2626',
+                    border: '1px solid #FCA5A5',
+                    padding: '8px 16px',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                >
+                  <X size={14} /> Dismiss Submission
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedApprovedCount === 0) {
+                      return toast.error('Please select at least one field set to Accept or Merge.');
+                    }
+                    setShowConfirmMergeModal(true);
+                  }}
+                  disabled={verifyingSync || dismissingSync || selectedApprovedCount === 0}
+                  style={{
+                    background: isResume ? '#15803D' : '#0B1F3A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '9px 20px',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: selectedApprovedCount === 0 ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    boxShadow: `0 2px 8px ${isResume ? 'rgba(21, 128, 61, 0.2)' : 'rgba(11, 31, 58, 0.2)'}`
+                  }}
+                >
+                  <CheckCheck size={15} />
+                  {verifyingSync ? 'Saving…' : `Save Selected (${selectedApprovedCount}) to Profile Vault`}
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* Action Footer */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ fontSize: 12.5, color: '#667085' }}>
-              Only fields marked with <strong style={{ color: '#087F71' }}>"Accept"</strong> will be saved to your active database profile.
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <button
-                type="button"
-                onClick={handleRejectSync}
-                disabled={dismissingSync || verifyingSync}
-                style={{
-                  background: '#FFFFFF',
-                  color: '#DC2626',
-                  border: '1px solid #FCA5A5',
-                  padding: '8px 16px',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6
-                }}
-              >
-                <X size={14} /> Dismiss Submission
-              </button>
-
-              <button
-                type="button"
-                onClick={handleVerifyAndMerge}
-                disabled={verifyingSync || dismissingSync}
-                style={{
-                  background: '#0B1F3A',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  padding: '9px 20px',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  boxShadow: '0 2px 8px rgba(11, 31, 58, 0.2)'
-                }}
-              >
-                <CheckCheck size={15} />
-                {verifyingSync ? 'Merging…' : 'Verify & Save to Main Profile Vault'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Info Banner when no pending review */}
       {pendingSyncs.length === 0 && (
@@ -1624,8 +1967,8 @@ export default function Profile() {
         </div>
       )}
 
-      {/* ── AI FORM IMPORT MODAL ── */}
-      {showImportModal && (
+      {/* ── AI RESUME IMPORT MODAL ── */}
+      {showResumeModal && (
         <div
           style={{
             position: 'fixed',
@@ -1638,7 +1981,7 @@ export default function Profile() {
             justifyContent: 'center',
             padding: 16,
           }}
-          onClick={() => setShowImportModal(false)}
+          onClick={() => !analyzingResume && setShowResumeModal(false)}
         >
           <div
             style={{
@@ -1652,71 +1995,474 @@ export default function Profile() {
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Sparkles size={18} color="#087F71" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0B1F3A' }}>
-                  Analyze External Form or Text with AI
-                </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FileUp size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: '#0B1F3A' }}>
+                    Import Resume with AI
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 12, color: '#667085' }}>
+                    Automate credentials, skills, links & education extraction
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowImportModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer' }}
-              >
-                <X size={18} />
-              </button>
+              {!analyzingResume && (
+                <button
+                  type="button"
+                  onClick={() => setShowResumeModal(false)}
+                  style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer' }}
+                >
+                  <X size={18} />
+                </button>
+              )}
             </div>
 
-            <p style={{ margin: '0 0 14px', fontSize: 12.5, color: '#667085', lineHeight: 1.5 }}>
-              Paste questions or filled values from any company placement portal, Google Form, or resume snippet. AI will extract candidate fields and stage them for your verification before adding to your Profile Vault.
+            <p style={{ margin: '0 0 16px', fontSize: 12.5, color: '#667085', lineHeight: 1.5 }}>
+              Upload your resume in <strong>PDF</strong> or <strong>DOCX</strong> format. OppTrack AI parses your contact details, education, CGPA, technical skills, projects, and online portfolios, staging them for your review and selective approval.
             </p>
 
-            <textarea
-              rows={6}
-              value={importText}
-              onChange={e => setImportText(e.target.value)}
-              placeholder="Paste application form fields, questions, or resume details here (e.g. Name: John Doe, CGPA: 8.6, LeetCode: leetcode.com/u/john)..."
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: 8,
-                border: '1px solid #CBD5E1',
-                fontSize: 13,
-                fontFamily: 'inherit',
-                outline: 'none',
-                boxSizing: 'border-box',
-                marginBottom: 16,
-              }}
-            />
+            {/* Drag & Drop Upload Zone */}
+            {!analyzingResume ? (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setResumeDragOver(true); }}
+                onDragLeave={() => setResumeDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setResumeDragOver(false);
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    const file = e.dataTransfer.files[0];
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (!['pdf', 'docx', 'doc'].includes(ext)) {
+                      return toast.error('Please upload a PDF or DOCX resume.');
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                      return toast.error('File size exceeds 10MB limit.');
+                    }
+                    setResumeFile(file);
+                  }
+                }}
+                onClick={() => document.getElementById('resume-file-input')?.click()}
+                style={{
+                  border: `2px dashed ${resumeDragOver ? '#15803D' : resumeFile ? '#15803D' : '#CBD5E1'}`,
+                  borderRadius: 12,
+                  padding: '24px 16px',
+                  textAlign: 'center',
+                  background: resumeDragOver ? '#F0FDF4' : resumeFile ? '#F0FDF4' : '#F8FAFD',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  marginBottom: 20,
+                }}
+              >
+                <input
+                  id="resume-file-input"
+                  type="file"
+                  accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const file = e.target.files[0];
+                      const ext = file.name.split('.').pop().toLowerCase();
+                      if (!['pdf', 'docx', 'doc'].includes(ext)) {
+                        return toast.error('Please upload a PDF or DOCX resume.');
+                      }
+                      if (file.size > 10 * 1024 * 1024) {
+                        return toast.error('File size exceeds 10MB limit.');
+                      }
+                      setResumeFile(file);
+                    }
+                  }}
+                />
+
+                {resumeFile ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FileText size={24} />
+                    </div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
+                      {resumeFile.name}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: '#667085' }}>
+                      {(resumeFile.size / 1024).toFixed(1)} KB • Click or drop another file to replace
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: '#E2E8F0', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <UploadCloud size={24} />
+                    </div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
+                      Drag & drop your resume here, or browse files
+                    </div>
+                    <div style={{ fontSize: 11.5, color: '#667085' }}>
+                      Supported formats: PDF, DOCX (Max 10MB)
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Progressive Loading Indicator */
+              <div style={{ padding: '20px 16px', background: '#F8FAFD', borderRadius: 12, border: '1px solid #E2E8F0', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                  <RefreshCw size={18} color="#15803D" style={{ animation: 'spin 1.2s linear infinite' }} />
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
+                    Extracting Candidate Credentials...
+                  </div>
+                </div>
+
+                {/* Progressive Checklist */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { num: 1, label: 'Reading resume document & extracting clean text' },
+                    { num: 2, label: 'AI identifying candidate details & credentials' },
+                    { num: 3, label: 'Normalizing values & mapping to Profile Vault fields' },
+                    { num: 4, label: 'Diff analysis against existing vault & confidence scoring' },
+                    { num: 5, label: 'Preparing interactive review staging' },
+                  ].map(step => (
+                    <div key={step.num} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: resumeStep >= step.num ? '#15803D' : '#94A3B8' }}>
+                      {resumeStep > step.num ? (
+                        <CheckCircle2 size={14} color="#15803D" />
+                      ) : resumeStep === step.num ? (
+                        <RefreshCw size={12} color="#15803D" style={{ animation: 'spin 1.2s linear infinite' }} />
+                      ) : (
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>
+                          {step.num}
+                        </div>
+                      )}
+                      <span style={{ fontWeight: resumeStep === step.num ? 700 : 500 }}>
+                        {step.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Progress bar */}
+                <div style={{ width: '100%', height: 6, background: '#E2E8F0', borderRadius: 3, marginTop: 16, overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: `${(resumeStep / 5) * 100}%`,
+                      height: '100%',
+                      background: '#15803D',
+                      borderRadius: 3,
+                      transition: 'width 0.4s ease',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button
                 type="button"
-                onClick={() => setShowImportModal(false)}
+                onClick={() => setShowResumeModal(false)}
+                disabled={analyzingResume}
                 style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', padding: '8px 16px', borderRadius: 6, fontSize: 12.5, fontWeight: 600, color: '#667085', cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={handleAnalyzeText}
-                disabled={analyzingText || !importText.trim()}
+                onClick={handleAnalyzeResume}
+                disabled={analyzingResume || !resumeFile}
                 style={{
-                  background: '#0B1F3A',
+                  background: '#15803D',
                   border: 'none',
                   padding: '8px 18px',
                   borderRadius: 6,
                   fontSize: 12.5,
                   fontWeight: 600,
                   color: '#FFFFFF',
-                  cursor: analyzingText || !importText.trim() ? 'not-allowed' : 'pointer',
+                  cursor: analyzingResume || !resumeFile ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6
                 }}
               >
                 <Sparkles size={14} />
-                {analyzingText ? 'AI Analyzing…' : 'Extract & Stage Fields'}
+                {analyzingResume ? 'Analyzing Resume…' : 'Extract & Review Fields'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CONFIRMATION MODAL BEFORE SAVING ── */}
+      {showConfirmMergeModal && pendingSyncs[selectedSyncIndex] && (() => {
+        const currentSync = pendingSyncs[selectedSyncIndex];
+        const selectedFields = (currentSync.analysis || [])
+          .filter(item => syncSelected[item.fieldId] !== false)
+          .map(item => {
+            const edit = syncEdits[item.fieldId] || {};
+            const action = edit.action !== undefined ? edit.action : item.action;
+            const val = edit.value !== undefined ? edit.value : (item.suggestedValue || item.incomingValue);
+            return {
+              fieldId: item.fieldId,
+              label: item.label,
+              value: val,
+              currentValue: item.currentValue,
+              action,
+            };
+          })
+          .filter(f => f.action !== 'keep');
+
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(11, 31, 58, 0.5)',
+              backdropFilter: 'blur(3px)',
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 16,
+            }}
+            onClick={() => setShowConfirmMergeModal(false)}
+          >
+            <div
+              style={{
+                background: '#FFFFFF',
+                borderRadius: 14,
+                padding: 24,
+                width: '100%',
+                maxWidth: 520,
+                boxShadow: '0 20px 40px rgba(11, 31, 58, 0.25)',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle2 size={22} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: '#0B1F3A' }}>
+                    Confirm Profile Vault Update
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 12, color: '#667085' }}>
+                    Source: {currentSync.fileName || currentSync.formTitle || currentSync.source}
+                  </p>
+                </div>
+              </div>
+
+              <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, margin: '0 0 14px' }}>
+                You are about to save <strong>{selectedFields.length} approved field(s)</strong> into your Profile Vault. Unselected fields or fields set to "Keep DB" will remain untouched.
+              </p>
+
+              <div style={{ maxHeight: 220, overflowY: 'auto', background: '#F8FAFD', border: '1px solid #E2E8F0', borderRadius: 8, padding: 12, marginBottom: 20 }}>
+                {selectedFields.map(f => (
+                  <div key={f.fieldId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '5px 0', borderBottom: '1px solid #EDF2F7', gap: 10 }}>
+                    <span style={{ fontWeight: 600, color: '#0B1F3A' }}>{f.label}</span>
+                    <span style={{
+                      color: f.action === 'append' ? '#2563EB' : '#15803D',
+                      fontWeight: 600,
+                      maxWidth: '60%',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {f.action === 'append' ? `+ Merge: ${f.value}` : f.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmMergeModal(false)}
+                  style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: '#475569', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleVerifyAndMerge}
+                  disabled={verifyingSync}
+                  style={{
+                    background: '#0B1F3A',
+                    border: 'none',
+                    padding: '8px 20px',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: '#FFFFFF',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                >
+                  {verifyingSync ? 'Saving to Vault…' : 'Save to Profile Vault'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── IMPORT & SYNC HISTORY MODAL ── */}
+      {showHistoryModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(11, 31, 58, 0.45)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={() => setShowHistoryModal(false)}
+        >
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: 14,
+              padding: 24,
+              width: '100%',
+              maxWidth: 640,
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 40px rgba(11, 31, 58, 0.25)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#E0E7FF', color: '#4338CA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <History size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: '#0B1F3A' }}>
+                    Resume & Form Import History
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 12, color: '#667085' }}>
+                    Track past imports, verified submissions, and rollback changes
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* List of past syncs */}
+            <div style={{ overflowY: 'auto', flex: 1, paddingRight: 4 }}>
+              {loadingHistory ? (
+                <div style={{ textAlign: 'center', padding: '30px 0', color: '#667085', fontSize: 13 }}>
+                  <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite', marginBottom: 8 }} />
+                  <div>Loading import history…</div>
+                </div>
+              ) : syncHistory.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#667085' }}>
+                  <FileText size={32} color="#CBD5E1" style={{ marginBottom: 8 }} />
+                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>No import records found</div>
+                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
+                    Uploaded resumes or scanned forms will be logged here.
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {syncHistory.map((item) => {
+                    const isResume = item.source === 'AI Resume Import';
+                    const isMerged = item.status === 'verified_and_merged';
+                    const isRejected = item.status === 'rejected';
+
+                    return (
+                      <div
+                        key={item._id}
+                        style={{
+                          border: '1px solid #E2E8F0',
+                          borderRadius: 10,
+                          padding: '12px 16px',
+                          background: isMerged ? '#FAFAF9' : '#FFFFFF',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 12,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{
+                            width: 34, height: 34, borderRadius: 8,
+                            background: isResume ? '#DCFCE7' : '#EAF2FF',
+                            color: isResume ? '#15803D' : '#2563EB',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}>
+                            {isResume ? <FileText size={18} /> : <Puzzle size={18} />}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>
+                              {item.fileName || item.formTitle || 'External Form'}
+                            </div>
+                            <div style={{ fontSize: 11.5, color: '#667085', marginTop: 2 }}>
+                              {new Date(item.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} • {item.analysis?.length || 0} fields detected
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: '3px 8px',
+                            borderRadius: 6,
+                            background: isMerged ? '#DCFCE7' : isRejected ? '#F1F5F9' : '#FEF3C7',
+                            color: isMerged ? '#15803D' : isRejected ? '#64748B' : '#B45309',
+                          }}>
+                            {isMerged ? '✓ Merged' : isRejected ? 'Dismissed' : 'Pending Review'}
+                          </span>
+
+                          {/* Undo / Rollback button if merged and has metadata */}
+                          {isMerged && item.metadata?.summary && (
+                            <button
+                              type="button"
+                              onClick={() => handleUndoUpdate(item._id)}
+                              disabled={rollingBackId === item._id}
+                              style={{
+                                background: '#FFFFFF',
+                                border: '1px solid #CBD5E1',
+                                padding: '4px 10px',
+                                borderRadius: 6,
+                                fontSize: 11.5,
+                                fontWeight: 600,
+                                color: '#475569',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                              title="Restore previous values"
+                            >
+                              <Undo2 size={12} />
+                              {rollingBackId === item._id ? 'Restoring…' : 'Rollback'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(false)}
+                style={{ background: '#0B1F3A', border: 'none', padding: '8px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: '#FFFFFF', cursor: 'pointer' }}
+              >
+                Close
               </button>
             </div>
           </div>

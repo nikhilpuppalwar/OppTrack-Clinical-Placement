@@ -204,17 +204,18 @@ export default function HelpGuide() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Hero Banner */}
           <div style={{
-            background: 'linear-gradient(135deg, #0B1F3A 0%, #123C73 100%)',
-            borderRadius: 16, padding: 30, color: '#FFFFFF',
-            boxShadow: '0 4px 20px rgba(11,31,58,0.12)',
+            background: '#0F172A',
+            borderRadius: 10, padding: 28, color: '#FFFFFF',
+            border: '1px solid #1E293B',
+            boxShadow: '0 2px 10px rgba(15,23,42,0.1)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             flexWrap: 'wrap', gap: 20
           }}>
             <div style={{ maxWidth: 580 }}>
               <span style={{
-                background: 'rgba(24,183,160,0.2)', color: '#22C7AE',
-                border: '1px solid rgba(24,183,160,0.4)', padding: '4px 10px',
-                borderRadius: 20, fontSize: 12, fontWeight: 700, display: 'inline-flex',
+                background: 'rgba(37,99,235,0.15)', color: '#93C5FD',
+                border: '1px solid rgba(37,99,235,0.3)', padding: '3px 8px',
+                borderRadius: 4, fontSize: 11.5, fontWeight: 700, display: 'inline-flex',
                 alignItems: 'center', gap: 6, marginBottom: 12
               }}>
                 <ShieldCheck size={14} /> Google Cloud OAuth Testing Program
@@ -334,10 +335,10 @@ export default function HelpGuide() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
               {[
-                { title: '📋 Opportunities Tracker', desc: 'Manage company applications, interview stages, and deadlines in one central dashboard.' },
-                { title: '🛡️ Profile Vault', desc: 'Store your academics, contact info, skills, projects, and addresses securely.' },
-                { title: '🧩 Smart Extension', desc: 'Autofill Google placement forms automatically with high confidence scores.' },
-                { title: '🤖 Multi-LLM AI Engine', desc: 'Supports Groq Cloud, Google Gemini, OpenAI, OpenRouter, and Anthropic.' },
+                { title: 'Opportunities Tracker', desc: 'Manage company applications, interview stages, and deadlines in one central dashboard.' },
+                { title: 'Profile Vault', desc: 'Store your academics, contact info, skills, projects, and addresses securely.' },
+                { title: 'Smart Extension', desc: 'Autofill Google placement forms automatically with high confidence scores.' },
+                { title: 'Multi-LLM AI Engine', desc: 'Supports Groq Cloud, Google Gemini, OpenAI, OpenRouter, and Anthropic.' },
               ].map((card, i) => (
                 <div key={i} style={{ background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 12, padding: 20 }}>
                   <h4 style={{ margin: '0 0 8px', color: '#123C73', fontSize: 15, fontWeight: 700 }}>{card.title}</h4>

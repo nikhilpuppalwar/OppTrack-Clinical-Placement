@@ -317,7 +317,10 @@ exports.updateRequestStatus = async (req, res) => {
     if (status === 'approved') {
       const transporter = getTransporter();
       if (transporter) {
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const clientUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173')
+          .split(',')[0]
+          .trim()
+          .replace(/\/+$/, '');
         transporter.sendMail({
           from: `"OppTrack Platform" <${process.env.SMTP_USER}>`,
           to: request.email,

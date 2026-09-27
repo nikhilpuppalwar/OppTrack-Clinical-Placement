@@ -10,8 +10,8 @@ const EVENT_BADGES = {
   deleted:                 { label: 'Deleted',         color: '#DC2626', bg: '#FEF0F0' },
   reminder_sent:           { label: 'Reminder',        color: '#B7791F', bg: '#FFF7E6' },
   profile_updated:         { label: 'Profile Vault',   color: '#123C73', bg: '#EBF2FB' },
-  sensitive_field_revealed:{ label: '🔒 Sensitive',    color: '#C2410C', bg: '#FFEDD5' },
-  applied_via_extension:   { label: '⚡ Applied',      color: '#15803D', bg: '#EAF8EF' },
+  sensitive_field_revealed:{ label: 'Sensitive Reveal', color: '#C2410C', bg: '#FFEDD5' },
+  applied_via_extension:   { label: 'Extension Applied',color: '#15803D', bg: '#EAF8EF' },
 };
 
 const EVENT_TYPES = [

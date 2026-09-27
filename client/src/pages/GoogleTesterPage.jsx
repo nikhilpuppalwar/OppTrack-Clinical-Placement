@@ -128,32 +128,32 @@ export default function GoogleTesterPage() {
               background: '#E8F8F5', color: '#0D7A6B', padding: '6px 12px',
               borderRadius: 8, fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6
             }}>
-              👥 {stats.approvedCount} Approved Testers
+              {stats.approvedCount} Approved Testers
             </span>
             <span style={{
-              background: stats.remainingSlots > 10 ? '#EAF2FF' : '#FEF3C7',
+              background: stats.remainingSlots > 10 ? '#EFF6FF' : '#FFFBEB',
               color: stats.remainingSlots > 10 ? '#2563EB' : '#B45309',
-              padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+              padding: '5px 10px', borderRadius: 4, fontSize: 12, fontWeight: 600,
               display: 'inline-flex', alignItems: 'center', gap: 6
             }}>
-              ⚡ {stats.remainingSlots} Slots Available
+              {stats.remainingSlots} Slots Available
             </span>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div style={{ height: 8, background: '#F1F5F9', borderRadius: 4, overflow: 'hidden', marginBottom: 12 }}>
+        <div style={{ height: 6, background: '#F1F5F9', borderRadius: 3, overflow: 'hidden', marginBottom: 12 }}>
           <div style={{
             height: '100%',
             width: `${Math.min(100, Math.max(1, ((stats.totalUsed) / stats.userCap) * 100))}%`,
-            background: 'linear-gradient(90deg, #123C73 0%, #18B7A0 100%)',
-            borderRadius: 4,
-            transition: 'width 0.4s ease',
+            background: '#2563EB',
+            borderRadius: 3,
+            transition: 'width 0.3s ease',
           }} />
         </div>
 
-        <p style={{ margin: 0, fontSize: 12.5, color: '#667085', lineHeight: 1.5 }}>
-          ℹ️ When you submit your Gmail, an automated notification is instantly dispatched to the platform owner. Once added to Google Cloud Console, your Google Account is immediately authorized to sync emails and calendar events.
+        <p style={{ margin: 0, fontSize: 12.5, color: '#64748B', lineHeight: 1.5 }}>
+          When you submit your Gmail address, an automated notification is dispatched to the workspace owner. Once added to the Google Cloud Console, your Google Account is authorized to sync emails and calendar events.
         </p>
       </div>
 

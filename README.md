@@ -187,6 +187,44 @@ OppTrack-Clinical-Placement/
 
 ---
 
+## 🚀 Live Deployment (Vercel + Render)
+
+- **Frontend (Vercel):** [https://opp-track-clinical-placement.vercel.app](https://opp-track-clinical-placement.vercel.app)
+- **Backend (Render):** [https://opptrack-clinical-placement.onrender.com](https://opptrack-clinical-placement.onrender.com)
+
+### Frontend Configuration (Vercel)
+- **Root Directory:** `client`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Environment Variable:**
+  ```env
+  VITE_API_URL=https://opptrack-clinical-placement.onrender.com/api
+  ```
+  *(Pre-configured in `client/.env.production`)*
+
+### Backend Configuration (Render)
+- **Root Directory:** `server`
+- **Build Command:** `npm install`
+- **Start Command:** `node server.js`
+- **Environment Variables:**
+  ```env
+  PORT=5000
+  MONGO_URI=your_mongodb_atlas_uri
+  JWT_SECRET=your_jwt_secret
+  CLIENT_URL=https://opp-track-clinical-placement.vercel.app
+  SMTP_HOST=smtp.gmail.com
+  SMTP_PORT=587
+  SMTP_USER=your_email@gmail.com
+  SMTP_PASS=your_app_password
+  ```
+
+> **Password Reset Link Resolution:**
+> Password reset links sent via email will automatically use:
+> `https://opp-track-clinical-placement.vercel.app/reset-password?token=...&email=...`
+> The backend dynamically validates requests from your Vercel deployment while preventing host header injection attacks.
+
+---
+
 ## 👤 Author
 
 **Nikhil Puppalwar**

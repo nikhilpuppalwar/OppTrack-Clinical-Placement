@@ -71,7 +71,7 @@ export default function Sidebar() {
 
       // Trigger desktop notification
       sendDesktopNotification({
-        title: data?.notification?.title || '🎯 Test Reminder: Google Online Assessment',
+        title: data?.notification?.title || 'Test Reminder: Online Assessment Alert',
         body: data?.notification?.body || 'Upcoming assessment alert test.',
       });
 
@@ -367,10 +367,12 @@ export default function Sidebar() {
             {/* Reminders List */}
             <div style={{ padding: '16px 22px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {upcomingReminders.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '36px 16px', color: '#667085' }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
-                  <strong style={{ display: 'block', fontSize: 14, color: '#0B1F3A', marginBottom: 4 }}>
-                    No upcoming tests or deadlines due!
+                <div style={{ textAlign: 'center', padding: '36px 16px', color: '#64748B' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                    <CheckCircle2 size={32} color="#16A34A" />
+                  </div>
+                  <strong style={{ display: 'block', fontSize: 14, color: '#0F172A', marginBottom: 4 }}>
+                    No upcoming tests or deadlines due
                   </strong>
                   <p style={{ margin: 0, fontSize: 12 }}>
                     When new online assessments or campus drives are extracted from your emails, automatic alerts will appear here.

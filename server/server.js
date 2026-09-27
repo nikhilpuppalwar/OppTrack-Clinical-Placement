@@ -11,9 +11,37 @@ connectDB();
 
 const app = express();
 
-// Middleware
+// CORS configuration supporting Vercel, Render, Chrome Extensions, and local development
+const allowedOrigins = [
+  'https://opp-track-clinical-placement.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((s) => s.trim().replace(/\/+$/, '')) : []),
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map((s) => s.trim().replace(/\/+$/, '')) : []),
+  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL.trim().replace(/\/+$/, '')}`] : []),
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || origin.startsWith('chrome-extension://')) {
+      return callback(null, true);
+    }
+    const cleanOrigin = origin.replace(/\/+$/, '');
+    try {
+      const hostname = new URL(origin).hostname.toLowerCase();
+      if (
+        allowedOrigins.includes(cleanOrigin) ||
+        hostname === 'vercel.app' ||
+        hostname.endsWith('.vercel.app') ||
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1'
+      ) {
+        return callback(null, true);
+      }
+    } catch {}
+    return callback(null, true);
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '2mb' }));

@@ -21,6 +21,12 @@ export const profileAPI = {
   verifySync: (id, data) => api.post(`/profile/verify-sync/${id}`, data),
   rejectSync: (id) => api.post(`/profile/reject-sync/${id}`),
   analyzeText: (data) => api.post('/profile/analyze-text', data),
+  analyzeResume: (formData, config) => api.post('/profile/analyze-resume', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    ...config,
+  }),
+  getSyncHistory: () => api.get('/profile/sync-history'),
+  undoUpdate: (logId) => api.post(`/profile/undo-update/${logId}`),
 };
 
 // Documents

@@ -17,6 +17,10 @@ import HelpGuide from './pages/HelpGuide';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import GoogleTesterPage from './pages/GoogleTesterPage';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import Cookies from './pages/Cookies';
+import CookieConsent from './components/CookieConsent';
 
 function HomeRoute() {
   const { user, loading } = useAuth();
@@ -63,8 +67,12 @@ export default function App() {
           <Route path="/help" element={<ProtectedLayout><HelpGuide /></ProtectedLayout>} />
           <Route path="/google-tester" element={<ProtectedLayout><GoogleTesterPage /></ProtectedLayout>} />
           <Route path="/request-tester" element={<ProtectedLayout><GoogleTesterPage /></ProtectedLayout>} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/cookies" element={<Cookies />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <CookieConsent />
       </BrowserRouter>
     </AuthProvider>
   );

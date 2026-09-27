@@ -17,8 +17,10 @@ const getAuthUrl = async (req, res) => {
 
 // @GET /api/google/callback
 const handleCallback = async (req, res) => {
-  const { code, state, error } = req.query;
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  const clientUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173')
+    .split(',')[0]
+    .trim()
+    .replace(/\/+$/, '');
 
   if (error) {
     return res.redirect(`${clientUrl}/settings?google=error&message=${encodeURIComponent(error)}`);
