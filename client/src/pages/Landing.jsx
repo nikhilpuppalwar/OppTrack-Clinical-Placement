@@ -153,7 +153,7 @@ export default function Landing() {
                   }}
                 >
                   <Folder size={13} color="#2563EB" />
-                  Student Placement Infrastructure
+                  PCCOE Student Placement Portal • By Nikhil Puppalwar
                 </div>
 
                 {/* Hero Title */}
@@ -171,8 +171,8 @@ export default function Landing() {
                 </h1>
 
                 {/* Hero Supporting Text */}
-                <p style={{ fontSize: '1.05rem', color: '#475569', margin: 0, lineHeight: 1.6, maxWidth: 520 }}>
-                  Track opportunities, reuse your profile information, manage deadlines, and reduce repetitive form filling throughout your placement season.
+                <p style={{ fontSize: '1.05rem', color: '#475569', margin: 0, lineHeight: 1.6, maxWidth: 540 }}>
+                  Empowering Pimpri Chinchwad College of Engineering (PCCOE) students with placement help, opportunity tracking, Profile Vault management, and 1-click Google Forms autofill across campus recruitment drives.
                 </p>
 
                 {/* Hero Buttons */}
@@ -765,7 +765,7 @@ export default function Landing() {
               © {new Date().getFullYear()} OppTrack. All rights reserved.
             </div>
             <div>
-              Built for campus placement preparation and student productivity.
+              Created by Nikhil Puppalwar • Built for Pimpri Chinchwad College of Engineering (PCCOE) students &amp; campus placement help.
             </div>
           </div>
 
