@@ -1,5 +1,9 @@
+# OppTrack — PCCOE Placement Portal by Nikhil Puppalwar
+# https://opp-track-clinical-placement.vercel.app
+
 User-agent: *
 Allow: /
+Allow: /landing
 Allow: /login
 Allow: /register
 Allow: /forgot-password
@@ -12,5 +16,24 @@ Disallow: /profile
 Disallow: /settings
 Disallow: /history
 Disallow: /help
+Disallow: /google-tester
+Disallow: /request-tester
+Disallow: /calendar
+Disallow: /reset-password
+Crawl-delay: 10
+
+# Allow Googlebot full access to public pages
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 5
+
+# Allow Bingbot
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 10
+
+# DuckDuckBot
+User-agent: DuckDuckBot
+Allow: /
 
 Sitemap: https://opp-track-clinical-placement.vercel.app/sitemap.xml

@@ -785,6 +785,7 @@ export default function Landing() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
                 <Link to="/help" style={{ color: '#64748B', textDecoration: 'none' }}>Help Guide</Link>
+                <a href="/about.html" style={{ color: '#64748B', textDecoration: 'none' }}>About OppTrack</a>
                 <a href={GITHUB_URL} target="_blank" rel="noreferrer" style={{ color: '#64748B', textDecoration: 'none' }}>GitHub Repository</a>
                 <a href="mailto:support@opptrack.io" style={{ color: '#64748B', textDecoration: 'none' }}>Contact Support</a>
               </div>
