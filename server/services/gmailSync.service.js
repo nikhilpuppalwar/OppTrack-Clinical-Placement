@@ -186,7 +186,9 @@ async function syncUserGmail(userId, options = {}) {
     const receivedAt = dateStr ? new Date(dateStr) : new Date();
 
     const bodyText = extractBodyFromPayload(msgDetail.data?.payload);
-    if (!bodyText || bodyText.length < 20) {
+    // Truncate to 10KB max — prevents MongoDB bloat from huge email bodies
+    const safeBodyText = bodyText ? bodyText.substring(0, 10000) : '';
+    if (!safeBodyText || safeBodyText.length < 20) {
       // Body empty or too short
       continue;
     }
@@ -252,9 +254,9 @@ async function syncUserGmail(userId, options = {}) {
         }
 
         if (matchedOpp.source) {
-          matchedOpp.source.rawEmailText = (matchedOpp.source.rawEmailText || '') + '\n\n--- AUTO GMAIL UPDATE ---\n\n' + bodyText;
+          matchedOpp.source.rawEmailText = (matchedOpp.source.rawEmailText || '') + '\n\n--- AUTO GMAIL UPDATE ---\n\n' + safeBodyText;
         } else {
-          matchedOpp.source = { rawEmailText: bodyText, extractedViaAI: true };
+          matchedOpp.source = { rawEmailText: safeBodyText, extractedViaAI: true };
         }
 
         await matchedOpp.save();
@@ -286,7 +288,7 @@ async function syncUserGmail(userId, options = {}) {
           subject,
           from,
           receivedAt,
-          rawText: bodyText,
+          rawText: safeBodyText,
           opportunityId: matchedOpp._id,
           status: 'auto_updated',
           autoUpdateDetails: {
@@ -313,7 +315,7 @@ async function syncUserGmail(userId, options = {}) {
 
     if (user.settings?.llmApiKey) {
       try {
-        extractedFields = await aiService.extract(bodyText, user.settings);
+        extractedFields = await aiService.extract(safeBodyText, user.settings);
 
         if (extractedFields.company && extractedFields.role) {
           duplicateWarning = await duplicateService.check(
@@ -343,7 +345,7 @@ async function syncUserGmail(userId, options = {}) {
       subject,
       from,
       receivedAt,
-      rawText: bodyText,
+      rawText: safeBodyText,
       extractionResult: {
         extractedFields,
         duplicateWarning,

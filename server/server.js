@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const reminderService = require('./services/reminder.service');
@@ -24,6 +25,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow server-to-server (no origin) and Chrome extensions
     if (!origin || origin.startsWith('chrome-extension://')) {
       return callback(null, true);
     }
@@ -40,18 +42,46 @@ app.use(cors({
         return callback(null, true);
       }
     } catch {}
-    return callback(null, true);
+    // Reject unknown origins explicitly
+    return callback(new Error(`CORS policy: origin ${origin} is not allowed`));
   },
   credentials: true,
 }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// ─── Rate Limiters ────────────────────────────────────────────────────────────
+// Strict limiter for sensitive auth endpoints (10 requests / 15 min per IP)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many attempts from this IP. Please try again after 15 minutes.' },
+});
+
+// General API limiter (200 requests / 15 min per IP)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests. Please slow down.' },
+});
+
+// Apply general limiter to all API routes
+app.use('/api/', generalLimiter);
+
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
-// Routes
+// Routes — auth endpoints get stricter rate limiting
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
 app.use('/api/auth', require('./routes/auth'));
+
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/opportunities', require('./routes/opportunities'));

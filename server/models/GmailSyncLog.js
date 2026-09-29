@@ -32,6 +32,7 @@ const gmailSyncLogSchema = new mongoose.Schema(
     rawText: {
       type: String,
       default: '',
+      maxlength: 10000, // Cap at 10KB to prevent MongoDB bloat from large email bodies
     },
     extractionResult: {
       extractedFields: { type: mongoose.Schema.Types.Mixed, default: {} },
@@ -60,5 +61,7 @@ const gmailSyncLogSchema = new mongoose.Schema(
 // Compound index to ensure uniqueness per user and messageId
 gmailSyncLogSchema.index({ userId: 1, gmailMessageId: 1 }, { unique: true });
 gmailSyncLogSchema.index({ userId: 1, status: 1 });
+// TTL: auto-expire resolved (ignored / auto_updated) log entries after 90 days
+gmailSyncLogSchema.index({ updatedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 90 });
 
 module.exports = mongoose.model('GmailSyncLog', gmailSyncLogSchema);

@@ -14,5 +14,7 @@ const reminderSchema = new mongoose.Schema(
 );
 
 reminderSchema.index({ remindAt: 1, sent: 1 });
+reminderSchema.index({ opportunityId: 1 });
+reminderSchema.index({ userId: 1, sent: 1 });
 
 module.exports = mongoose.model('Reminder', reminderSchema);

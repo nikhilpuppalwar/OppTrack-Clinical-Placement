@@ -316,8 +316,8 @@ const confirmPending = async (req, res) => {
   await ActivityLog.create({
     userId: req.user._id,
     opportunityId: opp._id,
-    eventType: 'created',
-    description: `Added opportunity from Gmail: ${opp.company} — ${opp.role}`,
+    eventType: 'gmail_approved',
+    description: `Approved from Gmail: ${opp.company} — ${opp.role}`,
     metadata: { gmailMessageId: item.gmailMessageId, from: item.from },
   });
 
@@ -344,6 +344,15 @@ const ignorePending = async (req, res) => {
 
   item.status = 'ignored';
   await item.save();
+
+  // Log the ignore action
+  await ActivityLog.create({
+    userId: req.user._id,
+    opportunityId: null,
+    eventType: 'gmail_ignored',
+    description: `Ignored Gmail email: ${item.subject || '(No Subject)'} from ${item.from || 'unknown'}`,
+    metadata: { gmailMessageId: item.gmailMessageId },
+  }).catch(() => {}); // non-critical, don't block response
 
   res.json({ message: 'Email ignored from review queue.' });
 };

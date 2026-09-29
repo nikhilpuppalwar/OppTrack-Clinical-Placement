@@ -9,12 +9,18 @@ const Reminder = require('../models/Reminder');
 const Opportunity = require('../models/Opportunity');
 const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
+const cryptoUtil = require('../utils/crypto.util');
+
+function safeDecrypt(value) {
+  if (!value) return '';
+  try { return cryptoUtil.decrypt(value); } catch { return value; }
+}
 
 const getTransporter = (user) => {
   const host = user?.settings?.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = Number(user?.settings?.smtpPort || process.env.SMTP_PORT) || 587;
   const authUser = user?.settings?.smtpUser || process.env.SMTP_USER;
-  const authPass = user?.settings?.smtpPass || process.env.SMTP_PASS;
+  const authPass = safeDecrypt(user?.settings?.smtpPass) || process.env.SMTP_PASS;
 
   if (!authUser || !authPass) {
     throw new Error('Server SMTP credentials not configured in .env');

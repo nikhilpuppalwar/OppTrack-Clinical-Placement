@@ -4,6 +4,21 @@ const Opportunity = require('../models/Opportunity');
 const ActivityLog = require('../models/ActivityLog');
 const reminderService = require('../services/reminder.service');
 const aiService = require('../services/aiExtraction.service');
+const cryptoUtil = require('../utils/crypto.util');
+
+/**
+ * Safely decrypt a stored sensitive field. Returns plain text.
+ * If decryption fails (legacy plain-text values), returns the raw value as-is.
+ */
+function safeDecrypt(value) {
+  if (!value) return '';
+  try {
+    return cryptoUtil.decrypt(value);
+  } catch {
+    // Not encrypted (legacy plain-text) — return as-is
+    return value;
+  }
+}
 
 function resolveApiKeyAndProvider(userSettings = {}) {
   let provider = (userSettings.llmProvider || 'groq').toLowerCase().trim();
@@ -71,29 +86,51 @@ function resolveApiKeyAndProvider(userSettings = {}) {
 // @GET /api/settings
 const getSettings = async (req, res) => {
   const userSettings = req.user.settings || {};
-  const { apiKey, provider, model, baseUrl } = resolveApiKeyAndProvider(userSettings);
+  // Decrypt sensitive fields before sending to client
+  const plainApiKey = safeDecrypt(userSettings.llmApiKey);
+  const plainSmtpPass = safeDecrypt(userSettings.smtpPass);
+  const settingsForClient = {
+    ...userSettings,
+    llmApiKey: plainApiKey,
+    smtpPass: plainSmtpPass,
+  };
+  const { apiKey, provider, model, baseUrl } = resolveApiKeyAndProvider(settingsForClient);
 
   res.json({
-    ...userSettings,
+    ...settingsForClient,
     llmProvider: userSettings.llmProvider || provider || 'groq',
-    llmApiKey: userSettings.llmApiKey || apiKey || '',
+    llmApiKey: plainApiKey,
     llmModel: userSettings.llmModel || model || '',
     llmBaseUrl: userSettings.llmBaseUrl || baseUrl || '',
-    hasApiKey: !!apiKey,
+    hasApiKey: !!plainApiKey,
   });
 };
 
 // @PUT /api/settings
 const updateSettings = async (req, res) => {
   const user = await User.findById(req.user._id);
-  user.settings = { ...user.settings, ...req.body };
+  const updates = { ...req.body };
+
+  // Encrypt sensitive fields before storing
+  if (updates.llmApiKey !== undefined) {
+    updates.llmApiKey = updates.llmApiKey ? cryptoUtil.encrypt(updates.llmApiKey.trim()) : '';
+  }
+  if (updates.smtpPass !== undefined) {
+    updates.smtpPass = updates.smtpPass ? cryptoUtil.encrypt(updates.smtpPass.trim()) : '';
+  }
+
+  user.settings = { ...user.settings, ...updates };
   await user.save();
 
-  const { apiKey, provider, model } = resolveApiKeyAndProvider(user.settings);
+  // Decrypt for response so client gets the plain values back
+  const plainApiKey = safeDecrypt(user.settings.llmApiKey);
+  const { provider, model } = resolveApiKeyAndProvider({ ...user.settings, llmApiKey: plainApiKey });
 
   res.json({
     ...user.settings,
-    hasApiKey: !!apiKey,
+    llmApiKey: plainApiKey,
+    smtpPass: safeDecrypt(user.settings.smtpPass),
+    hasApiKey: !!plainApiKey,
     effectiveProvider: provider,
     effectiveModel: model,
   });

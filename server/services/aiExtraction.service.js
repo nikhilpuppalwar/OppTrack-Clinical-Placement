@@ -4,6 +4,19 @@
  * Returns both flat fields AND a structured `sections` array for the dynamic field builder.
  */
 
+const cryptoUtil = require('../utils/crypto.util');
+
+/**
+ * Safely decrypt a stored sensitive value. Falls back to raw value if not encrypted.
+ */
+function safeDecrypt(value) {
+  if (!value) return '';
+  try {
+    return cryptoUtil.decrypt(value);
+  } catch {
+    return value; // legacy plain-text
+  }
+}
 const SCHEMA_PROMPT = `You are a placement/internship opportunity extractor for a college student's tracker app. 
 You will receive RAW email text that varies wildly in format — some are internship-only, 
 some are placement-only, some offer internship+PPO, some are off-campus drives. Fields may 
@@ -233,7 +246,8 @@ Raw Email:
 
 const extract = async (rawText, userSettings = {}) => {
   let provider = (userSettings?.llmProvider || 'groq').toLowerCase().trim();
-  const apiKey = userSettings?.llmApiKey;
+  // Decrypt apiKey — it may be stored encrypted in DB or plain-text from client
+  const apiKey = safeDecrypt(userSettings?.llmApiKey);
   let model = userSettings?.llmModel?.trim();
   const baseUrl = userSettings?.llmBaseUrl?.trim() || '';
 
@@ -655,7 +669,8 @@ EXISTING FIELDS & DEADLINE:
 
 const updateExtraction = async (rawText, existingCustomFields = [], existingDeadline = null, userSettings = {}) => {
   let provider = (userSettings?.llmProvider || 'groq').toLowerCase().trim();
-  const apiKey = userSettings?.llmApiKey;
+  // Decrypt apiKey — it may be stored encrypted in DB or plain-text from client
+  const apiKey = safeDecrypt(userSettings?.llmApiKey);
   let model = userSettings?.llmModel;
 
   if (apiKey && apiKey.startsWith('gsk_') && provider !== 'groq') provider = 'groq';

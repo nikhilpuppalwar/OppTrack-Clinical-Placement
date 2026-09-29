@@ -4,6 +4,12 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
 const gmailSyncService = require('../services/gmailSync.service');
+const cryptoUtil = require('../utils/crypto.util');
+
+function safeDecrypt(value) {
+  if (!value) return '';
+  try { return cryptoUtil.decrypt(value); } catch { return value; }
+}
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
@@ -258,7 +264,7 @@ const forgotPassword = async (req, res) => {
     const host = user?.settings?.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = Number(user?.settings?.smtpPort || process.env.SMTP_PORT || 587);
     const authUser = user?.settings?.smtpUser || process.env.SMTP_USER;
-    const authPass = user?.settings?.smtpPass || process.env.SMTP_PASS;
+    const authPass = safeDecrypt(user?.settings?.smtpPass) || process.env.SMTP_PASS;
 
     if (authUser && authPass) {
       try {
