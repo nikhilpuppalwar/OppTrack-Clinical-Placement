@@ -3,6 +3,7 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
+const gmailSyncService = require('../services/gmailSync.service');
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
@@ -163,6 +164,26 @@ const login = async (req, res) => {
 
     const token = generateToken(user._id);
 
+    // Auto-sync Gmail once per day on first login in background
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let autoSyncedOnLogin = false;
+    if (user.lastLoginAutoSyncDate !== todayStr) {
+      user.lastLoginAutoSyncDate = todayStr;
+      await user.save();
+
+      if (user.googleAuth?.refreshToken) {
+        autoSyncedOnLogin = true;
+        // Run in background asynchronously without blocking the login response
+        gmailSyncService.syncUserGmail(user._id).catch(err => {
+          if (err.isGoogleAuthExpired || err.message?.includes('invalid_grant')) {
+            console.warn(`[Auto-Sync] Google authorization expired for user ${user._id}. Token cleared; user needs to reconnect in Settings.`);
+          } else {
+            console.warn(`[Auto-Sync] Background Gmail sync on login failed for user ${user._id}:`, err.message);
+          }
+        });
+      }
+    }
+
     res.json({
       _id: user._id,
       name: user.name,
@@ -171,6 +192,7 @@ const login = async (req, res) => {
       branch: user.branch,
       batch: user.batch,
       token,
+      autoSyncedOnLogin,
     });
   } catch (err) {
     console.error('Login error:', err);

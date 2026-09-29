@@ -35,69 +35,80 @@ const DEFAULT_SETTINGS = {
 };
 
 const PRESET_PROVIDERS = [
-  { value: 'groq', label: 'Groq Cloud (Fast LPU Inference — Recommended)' },
-  { value: 'gemini', label: 'Google Gemini (gemini-2.0-flash / 1.5-flash)' },
-  { value: 'openai', label: 'OpenAI (GPT-4o / GPT-4o-mini)' },
-  { value: 'anthropic', label: 'Anthropic (Claude 3.5 / 3.7)' },
-  { value: 'deepseek', label: 'DeepSeek AI (V3 / R1)' },
+  { value: 'gemini', label: 'Google Gemini' },
+  { value: 'openai', label: 'OpenAI' },
+  { value: 'anthropic', label: 'Anthropic Claude' },
+  { value: 'deepseek', label: 'DeepSeek AI' },
   { value: 'openrouter', label: 'OpenRouter.ai (Universal Multi-Model API)' },
-  { value: 'together', label: 'Together.ai (Open Source Models)' },
-  { value: 'mistral', label: 'Mistral AI (Codestral / Large)' },
+  { value: 'together', label: 'Together AI' },
+  { value: 'mistral', label: 'Mistral AI' },
+  { value: 'groq', label: 'Groq Cloud (Fast LPU Inference — Recommended)' },
   { value: 'ollama', label: 'Ollama / Local LLM (Self-hosted)' },
   { value: 'other', label: '✏️ Custom Provider / OpenAI-Compatible Endpoint...' },
 ];
 
 const PRESET_MODELS = {
-  groq: [
-    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended — High Quality & Fast)' },
-    { value: 'openai/gpt-oss-20b', label: 'openai/gpt-oss-20b (Ultra Fast)' },
-    { value: 'llama-3.3-70b-specdec', label: 'llama-3.3-70b-specdec (Speculative Decoding)' },
-    { value: 'llama-3.1-70b-versatile', label: 'llama-3.1-70b-versatile (Active)' },
-    { value: 'meta-llama/llama-guard-3-8b', label: 'meta-llama/llama-guard-3-8b' },
-    { value: 'other', label: '✏️ Custom Model Name...' },
-  ],
   gemini: [
-    { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash (Recommended — Latest & Fastest)' },
-    { value: 'gemini-2.0-flash-lite', label: 'gemini-2.0-flash-lite (Cost-effective)' },
-    { value: 'gemini-1.5-flash-latest', label: 'gemini-1.5-flash-latest (Reliable)' },
-    { value: 'gemini-2.5-flash', label: 'gemini-2.5-flash (Next-Gen Preview)' },
+    { value: 'gemini-3.8-flash', label: 'gemini-3.8-flash (Recommended — Latest & Fastest)' },
+    { value: 'gemini-3.7-flash', label: 'gemini-3.7-flash' },
+    { value: 'gemini-3.6-flash', label: 'gemini-3.6-flash' },
+    { value: 'gemini-3.5-flash', label: 'gemini-3.5-flash' },
+    { value: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite' },
     { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   openai: [
-    { value: 'gpt-4o-mini', label: 'gpt-4o-mini (Recommended — Fast & Low Cost)' },
-    { value: 'gpt-4o', label: 'gpt-4o (High Reasoning Accuracy)' },
-    { value: 'o3-mini', label: 'o3-mini (Advanced Reasoning)' },
-    { value: 'gpt-4-turbo', label: 'gpt-4-turbo (Production Standard)' },
+    { value: 'gpt-5.6-sol', label: 'gpt-5.6-sol (Recommended)' },
+    { value: 'gpt-5.6-terra', label: 'gpt-5.6-terra' },
+    { value: 'gpt-5.6-luna', label: 'gpt-5.6-luna' },
+    { value: 'gpt-5.6-cyber', label: 'gpt-5.6-cyber' },
+    { value: 'gpt-5.3-codex', label: 'gpt-5.3-codex' },
     { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   anthropic: [
-    { value: 'claude-3-5-haiku-latest', label: 'claude-3-5-haiku-latest (Recommended — Fast & Sharp)' },
-    { value: 'claude-3-5-sonnet-latest', label: 'claude-3-5-sonnet-latest (Top Reasoning)' },
-    { value: 'claude-3-7-sonnet-latest', label: 'claude-3-7-sonnet-latest (Hybrid Reasoning)' },
-    { value: 'other', label: '✏️ Custom Model Name...' },
-  ],
-  openrouter: [
-    { value: 'meta-llama/llama-3.3-70b-instruct', label: 'meta-llama/llama-3.3-70b-instruct' },
-    { value: 'deepseek/deepseek-chat', label: 'deepseek/deepseek-chat (DeepSeek V3)' },
-    { value: 'deepseek/deepseek-r1', label: 'deepseek/deepseek-r1 (Reasoning)' },
-    { value: 'google/gemini-2.0-flash-001', label: 'google/gemini-2.0-flash-001' },
+    { value: 'claude-fable-5', label: 'claude-fable-5 (Recommended)' },
+    { value: 'claude-opus-5', label: 'claude-opus-5' },
+    { value: 'claude-sonnet-5', label: 'claude-sonnet-5' },
+    { value: 'claude-opus-4-8', label: 'claude-opus-4-8' },
+    { value: 'claude-sonnet-4-6', label: 'claude-sonnet-4-6' },
     { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   deepseek: [
-    { value: 'deepseek-chat', label: 'deepseek-chat (DeepSeek V3 — Recommended)' },
-    { value: 'deepseek-reasoner', label: 'deepseek-reasoner (DeepSeek R1)' },
+    { value: 'deepseek-chat', label: 'deepseek-chat (Recommended)' },
+    { value: 'deepseek-reasoner', label: 'deepseek-reasoner' },
+    { value: 'deepseek-v3', label: 'deepseek-v3' },
+    { value: 'deepseek-r1', label: 'deepseek-r1' },
+    { value: 'deepseek-coder', label: 'deepseek-coder' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  openrouter: [
+    { value: 'openai/gpt-5', label: 'openai/gpt-5' },
+    { value: 'anthropic/claude-sonnet', label: 'anthropic/claude-sonnet' },
+    { value: 'google/gemini', label: 'google/gemini' },
+    { value: 'deepseek/deepseek-chat', label: 'deepseek/deepseek-chat' },
+    { value: 'mistralai/mistral-large', label: 'mistralai/mistral-large' },
     { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   together: [
-    { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', label: 'Meta-Llama-3.1-70B-Instruct-Turbo' },
-    { value: 'mistralai/Mixtral-8x22B-Instruct-v0.1', label: 'Mixtral-8x22B-Instruct-v0.1' },
+    { value: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', label: 'meta-llama/Llama-3.3-70B-Instruct-Turbo' },
+    { value: 'Qwen/Qwen3-235B-A22B-Instruct', label: 'Qwen/Qwen3-235B-A22B-Instruct' },
     { value: 'deepseek-ai/DeepSeek-V3', label: 'deepseek-ai/DeepSeek-V3' },
+    { value: 'deepseek-ai/DeepSeek-R1', label: 'deepseek-ai/DeepSeek-R1' },
+    { value: 'mistralai/Mistral-7B-Instruct-v0.3', label: 'mistralai/Mistral-7B-Instruct-v0.3' },
     { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   mistral: [
+    { value: 'mistral-medium-latest', label: 'mistral-medium-latest' },
     { value: 'mistral-large-latest', label: 'mistral-large-latest' },
     { value: 'mistral-small-latest', label: 'mistral-small-latest' },
-    { value: 'codestral-latest', label: 'codestral-latest' },
+    { value: 'mistral-large-3', label: 'mistral-large-3' },
+    { value: 'mistral-small-4', label: 'mistral-small-4' },
+    { value: 'other', label: '✏️ Custom Model Name...' },
+  ],
+  groq: [
+    { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended — High Quality & Fast)' },
+    { value: 'openai/gpt-oss-20b', label: 'openai/gpt-oss-20b (Ultra Fast)' },
+    { value: 'llama-3.3-70b-specdec', label: 'llama-3.3-70b-specdec' },
+    { value: 'llama-3.1-70b-versatile', label: 'llama-3.1-70b-versatile' },
     { value: 'other', label: '✏️ Custom Model Name...' },
   ],
   ollama: [
@@ -691,13 +702,13 @@ export default function Settings() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-            background: googleStatus.isConnected ? '#EAF2FF' : '#F7F9FC',
-            border: `1px solid ${googleStatus.isConnected ? '#BFDBFE' : '#E5EAF0'}`,
-            color: googleStatus.isConnected ? '#2563EB' : '#667085',
+            background: googleStatus.isConnected ? '#EAF2FF' : googleStatus.tokenExpired ? '#FFFBEB' : '#F7F9FC',
+            border: `1px solid ${googleStatus.isConnected ? '#BFDBFE' : googleStatus.tokenExpired ? '#FDE68A' : '#E5EAF0'}`,
+            color: googleStatus.isConnected ? '#2563EB' : googleStatus.tokenExpired ? '#D97706' : '#667085',
           }}>
             <CalendarDays size={13} />
-            <span>Google Sync: <strong>{googleStatus.isConnected ? (googleStatus.googleEmail || 'Connected') : 'Not Connected'}</strong></span>
-            {googleStatus.isConnected ? <Check size={12} /> : <span style={{ fontSize: 11, opacity: 0.7 }}>OAuth</span>}
+            <span>Google Sync: <strong>{googleStatus.isConnected ? (googleStatus.googleEmail || 'Connected') : googleStatus.tokenExpired ? 'Session Expired' : 'Not Connected'}</strong></span>
+            {googleStatus.isConnected ? <Check size={12} /> : googleStatus.tokenExpired ? <AlertTriangle size={12} /> : <span style={{ fontSize: 11, opacity: 0.7 }}>OAuth</span>}
           </div>
 
           <div style={{
@@ -810,18 +821,18 @@ export default function Settings() {
               <span style={{
                 fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
                 padding: '4px 10px', borderRadius: 6,
-                background: googleStatus.isConnected ? '#EAF8EF' : '#F7F9FC',
-                color: googleStatus.isConnected ? '#15803D' : '#667085',
-                border: `1px solid ${googleStatus.isConnected ? '#A7F3D0' : '#E5EAF0'}`
+                background: googleStatus.isConnected ? '#EAF8EF' : googleStatus.tokenExpired ? '#FFFBEB' : '#F7F9FC',
+                color: googleStatus.isConnected ? '#15803D' : googleStatus.tokenExpired ? '#D97706' : '#667085',
+                border: `1px solid ${googleStatus.isConnected ? '#A7F3D0' : googleStatus.tokenExpired ? '#FDE68A' : '#E5EAF0'}`
               }}>
-                {googleStatus.isConnected ? 'OAuth Active' : 'Not Connected'}
+                {googleStatus.isConnected ? 'OAuth Active' : googleStatus.tokenExpired ? '⚠️ Session Expired' : 'Not Connected'}
               </span>
             </div>
 
             {/* Google OAuth Connection Box */}
             <div style={{
-              background: '#F8FAFD',
-              border: `1px solid ${googleStatus.isConnected ? '#A7F3D0' : '#E5EAF0'}`,
+              background: googleStatus.tokenExpired ? '#FFFDF5' : '#F8FAFD',
+              border: `1px solid ${googleStatus.isConnected ? '#A7F3D0' : googleStatus.tokenExpired ? '#FCD34D' : '#E5EAF0'}`,
               borderRadius: 12,
               padding: 20,
               marginBottom: 24,
@@ -835,18 +846,22 @@ export default function Settings() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                   <span style={{
                     width: 8, height: 8, borderRadius: '50%',
-                    background: googleStatus.isConnected ? '#15803D' : '#D97706'
+                    background: googleStatus.isConnected ? '#15803D' : googleStatus.tokenExpired ? '#DC2626' : '#D97706'
                   }} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}>
                     {googleStatus.isConnected
                       ? `Connected as ${googleStatus.googleEmail || 'Google User'}`
-                      : 'Google Account Not Connected'}
+                      : googleStatus.tokenExpired
+                        ? `Session Expired (${googleStatus.googleEmail || 'Google Account'})`
+                        : 'Google Account Not Connected'}
                   </span>
                 </div>
-                <p style={{ margin: 0, fontSize: 12, color: '#667085', maxWidth: 540, lineHeight: 1.5 }}>
+                <p style={{ margin: 0, fontSize: 12, color: googleStatus.tokenExpired ? '#92400E' : '#667085', maxWidth: 540, lineHeight: 1.5 }}>
                   {googleStatus.isConnected
                     ? `Connected on ${new Date(googleStatus.connectedAt).toLocaleDateString('en-IN')}. Refresh tokens are encrypted with AES-256-GCM. No passwords or IMAP credentials are stored.`
-                    : 'Connect your Google account via official OAuth 2.0. Required scopes: Gmail read-only (for trusted placement senders) and Google Calendar events.'}
+                    : googleStatus.tokenExpired
+                      ? 'Your Google authorization expired or was revoked (invalid_grant). Google periodically expires test tokens. Click below to reconnect and restore Gmail sync & Google Calendar integration.'
+                      : 'Connect your Google account via official OAuth 2.0. Required scopes: Gmail read-only (for trusted placement senders) and Google Calendar events.'}
                 </p>
               </div>
 
@@ -875,7 +890,7 @@ export default function Settings() {
                     onClick={handleConnectGoogle}
                     disabled={connectingGoogle}
                     style={{
-                      background: '#0B1F3A',
+                      background: googleStatus.tokenExpired ? '#087F71' : '#0B1F3A',
                       color: '#ffffff',
                       border: 'none',
                       padding: '10px 20px',
@@ -889,8 +904,8 @@ export default function Settings() {
                       boxShadow: '0 2px 6px rgba(11,31,58,0.15)'
                     }}
                   >
-                    <CalendarDays size={15} />
-                    {connectingGoogle ? 'Connecting…' : 'Connect Google Account'}
+                    {googleStatus.tokenExpired ? <RefreshCw size={15} className={connectingGoogle ? 'spin' : ''} /> : <CalendarDays size={15} />}
+                    {connectingGoogle ? 'Connecting…' : googleStatus.tokenExpired ? 'Reconnect Google Account' : 'Connect Google Account'}
                   </button>
                 )}
               </div>
@@ -1473,39 +1488,6 @@ export default function Settings() {
               >
                 <Sparkles size={14} /> {testingAi ? 'Testing…' : 'Test AI Connection'}
               </button>
-            </div>
-
-            {/* ── Latest AI Model Deprecation & Lifecycle News Bulletin ── */}
-            <div style={{
-              background: '#FFFBEB',
-              border: '1px solid #FCD34D',
-              borderRadius: 10,
-              padding: '14px 18px',
-              marginBottom: 20,
-              display: 'flex',
-              gap: 12,
-              alignItems: 'flex-start',
-            }}>
-              <AlertTriangle size={18} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
-              <div style={{ fontSize: 12.5, color: '#92400E', lineHeight: 1.55 }}>
-                <strong style={{ fontSize: 13, color: '#78350F', display: 'block', marginBottom: 4 }}>
-                  📢 Latest AI Model Lifecycle & Deprecation Bulletin (2025–2026)
-                </strong>
-                <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <li>
-                    <strong>Groq Cloud:</strong> Decommissioned older models: <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>llama-3.1-8b-instant</code>, <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>llama-3.3-70b-versatile</code>, <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>qwen/qwen3.8-27b</code>, and <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>llama3-70b-8192</code>. Active replacements: <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>openai/gpt-oss-120b</code> (recommended) or <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>llama-3.3-70b-specdec</code>.
-                  </li>
-                  <li>
-                    <strong>OpenAI:</strong> Legacy <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-3.5-turbo</code>, <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-3.5-turbo-instruct</code>, and <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-4-0613</code> are scheduled for complete shutdown in late 2026. Use <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-4o-mini</code> or <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gpt-4o</code>.
-                  </li>
-                  <li>
-                    <strong>Google Gemini:</strong> Legacy Gemini 1.0 (Pro/Vision) and experimental previews (<code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gemini-2.0-flash-exp</code>) are retired. Recommended: <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>gemini-2.0-flash</code>.
-                  </li>
-                  <li>
-                    <strong>Anthropic:</strong> Claude 3 Haiku is superseded by <code style={{ background: '#FEF3C7', padding: '1px 4px', borderRadius: 3 }}>claude-3-5-haiku-latest</code>.
-                  </li>
-                </ul>
-              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>

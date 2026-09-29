@@ -75,6 +75,7 @@ async function handleAuthCallback(code, userId) {
   if (googleEmail) user.googleAuth.googleEmail = googleEmail;
   user.googleAuth.calendarSyncEnabled = true;
   user.googleAuth.gmailSyncEnabled = true;
+  user.googleAuth.tokenExpired = false;
 
   await user.save();
 
@@ -156,10 +157,49 @@ async function disconnectGoogle(userId) {
     gmailSyncEnabled: false,
     calendarSyncEnabled: false,
     lastGmailSyncAt: null,
+    tokenExpired: false,
   };
 
   await user.save();
   return { success: true };
+}
+
+/**
+ * Checks if an error is an OAuth invalid_grant error (token expired or revoked)
+ * @param {Error|any} err
+ * @returns {boolean}
+ */
+function isInvalidGrant(err) {
+  if (!err) return false;
+  const msg = String(err.message || '').toLowerCase();
+  const resErr = String(err.response?.data?.error || '').toLowerCase();
+  const desc = String(err.response?.data?.error_description || '').toLowerCase();
+  return (
+    msg.includes('invalid_grant') ||
+    resErr.includes('invalid_grant') ||
+    desc.includes('invalid_grant') ||
+    desc.includes('token has been expired or revoked')
+  );
+}
+
+/**
+ * Automatically resets Google OAuth state when refresh token is expired or revoked
+ * @param {string|mongoose.Types.ObjectId} userId
+ */
+async function handleExpiredToken(userId) {
+  try {
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        'googleAuth.refreshToken': null,
+        'googleAuth.gmailSyncEnabled': false,
+        'googleAuth.calendarSyncEnabled': false,
+        'googleAuth.tokenExpired': true,
+      },
+    });
+    console.warn(`[GoogleAuth] Google OAuth session expired (invalid_grant) for user ${userId}. Cleared token and set tokenExpired: true.`);
+  } catch (err) {
+    console.error('Failed to update user on expired Google token:', err.message);
+  }
 }
 
 module.exports = {
@@ -169,4 +209,6 @@ module.exports = {
   handleAuthCallback,
   getAuthorizedGoogleClient,
   disconnectGoogle,
+  isInvalidGrant,
+  handleExpiredToken,
 };

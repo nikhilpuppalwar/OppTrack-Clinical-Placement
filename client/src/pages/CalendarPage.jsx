@@ -290,7 +290,10 @@ export default function CalendarPage() {
       if (isConnected) {
         setLoadingGoogle(true);
         const gRes = await calendarAPI.getGoogleEvents().catch(() => null);
-        if (gRes?.data?.events) {
+        if (gRes?.data?.tokenExpired || gRes?.data?.isConnected === false) {
+          setGoogleConnected(false);
+          setCalendarSyncActive(false);
+        } else if (gRes?.data?.events) {
           const parsedGEvts = (gRes.data.events || []).map(e => ({
             ...e,
             start: new Date(e.start),

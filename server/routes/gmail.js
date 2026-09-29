@@ -8,6 +8,8 @@ const {
   syncGmail,
   getPendingReview,
   getAutoUpdates,
+  dismissAutoUpdate,
+  updateAutoUpdate,
   reExtractPending,
   confirmPending,
   ignorePending,
@@ -27,6 +29,8 @@ router.post('/sync', syncGmail);
 // Pending review queue & Auto updates
 router.get('/pending-review', getPendingReview);
 router.get('/auto-updates', getAutoUpdates);
+router.delete('/auto-updates/:id', dismissAutoUpdate);
+router.put('/auto-updates/:id', updateAutoUpdate);
 router.post('/pending-review/:id/re-extract', reExtractPending);
 router.post('/pending-review/:id/confirm', confirmPending);
 router.post('/pending-review/:id/ignore', ignorePending);

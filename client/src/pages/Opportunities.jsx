@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { opportunityAPI, gmailAPI } from '../api';
+import { opportunityAPI, gmailAPI, settingsAPI } from '../api';
 import DeadlineBadge from '../components/DeadlineBadge';
+import Pagination from '../components/Pagination';
+import MissingKeyModal from '../components/MissingKeyModal';
 import { 
   Plus, Search, Trash2, Eye, Sparkles, Wand2, CalendarDays, X, Filter, 
   Mail, Check, ExternalLink, RefreshCw, AlertTriangle, Clock, CheckCircle2, 
-  ChevronDown, ChevronUp, Edit3, Building2, Briefcase, GraduationCap, Zap, ArrowRight
+  ChevronDown, ChevronUp, Edit3, Building2, Briefcase, GraduationCap, Zap, ArrowRight,
+  Copy, FileText, CheckCheck, Save, KeyRound, MapPin, DollarSign, Calendar
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-import MissingKeyModal from '../components/MissingKeyModal';
 
 const STATUSES = ['', 'not_applied', 'applied', 'oa', 'interview', 'hr', 'offer', 'rejected'];
 const EMP_TYPES = [
@@ -68,10 +69,122 @@ export default function Opportunities() {
   const [showAutoUpdates, setShowAutoUpdates] = useState(true);
   const [pendingEdits, setPendingEdits] = useState({});
 
+  // User Settings & API Key state
+  const [userSettings, setUserSettings] = useState({ llmApiKey: '' });
+  const [hasApiKey, setHasApiKey] = useState(true);
+
+  // Email Body expanded states & Auto update edit states
+  const [showEmailBody, setShowEmailBody] = useState({});
+  const [editingAutoUpdateId, setEditingAutoUpdateId] = useState(null);
+  const [autoUpdateEdits, setAutoUpdateEdits] = useState({});
+  const [showAutoEmail, setShowAutoEmail] = useState({});
+  const [updatingAutoId, setUpdatingAutoId] = useState(null);
+  const [deletingAutoId, setDeletingAutoId] = useState(null);
+
   // Pending Review Filters
   const [pendingDateFilter, setPendingDateFilter] = useState('all');
   const [pendingTypeFilter, setPendingTypeFilter] = useState('');
   const [pendingBranchFilter, setPendingBranchFilter] = useState('');
+  const [pendingSearch, setPendingSearch] = useState('');
+
+  // ─── Pagination states ───────────────────────────────────────────────────
+  const [trackedPage, setTrackedPage] = useState(1);
+  const [trackedPageSize, setTrackedPageSize] = useState(10);
+
+  const [pendingPage, setPendingPage] = useState(1);
+  const [pendingPageSize, setPendingPageSize] = useState(10);
+
+  const [autoUpdatePage, setAutoUpdatePage] = useState(1);
+  const [autoUpdatePageSize, setAutoUpdatePageSize] = useState(5);
+
+  // Tracked Opportunities pagination
+  const paginatedOpps = useMemo(() => {
+    const start = (trackedPage - 1) * trackedPageSize;
+    return opps.slice(start, start + trackedPageSize);
+  }, [opps, trackedPage, trackedPageSize]);
+
+  // Reset trackedPage if filters change
+  useEffect(() => {
+    setTrackedPage(1);
+  }, [filters]);
+
+  // Adjust trackedPage if opps shrink
+  useEffect(() => {
+    const maxP = Math.max(1, Math.ceil(opps.length / trackedPageSize));
+    if (trackedPage > maxP) setTrackedPage(maxP);
+  }, [opps.length, trackedPageSize, trackedPage]);
+
+  // Filtered Pending Review items
+  const filteredPending = useMemo(() => {
+    return pendingItems.filter(item => {
+      const ext = item.extractionResult?.extractedFields || {};
+      const edits = pendingEdits[item._id] || {};
+      const empType = (edits.employmentType || ext.employmentType || 'placement').toLowerCase();
+
+      // Search filter
+      if (pendingSearch.trim()) {
+        const query = pendingSearch.toLowerCase().trim();
+        const comp = (edits.company || ext.company || '').toLowerCase();
+        const role = (edits.role || ext.role || '').toLowerCase();
+        const loc = (edits.location || ext.location || '').toLowerCase();
+        const snippet = (item.rawEmailSnippet || '').toLowerCase();
+        if (!comp.includes(query) && !role.includes(query) && !loc.includes(query) && !snippet.includes(query)) {
+          return false;
+        }
+      }
+
+      // Type filter
+      if (pendingTypeFilter && !empType.includes(pendingTypeFilter)) return false;
+
+      // Branch filter
+      if (pendingBranchFilter) {
+        const branches = parseBranches(ext.eligibility?.allowedBranches).map(b => b.toLowerCase());
+        const branchRaw = (ext.eligibility?.rawText || '').toLowerCase();
+        const checkBranch = (terms) => terms.some(t => branches.some(b => b.includes(t)) || branchRaw.includes(t));
+
+        if (pendingBranchFilter === 'cs_it' && !checkBranch(['cs', 'it', 'comp', 'aiml', 'data science', 'software'])) return false;
+        if (pendingBranchFilter === 'entc' && !checkBranch(['entc', 'etc', 'ece', 'electronics', 'telecom'])) return false;
+        if (pendingBranchFilter === 'mech' && !checkBranch(['mech', 'automobile', 'production'])) return false;
+        if (pendingBranchFilter === 'electrical' && !checkBranch(['elect', 'eee'])) return false;
+        if (pendingBranchFilter === 'civil' && !checkBranch(['civil'])) return false;
+      }
+
+      // Date filter
+      if (pendingDateFilter !== 'all') {
+        const recDate = new Date(item.receivedAt);
+        const now = new Date();
+        const isToday = recDate.toDateString() === now.toDateString();
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        const isYesterday = recDate.toDateString() === yesterday.toDateString();
+        const diffDays = (now - recDate) / (1000 * 60 * 60 * 24);
+
+        if (pendingDateFilter === 'today' && !isToday) return false;
+        if (pendingDateFilter === 'yesterday' && !isYesterday) return false;
+        if (pendingDateFilter === 'week' && diffDays > 7) return false;
+      }
+
+      return true;
+    });
+  }, [pendingItems, pendingEdits, pendingSearch, pendingTypeFilter, pendingBranchFilter, pendingDateFilter]);
+
+  // Paginated Pending Review items
+  const paginatedPending = useMemo(() => {
+    const start = (pendingPage - 1) * pendingPageSize;
+    return filteredPending.slice(start, start + pendingPageSize);
+  }, [filteredPending, pendingPage, pendingPageSize]);
+
+  // Adjust pendingPage if list shrinks
+  useEffect(() => {
+    const maxP = Math.max(1, Math.ceil(filteredPending.length / pendingPageSize));
+    if (pendingPage > maxP) setPendingPage(maxP);
+  }, [filteredPending.length, pendingPageSize, pendingPage]);
+
+  // Paginated Auto Updates
+  const paginatedAutoUpdates = useMemo(() => {
+    const start = (autoUpdatePage - 1) * autoUpdatePageSize;
+    return autoUpdates.slice(start, start + autoUpdatePageSize);
+  }, [autoUpdates, autoUpdatePage, autoUpdatePageSize]);
 
   // AI Follow-up Update modal state
   const [activeAiOpp, setActiveAiOpp] = useState(null);
@@ -79,6 +192,16 @@ export default function Opportunities() {
   const [aiUpdating, setAiUpdating] = useState(false);
   const [changesSummary, setChangesSummary] = useState(null);
   const [keyModal, setKeyModal] = useState({ isOpen: false, keyType: 'AI', message: '' });
+
+  const fetchSettings = async () => {
+    try {
+      const { data } = await settingsAPI.get();
+      setUserSettings(data || {});
+      setHasApiKey(Boolean(data?.llmApiKey?.trim()));
+    } catch (err) {
+      console.warn('Failed to load user settings:', err);
+    }
+  };
 
   const fetchOpps = async () => {
     setLoading(true);
@@ -89,7 +212,8 @@ export default function Opportunities() {
       if (filters.employmentType) params.employmentType = filters.employmentType;
       const { data } = await opportunityAPI.list(params);
 
-      let sorted = [...data];
+      const rawList = Array.isArray(data) ? data : (data?.opportunities || []);
+      let sorted = [...rawList];
       if (filters.sortBy === 'company') {
         sorted.sort((a, b) => a.company.localeCompare(b.company));
       } else if (filters.sortBy === 'deadline') {
@@ -110,10 +234,12 @@ export default function Opportunities() {
         gmailAPI.getPending(),
         gmailAPI.getAutoUpdates().catch(() => ({ data: [] })),
       ]);
-      setPendingItems(pendingRes.data || []);
-      setAutoUpdates(updatesRes.data || []);
+      const pList = Array.isArray(pendingRes.data) ? pendingRes.data : (pendingRes.data?.items || []);
+      const uList = Array.isArray(updatesRes.data) ? updatesRes.data : (updatesRes.data?.updates || []);
+      setPendingItems(pList);
+      setAutoUpdates(uList);
 
-      // Initialize edit fields
+      // Initialize edit fields for pending items
       const edits = {};
       (pendingRes.data || []).forEach(item => {
         const ext = item.extractionResult?.extractedFields || {};
@@ -127,12 +253,34 @@ export default function Opportunities() {
           location: ext.location || '',
           deadline: ext.deadline ? ext.deadline.substring(0, 16) : '',
           testDate: ext.testDate ? ext.testDate.substring(0, 16) : '',
+          driveDate: ext.driveDate ? ext.driveDate.substring(0, 16) : '',
+          interviewDate: ext.interviewDate ? ext.interviewDate.substring(0, 16) : '',
+          shortlistInfo: ext.shortlistInfo || '',
+          minCGPA: ext.eligibility?.minCGPA != null ? String(ext.eligibility.minCGPA) : '',
           allowedBranches: Array.isArray(ext.eligibility?.allowedBranches)
             ? ext.eligibility.allowedBranches.join(', ')
             : (typeof ext.eligibility?.allowedBranches === 'string' ? ext.eligibility.allowedBranches : ''),
+          links: Array.isArray(ext.links)
+            ? ext.links.map(l => typeof l === 'string' ? l : l?.url || '').filter(Boolean).join(', ')
+            : (typeof ext.links === 'string' ? ext.links : ''),
         };
       });
       setPendingEdits(edits);
+
+      // Initialize edit fields for auto updates
+      const aEdits = {};
+      (updatesRes.data || []).forEach(u => {
+        const opp = u.opportunityId || {};
+        aEdits[u._id] = {
+          status: opp.status || 'applied',
+          testDate: opp.testDate ? opp.testDate.substring(0, 16) : '',
+          driveDate: opp.driveDate ? opp.driveDate.substring(0, 16) : '',
+          interviewDate: opp.interviewDate ? opp.interviewDate.substring(0, 16) : '',
+          deadline: opp.deadline ? opp.deadline.substring(0, 16) : '',
+          shortlistInfo: opp.shortlistInfo || '',
+        };
+      });
+      setAutoUpdateEdits(aEdits);
     } catch (err) {
       console.warn('Failed to load pending reviews:', err);
     } finally {
@@ -141,11 +289,23 @@ export default function Opportunities() {
   };
 
   useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  useEffect(() => {
     fetchOpps();
     fetchPending();
   }, [filters]);
 
   const handleSyncGmail = async () => {
+    if (!hasApiKey) {
+      setKeyModal({
+        isOpen: true,
+        keyType: 'AI',
+        message: 'Please enter your API key to automatically extract job details, dates, and packages during Gmail sync.',
+      });
+      return;
+    }
     setSyncingGmail(true);
     const toastId = toast.loading('Fetching placement emails from trusted senders…');
     try {
@@ -160,7 +320,54 @@ export default function Opportunities() {
     }
   };
 
+  const handleRemoveAutoUpdate = async (id) => {
+    if (!window.confirm('Remove this auto-update suggestion from the list?')) return;
+    setDeletingAutoId(id);
+    try {
+      await gmailAPI.dismissAutoUpdate(id);
+      toast.success('Suggestion removed');
+      setAutoUpdates(prev => prev.filter(u => u._id !== id));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to remove suggestion');
+    } finally {
+      setDeletingAutoId(null);
+    }
+  };
+
+  const handleSaveAutoUpdate = async (u) => {
+    setUpdatingAutoId(u._id);
+    const toastId = toast.loading('Saving updates to opportunity…');
+    try {
+      const editData = autoUpdateEdits[u._id] || {};
+      const payload = {
+        status: editData.status,
+        testDate: editData.testDate || null,
+        driveDate: editData.driveDate || null,
+        interviewDate: editData.interviewDate || null,
+        deadline: editData.deadline || null,
+        shortlistInfo: editData.shortlistInfo || null,
+      };
+      await gmailAPI.updateAutoUpdate(u._id, payload);
+      toast.success('Opportunity updated successfully!', { id: toastId });
+      setEditingAutoUpdateId(null);
+      await fetchPending();
+      await fetchOpps();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update suggestion', { id: toastId });
+    } finally {
+      setUpdatingAutoId(null);
+    }
+  };
+
   const handleReExtract = async (id) => {
+    if (!hasApiKey) {
+      setKeyModal({
+        isOpen: true,
+        keyType: 'AI',
+        message: 'Please enter your API key to extract important details with AI.',
+      });
+      return;
+    }
     setReExtractingId(id);
     const toastId = toast.loading('AI extracting full details from email…');
     try {
@@ -180,9 +387,16 @@ export default function Opportunities() {
           location: ext.location || '',
           deadline: ext.deadline ? ext.deadline.substring(0, 16) : '',
           testDate: ext.testDate ? ext.testDate.substring(0, 16) : '',
+          driveDate: ext.driveDate ? ext.driveDate.substring(0, 16) : '',
+          interviewDate: ext.interviewDate ? ext.interviewDate.substring(0, 16) : '',
+          shortlistInfo: ext.shortlistInfo || '',
+          minCGPA: ext.eligibility?.minCGPA != null ? String(ext.eligibility.minCGPA) : '',
           allowedBranches: Array.isArray(ext.eligibility?.allowedBranches)
             ? ext.eligibility.allowedBranches.join(', ')
             : (typeof ext.eligibility?.allowedBranches === 'string' ? ext.eligibility.allowedBranches : ''),
+          links: Array.isArray(ext.links)
+            ? ext.links.map(l => typeof l === 'string' ? l : l?.url || '').filter(Boolean).join(', ')
+            : (typeof ext.links === 'string' ? ext.links : ''),
         }
       }));
     } catch (err) {
@@ -210,24 +424,32 @@ export default function Opportunities() {
 
       let branchesArr = ext.eligibility?.allowedBranches || [];
       if (editData.allowedBranches) {
-        branchesArr = editData.allowedBranches.split(',').map(s => s.trim()).filter(Boolean);
+        branchesArr = editData.allowedBranches.split(/[,;/]+/).map(s => s.trim()).filter(Boolean);
+      }
+
+      let linksArr = ext.links || [];
+      if (editData.links) {
+        linksArr = editData.links.split(/[,;\s]+/).map(u => u.trim()).filter(Boolean).map(url => ({ url, label: 'Registration Link' }));
       }
 
       const payload = {
-        company: editData.company || ext.company,
-        role: editData.role || ext.role,
-        ctc: editData.ctc || ext.ctc,
-        stipend: editData.stipend || ext.stipend,
-        ppo: editData.ppo || ext.ppo,
+        company: (editData.company || ext.company || 'New Opportunity').trim(),
+        role: (editData.role || ext.role || 'Graduate Trainee').trim(),
+        ctc: editData.ctc || ext.ctc || null,
+        stipend: editData.stipend || ext.stipend || null,
+        ppo: editData.ppo || ext.ppo || null,
         employmentType: editData.employmentType || ext.employmentType || 'placement',
-        location: editData.location || ext.location,
-        deadline: editData.deadline || ext.deadline,
-        testDate: editData.testDate || ext.testDate,
-        driveDate: editData.driveDate || ext.driveDate,
-        links: ext.links || [],
+        location: editData.location || ext.location || null,
+        deadline: editData.deadline || ext.deadline || null,
+        testDate: editData.testDate || ext.testDate || null,
+        driveDate: editData.driveDate || ext.driveDate || null,
+        interviewDate: editData.interviewDate || ext.interviewDate || null,
+        shortlistInfo: editData.shortlistInfo || ext.shortlistInfo || null,
+        links: linksArr,
         eligibility: {
           ...(ext.eligibility || {}),
           allowedBranches: branchesArr,
+          minCGPA: editData.minCGPA ? Number(editData.minCGPA) : ext.eligibility?.minCGPA || null,
         },
         allowedBranches: branchesArr,
         customFields: ext.sections?.flatMap(s => s.fields || []) || [],
@@ -430,6 +652,60 @@ export default function Opportunities() {
 
       {viewTab === 'pending' ? (
         <div style={{ marginBottom: 40 }}>
+          {/* Missing API Key Warning Banner */}
+          {!hasApiKey && (
+            <div style={{
+              background: '#FFFBEB',
+              border: '1px solid #FCD34D',
+              borderLeft: '4px solid #F59E0B',
+              borderRadius: 10,
+              padding: '14px 18px',
+              marginBottom: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+              boxShadow: '0 1px 3px rgba(245, 158, 11, 0.08)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <KeyRound size={20} color="#D97706" style={{ flexShrink: 0 }} />
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#92400E' }}>
+                    Please enter your API key to enable AI extraction
+                  </h4>
+                  <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#B45309' }}>
+                    An LLM API key (Groq, Gemini, OpenAI, etc.) is required to parse company details, packages, drive dates, and eligibility from incoming Gmail emails.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setKeyModal({
+                  isOpen: true,
+                  keyType: 'AI',
+                  message: 'Please enter your API key to automatically parse emails and extract important job details.',
+                })}
+                style={{
+                  background: '#D97706',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '8px 16px',
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)',
+                }}
+              >
+                <KeyRound size={14} /> Enter API Key
+              </button>
+            </div>
+          )}
+
           {/* Top Control & Filter Bar for Pending Review */}
           <div style={{
             background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 10,
@@ -452,7 +728,7 @@ export default function Opportunities() {
                   <button
                     key={df.key}
                     type="button"
-                    onClick={() => setPendingDateFilter(df.key)}
+                    onClick={() => { setPendingDateFilter(df.key); setPendingPage(1); }}
                     style={{
                       background: pendingDateFilter === df.key ? '#FFFFFF' : 'transparent',
                       color: pendingDateFilter === df.key ? '#0B1F3A' : '#667085',
@@ -471,13 +747,34 @@ export default function Opportunities() {
               </div>
             </div>
 
-            {/* Category & Branch Selectors */}
+            {/* Category & Branch Selectors + Search */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              {/* Quick Search */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: '5px 10px', flex: '1 1 200px' }}>
+                <Search size={13} color="#667085" />
+                <input
+                  type="text"
+                  placeholder="Filter pending by company, role, or text..."
+                  value={pendingSearch}
+                  onChange={e => { setPendingSearch(e.target.value); setPendingPage(1); }}
+                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12, outline: 'none', width: '100%', fontFamily: 'inherit' }}
+                />
+                {pendingSearch && (
+                  <button
+                    type="button"
+                    onClick={() => { setPendingSearch(''); setPendingPage(1); }}
+                    style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer', padding: 0 }}
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: '5px 10px' }}>
                 <Briefcase size={13} color="#667085" />
                 <select
                   value={pendingTypeFilter}
-                  onChange={e => setPendingTypeFilter(e.target.value)}
+                  onChange={e => { setPendingTypeFilter(e.target.value); setPendingPage(1); }}
                   style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
                 >
                   <option value="">All Opportunity Types</option>
@@ -492,7 +789,7 @@ export default function Opportunities() {
                 <GraduationCap size={13} color="#667085" />
                 <select
                   value={pendingBranchFilter}
-                  onChange={e => setPendingBranchFilter(e.target.value)}
+                  onChange={e => { setPendingBranchFilter(e.target.value); setPendingPage(1); }}
                   style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
                 >
                   {BRANCH_FILTERS.map(bf => (
@@ -501,10 +798,10 @@ export default function Opportunities() {
                 </select>
               </div>
 
-              {(pendingDateFilter !== 'all' || pendingTypeFilter || pendingBranchFilter) && (
+              {(pendingDateFilter !== 'all' || pendingTypeFilter || pendingBranchFilter || pendingSearch) && (
                 <button
                   type="button"
-                  onClick={() => { setPendingDateFilter('all'); setPendingTypeFilter(''); setPendingBranchFilter(''); }}
+                  onClick={() => { setPendingDateFilter('all'); setPendingTypeFilter(''); setPendingBranchFilter(''); setPendingSearch(''); setPendingPage(1); }}
                   style={{ background: 'transparent', border: 'none', color: '#DC3545', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '4px 8px' }}
                 >
                   Reset Filters
@@ -534,7 +831,7 @@ export default function Opportunities() {
                       Auto-Updated Jobs from Gmail ({autoUpdates.length})
                     </h4>
                     <span style={{ fontSize: 11.5, color: '#667085' }}>
-                      Shortlists, drive dates, and test schedules merged directly into your database
+                      Updates detected from emails. You can review, update, or remove any suggestion here.
                     </span>
                   </div>
                 </div>
@@ -550,56 +847,257 @@ export default function Opportunities() {
               </div>
 
               {showAutoUpdates && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-                  {autoUpdates.map(u => {
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+                  {paginatedAutoUpdates.map(u => {
                     const opp = u.opportunityId || {};
                     const details = u.autoUpdateDetails || {};
                     const changes = details.changesSummary || [];
+                    const isEditing = editingAutoUpdateId === u._id;
+                    const aEdit = autoUpdateEdits[u._id] || {};
+                    const isEmailOpen = Boolean(showAutoEmail[u._id]);
 
                     return (
                       <div
                         key={u._id}
                         style={{
                           background: '#F9FAFB', border: '1px solid #E5EAF0', borderRadius: 8,
-                          padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          flexWrap: 'wrap', gap: 10
+                          padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10
                         }}
                       >
-                        <div style={{ flex: 1, minWidth: 260 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                            <strong style={{ fontSize: 13.5, color: '#0B1F3A' }}>
-                              {details.existingCompany || opp.company || 'Job Record'}
-                            </strong>
-                            {opp.role && <span style={{ fontSize: 12, color: '#667085' }}>• {opp.role}</span>}
-                            <span style={{ fontSize: 11, background: '#ECFDF5', color: '#059669', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>
-                              Updated
-                            </span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+                          <div style={{ flex: 1, minWidth: 260 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
+                              <strong style={{ fontSize: 14, color: '#0B1F3A' }}>
+                                {details.existingCompany || opp.company || 'Job Record'}
+                              </strong>
+                              {opp.role && <span style={{ fontSize: 12, color: '#667085' }}>• {opp.role}</span>}
+                              <span style={{ fontSize: 11, background: '#ECFDF5', color: '#059669', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>
+                                Auto-Suggested
+                              </span>
+                              <span style={{ fontSize: 11, color: '#9CA3AF' }}>
+                                {new Date(u.receivedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: 12, color: '#374151' }}>
+                              <strong>Changes:</strong> {changes.length > 0 ? changes.join(' | ') : 'Drive/Shortlist details synchronized'}
+                            </div>
                           </div>
-                          <div style={{ fontSize: 12, color: '#374151' }}>
-                            {changes.length > 0 ? changes.join(' | ') : 'Drive/Shortlist details synchronized'}
+
+                          {/* Action Buttons: View Email, Update Suggestion, Remove, View Opportunity */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              onClick={() => setShowAutoEmail(prev => ({ ...prev, [u._id]: !prev[u._id] }))}
+                              style={{
+                                background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#334155',
+                                padding: '5px 10px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
+                                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4
+                              }}
+                            >
+                              <FileText size={12} /> {isEmailOpen ? 'Hide Email' : 'View Email'}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setEditingAutoUpdateId(isEditing ? null : u._id)}
+                              style={{
+                                background: '#E0F2FE', border: '1px solid #BAE6FD', color: '#0284C7',
+                                padding: '5px 11px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
+                                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4
+                              }}
+                            >
+                              <Edit3 size={12} /> {isEditing ? 'Cancel Edit' : 'Update Suggestion'}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveAutoUpdate(u._id)}
+                              disabled={deletingAutoId === u._id}
+                              style={{
+                                background: '#FEE2E2', border: '1px solid #FECACA', color: '#DC2626',
+                                padding: '5px 10px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
+                                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4
+                              }}
+                            >
+                              <Trash2 size={12} /> {deletingAutoId === u._id ? 'Removing…' : 'Remove'}
+                            </button>
+
+                            {opp._id && (
+                              <Link
+                                to={`/opportunities/${opp._id}`}
+                                style={{
+                                  background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#1F2937',
+                                  padding: '5px 11px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
+                                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4
+                                }}
+                              >
+                                View Opportunity <ArrowRight size={12} />
+                              </Link>
+                            )}
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontSize: 11, color: '#9CA3AF' }}>
-                            {new Date(u.receivedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          {opp._id && (
-                            <Link
-                              to={`/opportunities/${opp._id}`}
-                              style={{
-                                background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#1F2937',
-                                padding: '5px 11px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
-                                textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4
-                              }}
-                            >
-                              View Opportunity <ArrowRight size={12} />
-                            </Link>
-                          )}
-                        </div>
+                        {/* Raw Email Display for Auto-Update */}
+                        {isEmailOpen && (
+                          <div style={{
+                            background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 6,
+                            padding: 12, marginTop: 4
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                              <span style={{ fontSize: 11.5, fontWeight: 700, color: '#475569' }}>
+                                Original Email: {u.subject} (From: {u.from})
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(u.rawText || '');
+                                  toast.success('Email copied!');
+                                }}
+                                style={{
+                                  background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: 4,
+                                  padding: '2px 7px', fontSize: 11, fontWeight: 600, color: '#475569', cursor: 'pointer',
+                                  display: 'inline-flex', alignItems: 'center', gap: 4
+                                }}
+                              >
+                                <Copy size={11} /> Copy
+                              </button>
+                            </div>
+                            <div style={{
+                              whiteSpace: 'pre-wrap', fontSize: 12, color: '#1E293B', lineHeight: 1.5,
+                              maxHeight: 200, overflowY: 'auto', background: '#F8FAFC', padding: 10, borderRadius: 4, border: '1px solid #E2E8F0'
+                            }}>
+                              {u.rawText || 'No email content available.'}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Inline Edit Form for Auto-Update */}
+                        {isEditing && (
+                          <div style={{
+                            background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 8,
+                            padding: 14, marginTop: 4, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10
+                          }}>
+                            <div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                                Status
+                              </label>
+                              <select
+                                value={aEdit.status || 'applied'}
+                                onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], status: e.target.value } }))}
+                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                              >
+                                <option value="not_applied">Not Applied</option>
+                                <option value="applied">Applied</option>
+                                <option value="oa">OA / Test</option>
+                                <option value="interview">Interview</option>
+                                <option value="hr">HR Round</option>
+                                <option value="offer">Offer Received</option>
+                                <option value="rejected">Rejected</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                                OA / Test Date & Time
+                              </label>
+                              <input
+                                type="datetime-local"
+                                value={aEdit.testDate || ''}
+                                onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], testDate: e.target.value } }))}
+                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                                Campus Drive Date
+                              </label>
+                              <input
+                                type="date"
+                                value={aEdit.driveDate ? aEdit.driveDate.substring(0, 10) : ''}
+                                onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], driveDate: e.target.value } }))}
+                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                                Interview Date & Time
+                              </label>
+                              <input
+                                type="datetime-local"
+                                value={aEdit.interviewDate || ''}
+                                onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], interviewDate: e.target.value } }))}
+                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                                Application Deadline
+                              </label>
+                              <input
+                                type="datetime-local"
+                                value={aEdit.deadline || ''}
+                                onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], deadline: e.target.value } }))}
+                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                                Shortlist / Results Note
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. 15 candidates shortlisted"
+                                value={aEdit.shortlistInfo || ''}
+                                onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], shortlistInfo: e.target.value } }))}
+                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                              />
+                            </div>
+
+                            <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                              <button
+                                type="button"
+                                onClick={() => setEditingAutoUpdateId(null)}
+                                style={{
+                                  background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#64748B',
+                                  padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                                }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSaveAutoUpdate(u)}
+                                disabled={updatingAutoId === u._id}
+                                style={{
+                                  background: '#10B981', color: '#FFFFFF', border: 'none',
+                                  padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6
+                                }}
+                              >
+                                <Save size={13} /> {updatingAutoId === u._id ? 'Saving…' : 'Save Suggestion Updates'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
+                  {autoUpdates.length > autoUpdatePageSize && (
+                    <Pagination
+                      currentPage={autoUpdatePage}
+                      totalItems={autoUpdates.length}
+                      pageSize={autoUpdatePageSize}
+                      onPageChange={setAutoUpdatePage}
+                      onPageSizeChange={setAutoUpdatePageSize}
+                      pageSizeOptions={[5, 10, 20]}
+                      itemName="auto-update suggestions"
+                      accentColor="#10B981"
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -641,48 +1139,46 @@ export default function Opportunities() {
                 </Link>
               </div>
             </div>
+          ) : filteredPending.length === 0 ? (
+            <div style={{
+              background: '#FFFFFF', border: '1px dashed #E5EAF0', borderRadius: 12,
+              padding: '40px 20px', textAlign: 'center', color: '#667085'
+            }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: '#0B1F3A', marginBottom: 4 }}>
+                No pending opportunities match your filters
+              </div>
+              <div style={{ fontSize: 13, marginBottom: 16 }}>
+                You have {pendingItems.length} pending items, but none match the current search or filters.
+              </div>
+              <button
+                type="button"
+                onClick={() => { setPendingDateFilter('all'); setPendingTypeFilter(''); setPendingBranchFilter(''); setPendingSearch(''); setPendingPage(1); }}
+                style={{
+                  background: '#087F71', color: '#FFFFFF', border: 'none',
+                  padding: '7px 16px', borderRadius: 6, fontSize: 12.5, fontWeight: 600, cursor: 'pointer'
+                }}
+              >
+                Reset All Filters
+              </button>
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {pendingItems
-                .filter(item => {
-                  const ext = item.extractionResult?.extractedFields || {};
-                  const edits = pendingEdits[item._id] || {};
-                  const empType = (edits.employmentType || ext.employmentType || 'placement').toLowerCase();
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Top Pagination Control */}
+              <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 10, overflow: 'hidden' }}>
+                <Pagination
+                  currentPage={pendingPage}
+                  totalItems={filteredPending.length}
+                  pageSize={pendingPageSize}
+                  onPageChange={setPendingPage}
+                  onPageSizeChange={(newSize) => { setPendingPageSize(newSize); setPendingPage(1); }}
+                  pageSizeOptions={[10, 20, 50]}
+                  itemName="pending opportunities"
+                  accentColor="#087F71"
+                />
+              </div>
 
-                  // Type filter
-                  if (pendingTypeFilter && !empType.includes(pendingTypeFilter)) return false;
-
-                  // Branch filter
-                  if (pendingBranchFilter) {
-                    const branches = parseBranches(ext.eligibility?.allowedBranches).map(b => b.toLowerCase());
-                    const branchRaw = (ext.eligibility?.rawText || '').toLowerCase();
-                    const checkBranch = (terms) => terms.some(t => branches.some(b => b.includes(t)) || branchRaw.includes(t));
-
-                    if (pendingBranchFilter === 'cs_it' && !checkBranch(['cs', 'it', 'comp', 'aiml', 'data science', 'software'])) return false;
-                    if (pendingBranchFilter === 'entc' && !checkBranch(['entc', 'etc', 'ece', 'electronics', 'telecom'])) return false;
-                    if (pendingBranchFilter === 'mech' && !checkBranch(['mech', 'automobile', 'production'])) return false;
-                    if (pendingBranchFilter === 'electrical' && !checkBranch(['elect', 'eee'])) return false;
-                    if (pendingBranchFilter === 'civil' && !checkBranch(['civil'])) return false;
-                  }
-
-                  // Date filter
-                  if (pendingDateFilter !== 'all') {
-                    const recDate = new Date(item.receivedAt);
-                    const now = new Date();
-                    const isToday = recDate.toDateString() === now.toDateString();
-                    const yesterday = new Date();
-                    yesterday.setDate(now.getDate() - 1);
-                    const isYesterday = recDate.toDateString() === yesterday.toDateString();
-                    const diffDays = (now - recDate) / (1000 * 60 * 60 * 24);
-
-                    if (pendingDateFilter === 'today' && !isToday) return false;
-                    if (pendingDateFilter === 'yesterday' && !isYesterday) return false;
-                    if (pendingDateFilter === 'week' && diffDays > 7) return false;
-                  }
-
-                  return true;
-                })
-                .map(item => {
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {paginatedPending.map(item => {
                   const ext = item.extractionResult?.extractedFields || {};
                   const dup = item.extractionResult?.duplicateWarning;
                   const elig = item.extractionResult?.eligibilityCheckResult;
@@ -860,89 +1356,301 @@ export default function Opportunities() {
                         );
                       })()}
 
-                      {/* Expanded Edit Form */}
-                      {isExpanded && (
+                      {/* Missing API Key Warning Callout on Card if not configured */}
+                      {(!hasApiKey || ext.note) && (
                         <div style={{
-                          background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 8,
-                          padding: 16, marginBottom: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12
+                          background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8,
+                          padding: '10px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10
                         }}>
-                          <div>
-                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Company Name</label>
-                            <input
-                              type="text"
-                              value={edits.company}
-                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], company: e.target.value } }))}
-                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
-                            />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <AlertTriangle size={15} color="#D97706" />
+                            <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>
+                              {ext.note || 'AI API Key was not set. Please enter your API key to automatically parse and extract full details.'}
+                            </span>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => setKeyModal({
+                              isOpen: true,
+                              keyType: 'AI',
+                              message: 'Please enter your API key to extract important details from placement emails with AI.',
+                            })}
+                            style={{
+                              background: '#D97706', color: '#fff', border: 'none', borderRadius: 4,
+                              padding: '5px 12px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer'
+                            }}
+                          >
+                            Enter API Key
+                          </button>
+                        </div>
+                      )}
 
-                          <div>
-                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Role</label>
-                            <input
-                              type="text"
-                              value={edits.role}
-                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], role: e.target.value } }))}
-                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
-                            />
+                      {/* Full Gmail Content Viewer (Collapsible) */}
+                      {showEmailBody[item._id] && (
+                        <div style={{
+                          background: '#F8FAFC',
+                          border: '1px solid #CBD5E1',
+                          borderLeft: '4px solid #EA4335',
+                          borderRadius: 8,
+                          padding: 14,
+                          marginBottom: 16
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                            <div>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Mail size={14} color="#EA4335" /> Gmail Message Content
+                              </span>
+                              <span style={{ fontSize: 11, color: '#64748B' }}>
+                                Subject: {item.subject} • From: {item.from} • {new Date(item.receivedAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(item.rawText || '');
+                                toast.success('Email text copied to clipboard!');
+                              }}
+                              style={{
+                                background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 4,
+                                padding: '3px 8px', fontSize: 11, fontWeight: 600, color: '#475569', cursor: 'pointer',
+                                display: 'inline-flex', alignItems: 'center', gap: 4
+                              }}
+                            >
+                              <Copy size={11} /> Copy Text
+                            </button>
                           </div>
-
-                          <div>
-                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>CTC / Package</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. 8.5 LPA"
-                              value={edits.ctc}
-                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], ctc: e.target.value } }))}
-                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
-                            />
+                          <div style={{
+                            whiteSpace: 'pre-wrap',
+                            fontSize: 12.5,
+                            color: '#1E293B',
+                            lineHeight: 1.6,
+                            maxHeight: 280,
+                            overflowY: 'auto',
+                            background: '#FFFFFF',
+                            padding: 12,
+                            borderRadius: 6,
+                            border: '1px solid #E2E8F0',
+                          }}>
+                            {item.rawText || 'No email content available.'}
                           </div>
-
-                          <div>
-                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Stipend / PPO</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. 25,000 / month"
-                              value={edits.stipend || edits.ppo}
-                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], stipend: e.target.value } }))}
-                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
-                            />
-                          </div>
-
-                          <div>
-                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Allowed Branches (comma separated)</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. CS, IT, ENTC, Mech"
-                              value={edits.allowedBranches}
-                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], allowedBranches: e.target.value } }))}
-                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
-                            />
-                          </div>
-
-                          <div>
-                            <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Deadline Date & Time</label>
-                            <input
-                              type="datetime-local"
-                              value={edits.deadline}
-                              onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], deadline: e.target.value } }))}
-                              style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
-                            />
+                          <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>
+                            💡 All content present in Gmail is preserved above. You can read the original email and extract or modify any important data below.
                           </div>
                         </div>
                       )}
 
-                      {/* Footer Actions: Re-extract, Edit toggle, Ignore, Confirm */}
+                      {/* Expanded Edit Form: Extracted Important Data */}
+                      {isExpanded && (
+                        <div style={{
+                          background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 8,
+                          padding: 16, marginBottom: 16
+                        }}>
+                          <div style={{ marginBottom: 12 }}>
+                            <h4 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
+                              Extracted Important Data (Editable)
+                            </h4>
+                            <span style={{ fontSize: 11.5, color: '#667085' }}>
+                              Review or modify the extracted fields below. Everything here will be saved to your database and synced to Google Calendar.
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Company Name</label>
+                              <input
+                                type="text"
+                                value={edits.company}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], company: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Role / Designation</label>
+                              <input
+                                type="text"
+                                value={edits.role}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], role: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Opportunity Type</label>
+                              <select
+                                value={edits.employmentType || 'placement'}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], employmentType: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              >
+                                <option value="placement">Placement (Full-time)</option>
+                                <option value="internship">Internship</option>
+                                <option value="internship+ppo">Internship + PPO</option>
+                                <option value="off-campus">Off-Campus Drive</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>CTC / Package</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. 10 LPA or 12,00,000"
+                                value={edits.ctc}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], ctc: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Stipend / PPO</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. 25,000 / month"
+                                value={edits.stipend || edits.ppo}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], stipend: e.target.value, ppo: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Location / Mode</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Pune, Bangalore, Hybrid"
+                                value={edits.location}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], location: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Application Deadline</label>
+                              <input
+                                type="datetime-local"
+                                value={edits.deadline}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], deadline: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>OA / Online Test Date & Time</label>
+                              <input
+                                type="datetime-local"
+                                value={edits.testDate}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], testDate: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Campus Drive Date</label>
+                              <input
+                                type="date"
+                                value={edits.driveDate ? edits.driveDate.substring(0, 10) : ''}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], driveDate: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Interview Date & Time</label>
+                              <input
+                                type="datetime-local"
+                                value={edits.interviewDate}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], interviewDate: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Minimum CGPA</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. 6.5 or 7.0"
+                                value={edits.minCGPA}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], minCGPA: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Allowed Branches (comma separated)</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. CS, IT, ENTC, Mech"
+                                value={edits.allowedBranches}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], allowedBranches: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Registration / Application Links</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. https://forms.gle/... or job portal link"
+                                value={edits.links}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], links: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Shortlist / Eligibility / Round Notes</label>
+                              <textarea
+                                rows={2}
+                                placeholder="e.g. Online Assessment followed by Technical and HR round..."
+                                value={edits.shortlistInfo}
+                                onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], shortlistInfo: e.target.value } }))}
+                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Footer Actions: View Email, Re-extract, Edit toggle, Ignore, Confirm */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => setShowEmailBody(prev => ({ ...prev, [item._id]: !prev[item._id] }))}
+                            style={{
+                              background: showEmailBody[item._id] ? '#EFF6FF' : '#F8FAFC',
+                              border: '1px solid #CBD5E1',
+                              color: showEmailBody[item._id] ? '#1D4ED8' : '#334155',
+                              padding: '6px 12px',
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6
+                            }}
+                          >
+                            <FileText size={13} color={showEmailBody[item._id] ? '#1D4ED8' : '#DC2626'} />
+                            {showEmailBody[item._id] ? 'Hide Gmail Content' : 'View Full Gmail Content'}
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => setExpandedReviewId(isExpanded ? null : item._id)}
                             style={{
-                              background: 'transparent', border: 'none', color: '#18B7A0',
-                              fontSize: 12.5, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                              background: isExpanded ? '#E8F8F5' : '#FFFFFF',
+                              border: '1px solid #CBD5E1',
+                              color: '#087F71',
+                              fontSize: 12,
+                              fontWeight: 600,
+                              padding: '6px 12px',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 5
                             }}
                           >
-                            <Edit3 size={13} /> {isExpanded ? 'Hide Edit Fields' : 'Review & Edit Details'}
+                            <Edit3 size={13} /> {isExpanded ? 'Hide Extracted Fields' : 'Review & Edit Extracted Data'}
                             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                           </button>
 
@@ -952,7 +1660,7 @@ export default function Opportunities() {
                             disabled={reExtractingId === item._id}
                             style={{
                               background: '#F0FDF4', border: '1px solid rgba(22, 163, 74, 0.25)', color: '#16A34A',
-                              padding: '5px 11px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                              padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                               display: 'inline-flex', alignItems: 'center', gap: 5
                             }}
                           >
@@ -992,6 +1700,21 @@ export default function Opportunities() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Bottom Pagination Control */}
+              <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 10, overflow: 'hidden' }}>
+                <Pagination
+                  currentPage={pendingPage}
+                  totalItems={filteredPending.length}
+                  pageSize={pendingPageSize}
+                  onPageChange={setPendingPage}
+                  onPageSizeChange={(newSize) => { setPendingPageSize(newSize); setPendingPage(1); }}
+                  pageSizeOptions={[10, 20, 50]}
+                  itemName="pending opportunities"
+                  accentColor="#087F71"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -1108,7 +1831,7 @@ export default function Opportunities() {
                     </tr>
                   </thead>
                   <tbody>
-                    {opps.map(opp => {
+                    {paginatedOpps.map(opp => {
                       const pay = getOppPay(opp);
                       const deadline = getOppDeadline(opp);
                       const typeLabel = (opp.employmentType || 'placement').replace('-', ' ');
@@ -1259,11 +1982,17 @@ export default function Opportunities() {
                 </table>
               </div>
 
-              {/* Table Footer */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', background: '#F8FAFD', borderTop: '1px solid #E5EAF0', fontSize: 12, color: '#667085' }}>
-                <span>Showing {opps.length} placement & internship records</span>
-                <span style={{ color: '#087F71', fontWeight: 600 }}>✦ OppTrack SaaS</span>
-              </div>
+              {/* Table Footer & Pagination */}
+              <Pagination
+                currentPage={trackedPage}
+                totalItems={opps.length}
+                pageSize={trackedPageSize}
+                onPageChange={setTrackedPage}
+                onPageSizeChange={(newSize) => { setTrackedPageSize(newSize); setTrackedPage(1); }}
+                pageSizeOptions={[10, 25, 50]}
+                itemName="opportunities"
+                accentColor="#087F71"
+              />
             </div>
           )}
       </>
@@ -1320,6 +2049,10 @@ export default function Opportunities() {
         onClose={() => setKeyModal(k => ({ ...k, isOpen: false }))}
         keyType={keyModal.keyType}
         message={keyModal.message}
+        onSaved={(newKey) => {
+          setUserSettings(prev => ({ ...prev, llmApiKey: newKey }));
+          setHasApiKey(true);
+        }}
       />
     </div>
   );

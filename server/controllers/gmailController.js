@@ -66,25 +66,121 @@ const syncGmail = async (req, res) => {
 
 // @GET /api/gmail/pending-review
 const getPendingReview = async (req, res) => {
-  const items = await GmailSyncLog.find({
-    userId: req.user._id,
-    status: 'pending_review',
-  }).sort({ receivedAt: -1 });
+  try {
+    const { page, limit } = req.query;
+    const query = {
+      userId: req.user._id,
+      status: 'pending_review',
+    };
 
-  res.json(items);
+    if (page && limit) {
+      const p = Math.max(1, Number(page));
+      const l = Math.max(1, Number(limit));
+      const [items, total] = await Promise.all([
+        GmailSyncLog.find(query)
+          .sort({ receivedAt: -1 })
+          .skip((p - 1) * l)
+          .limit(l),
+        GmailSyncLog.countDocuments(query),
+      ]);
+      return res.json({ items, total, page: p, pages: Math.ceil(total / l) });
+    }
+
+    const items = await GmailSyncLog.find(query).sort({ receivedAt: -1 });
+    res.json(items);
+  } catch (err) {
+    console.error('Error fetching pending review items:', err);
+    res.status(500).json({ message: 'Failed to fetch pending review items', items: [] });
+  }
 };
 
 // @GET /api/gmail/auto-updates
 const getAutoUpdates = async (req, res) => {
-  const updates = await GmailSyncLog.find({
-    userId: req.user._id,
-    status: 'auto_updated',
-  })
-    .sort({ receivedAt: -1 })
-    .limit(20)
-    .populate('opportunityId', 'company role status deadline driveDate testDate interviewDate shortlistInfo');
+  try {
+    const { page, limit } = req.query;
+    const query = {
+      userId: req.user._id,
+      status: 'auto_updated',
+    };
 
-  res.json(updates);
+    if (page && limit) {
+      const p = Math.max(1, Number(page));
+      const l = Math.max(1, Number(limit));
+      const [updates, total] = await Promise.all([
+        GmailSyncLog.find(query)
+          .sort({ receivedAt: -1 })
+          .skip((p - 1) * l)
+          .limit(l)
+          .populate('opportunityId', 'company role status deadline driveDate testDate interviewDate shortlistInfo'),
+        GmailSyncLog.countDocuments(query),
+      ]);
+      return res.json({ updates, total, page: p, pages: Math.ceil(total / l) });
+    }
+
+    const updates = await GmailSyncLog.find(query)
+      .sort({ receivedAt: -1 })
+      .limit(50)
+      .populate('opportunityId', 'company role status deadline driveDate testDate interviewDate shortlistInfo');
+
+    res.json(updates);
+  } catch (err) {
+    console.error('Error fetching auto updates:', err);
+    res.status(500).json({ message: 'Failed to fetch auto updates', updates: [] });
+  }
+};
+
+// @DELETE /api/gmail/auto-updates/:id
+const dismissAutoUpdate = async (req, res) => {
+  const item = await GmailSyncLog.findOneAndDelete({
+    _id: req.params.id,
+    userId: req.user._id,
+  });
+  if (!item) return res.status(404).json({ message: 'Auto-update suggestion not found.' });
+  res.json({ message: 'Auto-update suggestion removed.' });
+};
+
+// @PUT /api/gmail/auto-updates/:id
+const updateAutoUpdate = async (req, res) => {
+  const item = await GmailSyncLog.findOne({
+    _id: req.params.id,
+    userId: req.user._id,
+  });
+  if (!item) return res.status(404).json({ message: 'Auto-update item not found.' });
+
+  const { status, testDate, driveDate, interviewDate, deadline, shortlistInfo } = req.body;
+
+  if (item.opportunityId) {
+    const opp = await Opportunity.findOne({ _id: item.opportunityId, userId: req.user._id });
+    if (opp) {
+      if (status) opp.status = status;
+      if (testDate !== undefined) opp.testDate = testDate ? new Date(testDate) : null;
+      if (driveDate !== undefined) opp.driveDate = driveDate ? new Date(driveDate) : null;
+      if (interviewDate !== undefined) opp.interviewDate = interviewDate ? new Date(interviewDate) : null;
+      if (deadline !== undefined) opp.deadline = deadline ? new Date(deadline) : null;
+      if (shortlistInfo !== undefined) opp.shortlistInfo = shortlistInfo;
+      await opp.save();
+
+      // Mirror to Google Calendar
+      await calendarSyncService.createOrUpdateEvent(req.user._id, opp).catch(err => {
+        console.warn('Google Calendar mirror warning in updateAutoUpdate:', err.message);
+      });
+
+      const updatedChanges = [];
+      if (status) updatedChanges.push(`Status: ${status}`);
+      if (driveDate) updatedChanges.push(`Drive: ${new Date(driveDate).toLocaleDateString()}`);
+      if (testDate) updatedChanges.push(`Test: ${new Date(testDate).toLocaleDateString()}`);
+      if (interviewDate) updatedChanges.push(`Interview: ${new Date(interviewDate).toLocaleDateString()}`);
+      if (shortlistInfo) updatedChanges.push(`Shortlist: ${shortlistInfo.substring(0, 30)}...`);
+
+      if (updatedChanges.length > 0) {
+        if (!item.autoUpdateDetails) item.autoUpdateDetails = {};
+        item.autoUpdateDetails.changesSummary = updatedChanges;
+        await item.save();
+      }
+    }
+  }
+
+  res.json({ message: 'Opportunity updated successfully from suggestion!', item });
 };
 
 // @POST /api/gmail/pending-review/:id/re-extract
@@ -259,6 +355,8 @@ module.exports = {
   syncGmail,
   getPendingReview,
   getAutoUpdates,
+  dismissAutoUpdate,
+  updateAutoUpdate,
   reExtractPending,
   confirmPending,
   ignorePending,

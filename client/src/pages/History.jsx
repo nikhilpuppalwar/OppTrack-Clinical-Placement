@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { historyAPI, formHistoryAPI } from '../api';
-import { Filter, Clock, ChevronLeft, ChevronRight, Activity, Puzzle } from 'lucide-react';
+import { Filter, Clock, Activity, Puzzle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Pagination from '../components/Pagination';
 
 const EVENT_BADGES = {
   created:                 { label: 'Created',        color: '#2563EB', bg: '#EAF2FF' },
@@ -40,23 +41,25 @@ export default function History() {
   const [loading, setLoading]   = useState(true);
   const [eventType, setEventType] = useState('');
   const [page, setPage]         = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const [totalLogs, setTotalLogs] = useState(0);
 
   // Form history state
   const [formLogs, setFormLogs]       = useState([]);
   const [formLoading, setFormLoading] = useState(false);
   const [formPage, setFormPage]       = useState(1);
-  const [formTotalPages, setFormTotalPages] = useState(1);
+  const [formPageSize, setFormPageSize] = useState(15);
+  const [formTotal, setFormTotal]     = useState(0);
 
   // ─── Fetch activity logs ───────────────────────────────────────────────────
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const params = { limit: 15, page };
+      const params = { limit: pageSize, page };
       if (eventType) params.eventType = eventType;
       const { data } = await historyAPI.list(params);
       setLogs(data.logs || []);
-      setTotalPages(data.pages || 1);
+      setTotalLogs(data.total || 0);
     } catch {
       toast.error('Failed to load activity logs');
     } finally {
@@ -68,9 +71,9 @@ export default function History() {
   const fetchFormLogs = async () => {
     setFormLoading(true);
     try {
-      const { data } = await formHistoryAPI.list({ limit: 15, page: formPage });
+      const { data } = await formHistoryAPI.list({ limit: formPageSize, page: formPage });
       setFormLogs(data.entries || []);
-      setFormTotalPages(data.pages || 1);
+      setFormTotal(data.total || 0);
     } catch {
       toast.error('Failed to load extension activity');
     } finally {
@@ -80,11 +83,11 @@ export default function History() {
 
   useEffect(() => {
     if (activeTab === 'activity') fetchLogs();
-  }, [eventType, page, activeTab]);
+  }, [eventType, page, pageSize, activeTab]);
 
   useEffect(() => {
     if (activeTab === 'extension') fetchFormLogs();
-  }, [formPage, activeTab]);
+  }, [formPage, formPageSize, activeTab]);
 
   // ─── Styles ────────────────────────────────────────────────────────────────
   const tabBase = {
@@ -179,7 +182,16 @@ export default function History() {
                     </LogRow>
                   );
                 })}
-                <Pagination page={page} totalPages={totalPages} onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} />
+                <Pagination
+                  currentPage={page}
+                  totalItems={totalLogs}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={(newSize) => { setPageSize(newSize); setPage(1); }}
+                  pageSizeOptions={[10, 15, 25, 50]}
+                  itemName="activity logs"
+                  accentColor="#2563EB"
+                />
               </>
             )}
           </div>
@@ -229,7 +241,16 @@ export default function History() {
                   </LogRow>
                 );
               })}
-              <Pagination page={formPage} totalPages={formTotalPages} onPrev={() => setFormPage(p => p - 1)} onNext={() => setFormPage(p => p + 1)} />
+              <Pagination
+                currentPage={formPage}
+                totalItems={formTotal}
+                pageSize={formPageSize}
+                onPageChange={setFormPage}
+                onPageSizeChange={(newSize) => { setFormPageSize(newSize); setFormPage(1); }}
+                pageSizeOptions={[10, 15, 25, 50]}
+                itemName="extension logs"
+                accentColor="#087F71"
+              />
             </>
           )}
         </div>
@@ -259,32 +280,6 @@ function BadgeAndTime({ badge, time }) {
       <span style={{ fontSize: 12, color: '#667085', fontFamily: 'ui-monospace, monospace', display: 'flex', alignItems: 'center', gap: 4 }}>
         <Clock size={12} /> {time}
       </span>
-    </div>
-  );
-}
-
-function Pagination({ page, totalPages, onPrev, onNext }) {
-  if (totalPages <= 1) return null;
-  const btnStyle = (disabled) => ({
-    background: '#FFFFFF', border: '1px solid #E5EAF0',
-    color: disabled ? '#D0D5DD' : '#172033',
-    padding: '6px 14px', borderRadius: 6, fontSize: 13,
-    cursor: disabled ? 'default' : 'pointer',
-    display: 'flex', alignItems: 'center', gap: 4,
-    fontFamily: 'inherit',
-    fontWeight: 500,
-  });
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', background: '#F8FAFD', borderTop: '1px solid #E5EAF0' }}>
-      <button disabled={page <= 1} onClick={onPrev} style={btnStyle(page <= 1)}>
-        <ChevronLeft size={14} /> Prev
-      </button>
-      <span style={{ fontSize: 13, color: '#667085', fontFamily: 'ui-monospace, monospace' }}>
-        Page {page} of {totalPages}
-      </span>
-      <button disabled={page >= totalPages} onClick={onNext} style={btnStyle(page >= totalPages)}>
-        Next <ChevronRight size={14} />
-      </button>
     </div>
   );
 }

@@ -36,7 +36,9 @@ const userSchema = new mongoose.Schema(
       gmailSyncEnabled: { type: Boolean, default: false },
       calendarSyncEnabled: { type: Boolean, default: false },
       lastGmailSyncAt: { type: Date, default: null },
+      tokenExpired: { type: Boolean, default: false },
     },
+    lastLoginAutoSyncDate: { type: String, default: null }, // Track YYYY-MM-DD for once-daily login sync
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpire: { type: Date, default: null },
   },

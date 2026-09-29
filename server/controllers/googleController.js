@@ -45,6 +45,7 @@ const getStatus = async (req, res) => {
   const auth = user.googleAuth || {};
   res.json({
     isConnected: Boolean(auth.refreshToken),
+    tokenExpired: Boolean(auth.tokenExpired),
     connectedAt: auth.connectedAt,
     googleEmail: auth.googleEmail,
     gmailSyncEnabled: Boolean(auth.gmailSyncEnabled),

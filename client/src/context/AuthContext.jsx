@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../api';
+import { authAPI, gmailAPI } from '../api';
 
 const AuthContext = createContext(null);
 
@@ -11,7 +11,17 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('opptrack_user');
     const token = localStorage.getItem('opptrack_token');
     if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+
+      // First session of the day check
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const lastDailySync = localStorage.getItem(`opptrack_last_daily_sync_${parsedUser._id}`);
+      if (lastDailySync !== todayStr) {
+        localStorage.setItem(`opptrack_last_daily_sync_${parsedUser._id}`, todayStr);
+        // Silently sync in background on first visit of the day
+        gmailAPI.sync().catch(() => {});
+      }
     }
     setLoading(false);
   }, []);
@@ -20,6 +30,8 @@ export const AuthProvider = ({ children }) => {
     const { data } = await authAPI.login({ email, password });
     localStorage.setItem('opptrack_token', data.token);
     localStorage.setItem('opptrack_user', JSON.stringify(data));
+    const todayStr = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(`opptrack_last_daily_sync_${data._id}`, todayStr);
     setUser(data);
     return data;
   };

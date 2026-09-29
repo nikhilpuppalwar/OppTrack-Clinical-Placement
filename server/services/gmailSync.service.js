@@ -120,11 +120,22 @@ async function syncUserGmail(userId, options = {}) {
 
   const query = `from:(${senderQuery}) ${timeFilter}`;
 
-  const listRes = await gmail.users.messages.list({
-    userId: 'me',
-    q: query,
-    maxResults: 50,
-  });
+  let listRes;
+  try {
+    listRes = await gmail.users.messages.list({
+      userId: 'me',
+      q: query,
+      maxResults: 50,
+    });
+  } catch (err) {
+    if (googleAuthService.isInvalidGrant(err)) {
+      await googleAuthService.handleExpiredToken(userId);
+      const authErr = new Error('Google authorization expired (invalid_grant). Please reconnect your Google account in Settings.');
+      authErr.isGoogleAuthExpired = true;
+      throw authErr;
+    }
+    throw err;
+  }
 
   const messages = listRes.data?.messages || [];
   if (messages.length === 0) {
@@ -148,11 +159,23 @@ async function syncUserGmail(userId, options = {}) {
     }
 
     // Fetch full email
-    const msgDetail = await gmail.users.messages.get({
-      userId: 'me',
-      id: msgRef.id,
-      format: 'full',
-    });
+    let msgDetail;
+    try {
+      msgDetail = await gmail.users.messages.get({
+        userId: 'me',
+        id: msgRef.id,
+        format: 'full',
+      });
+    } catch (err) {
+      if (googleAuthService.isInvalidGrant(err)) {
+        await googleAuthService.handleExpiredToken(userId);
+        const authErr = new Error('Google authorization expired (invalid_grant). Please reconnect your Google account in Settings.');
+        authErr.isGoogleAuthExpired = true;
+        throw authErr;
+      }
+      console.warn(`Could not fetch message ${msgRef.id}:`, err.message);
+      continue;
+    }
 
     const headers = msgDetail.data?.payload?.headers || [];
     const getHeader = (name) => headers.find(h => h.name?.toLowerCase() === name.toLowerCase())?.value || '';

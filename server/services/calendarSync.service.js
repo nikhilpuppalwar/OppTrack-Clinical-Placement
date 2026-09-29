@@ -56,6 +56,10 @@ async function syncMilestone({ calendar, opportunity, typeKey, dateValue, titleS
       });
       return res.data?.id || existingEventId;
     } catch (err) {
+      if (googleAuthService.isInvalidGrant(err)) {
+        await googleAuthService.handleExpiredToken(userId);
+        return null;
+      }
       if (err.code !== 404 && err.code !== 410) {
         console.warn(`Could not update calendar event (${typeKey}):`, err.message);
       }
@@ -70,6 +74,10 @@ async function syncMilestone({ calendar, opportunity, typeKey, dateValue, titleS
     });
     return res.data?.id || null;
   } catch (err) {
+    if (googleAuthService.isInvalidGrant(err)) {
+      await googleAuthService.handleExpiredToken(userId);
+      return null;
+    }
     console.warn(`Could not insert calendar event (${typeKey}):`, err.message);
     return null;
   }
@@ -383,6 +391,17 @@ async function getGoogleCalendarEvents(userId) {
       events: formattedEvents,
     };
   } catch (err) {
+    if (googleAuthService.isInvalidGrant(err)) {
+      await googleAuthService.handleExpiredToken(userId);
+      return {
+        isConnected: false,
+        tokenExpired: true,
+        googleEmail: user.googleAuth?.googleEmail,
+        calendarSyncEnabled: false,
+        error: 'Google authorization expired (invalid_grant). Please reconnect in Settings.',
+        events: [],
+      };
+    }
     console.error('getGoogleCalendarEvents error:', err.message);
     return {
       isConnected: true,

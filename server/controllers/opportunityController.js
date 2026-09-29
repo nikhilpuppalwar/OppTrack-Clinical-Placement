@@ -23,6 +23,16 @@ const getOpportunities = async (req, res) => {
   let dbQuery = Opportunity.find(query).sort({ deadline: 1, createdAt: -1 });
   if (fields) dbQuery = dbQuery.select(fields.split(',').join(' '));
 
+  if (req.query.page && req.query.limit) {
+    const p = Math.max(1, Number(req.query.page));
+    const l = Math.max(1, Number(req.query.limit));
+    const [opportunities, total] = await Promise.all([
+      dbQuery.skip((p - 1) * l).limit(l),
+      Opportunity.countDocuments(query),
+    ]);
+    return res.json({ opportunities, total, page: p, pages: Math.ceil(total / l) });
+  }
+
   const opportunities = await dbQuery;
   res.json(opportunities);
 };
