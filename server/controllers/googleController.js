@@ -22,6 +22,8 @@ const handleCallback = async (req, res) => {
     .trim()
     .replace(/\/+$/, '');
 
+  const { error, code, state } = req.query;
+
   if (error) {
     return res.redirect(`${clientUrl}/settings?google=error&message=${encodeURIComponent(error)}`);
   }
