@@ -23,7 +23,8 @@ async function getApiBase() {
 }
 
 async function authedFetch(path, options = {}) {
-  const token = await getToken();
+  const isAuthRoute = path.includes('/auth/login') || path.includes('/auth/register');
+  const token = isAuthRoute ? null : await getToken();
   let base = await getApiBase();
 
   const doFetch = async (baseUrl) => {
@@ -39,16 +40,32 @@ async function authedFetch(path, options = {}) {
     return { ok: res.ok, status: res.status, data };
   };
 
+  let result;
   try {
-    return await doFetch(base);
+    result = await doFetch(base);
   } catch (err) {
     const altBase = base.includes('onrender.com') ? LOCAL_API_BASE : PRIMARY_API_BASE;
     try {
-      return await doFetch(altBase);
+      result = await doFetch(altBase);
+      if (result.ok) {
+        await chrome.storage.local.set({ opptrack_api_url: altBase });
+      }
     } catch {
       return { ok: false, status: 0, error: err.message };
     }
   }
+
+  // Handle 401 Unauthorized: token expired, invalid, or user deleted
+  if (result && result.status === 401 && !isAuthRoute) {
+    console.warn('[OppTrack Extension] Auth token rejected (401). Clearing stale token.');
+    await chrome.storage.local.remove(['opptrack_token', 'opptrack_user']);
+    chrome.runtime.sendMessage({
+      type: 'AUTH_EXPIRED',
+      message: result.data?.message || 'Session expired. Please log in or sync your token.',
+    }).catch(() => {});
+  }
+
+  return result;
 }
 
 // ─── Tab tracking for form submission detection (Feature 4) ──────────────────
@@ -149,8 +166,74 @@ async function handleMessage(msg, sender) {
     }
 
     case 'GET_AUTH': {
-      const { opptrack_token, opptrack_user } = await chrome.storage.local.get(['opptrack_token', 'opptrack_user']);
-      return { token: opptrack_token || null, user: opptrack_user || null };
+      const { opptrack_token, opptrack_user, opptrack_api_url } = await chrome.storage.local.get([
+        'opptrack_token',
+        'opptrack_user',
+        'opptrack_api_url',
+      ]);
+      return {
+        token: opptrack_token || null,
+        user: opptrack_user || null,
+        apiUrl: opptrack_api_url || PRIMARY_API_BASE,
+      };
+    }
+
+    case 'SYNC_TOKEN_FROM_WEB': {
+      if (msg.token) {
+        const userObj = msg.user || null;
+        let apiUrl = null;
+        if (msg.origin && (msg.origin.includes('localhost') || msg.origin.includes('127.0.0.1'))) {
+          apiUrl = LOCAL_API_BASE;
+        } else if (msg.origin && (msg.origin.includes('vercel.app') || msg.origin.includes('onrender.com'))) {
+          apiUrl = PRIMARY_API_BASE;
+        }
+        const updates = { opptrack_token: msg.token, opptrack_user: userObj };
+        if (apiUrl) updates.opptrack_api_url = apiUrl;
+        await chrome.storage.local.set(updates);
+        return { ok: true, synced: true };
+      } else {
+        await chrome.storage.local.remove(['opptrack_token', 'opptrack_user']);
+        return { ok: true, loggedOut: true };
+      }
+    }
+
+    case 'SET_MANUAL_TOKEN': {
+      if (!msg.token) return { ok: false, error: 'Token cannot be empty' };
+      const updates = { opptrack_token: msg.token.trim() };
+      if (msg.apiUrl) updates.opptrack_api_url = msg.apiUrl;
+      if (msg.user) updates.opptrack_user = msg.user;
+      await chrome.storage.local.set(updates);
+      // Validate by fetching profile
+      const testRes = await authedFetch('/profile');
+      if (testRes.ok) {
+        if (testRes.data) {
+          const userObj = {
+            name: testRes.data.candidateName,
+            email: testRes.data.collegeEmail || testRes.data.personalEmail,
+          };
+          await chrome.storage.local.set({ opptrack_user: userObj });
+        }
+        return { ok: true, user: testRes.data };
+      } else {
+        return { ok: false, error: testRes.data?.message || 'Token verification failed. Please check the token.' };
+      }
+    }
+
+    case 'GET_API_BASE': {
+      const base = await getApiBase();
+      return { ok: true, apiUrl: base };
+    }
+
+    case 'SET_API_BASE': {
+      if (msg.apiUrl) {
+        await chrome.storage.local.set({ opptrack_api_url: msg.apiUrl });
+      }
+      return { ok: true };
+    }
+
+    case 'VERIFY_TOKEN': {
+      const testRes = await authedFetch('/profile');
+      return { ok: testRes.ok, status: testRes.status, data: testRes.data };
     }
 
     // ── Profile + Documents ───────────────────────────────────────────────────

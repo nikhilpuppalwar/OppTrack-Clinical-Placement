@@ -12,9 +12,32 @@
     <div class="logo-row">
       <div class="logo-dot"></div>
       <span class="logo-text">OppTrack</span>
+      <span id="backend-badge-login" class="badge-tag" style="margin-left:auto;font-size:10px;">Cloud</span>
     </div>
     <h2 class="view-title">Sign in to autofill</h2>
     <p class="view-sub">Connect your OppTrack account to enable intelligent AI form autofilling.</p>
+
+    <!-- Quick Web Session Auto-Sync Button -->
+    <div style="background:#EBF5FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px;margin-bottom:14px;text-align:center;">
+      <div style="font-size:11px;font-weight:600;color:#1E40AF;margin-bottom:6px;">Logged in on the OppTrack website?</div>
+      <button id="sync-web-token-btn" class="btn-primary" style="background:#2563EB;width:100%;padding:8px 10px;font-size:12px;">
+        🔄 Sync Session from Web Tab
+      </button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <div style="flex:1;height:1px;background:#E5EAF0;"></div>
+      <span style="font-size:10px;color:#98A2B3;text-transform:uppercase;font-weight:600;">or sign in with password</span>
+      <div style="flex:1;height:1px;background:#E5EAF0;"></div>
+    </div>
+
+    <div class="field-group">
+      <label for="backend-server-select">Backend Server</label>
+      <select id="backend-server-select" style="font-size:11px;">
+        <option value="https://opptrack-clinical-placement.onrender.com/api">Render Cloud (Live)</option>
+        <option value="http://localhost:5000/api">Localhost (http://localhost:5000)</option>
+      </select>
+    </div>
 
     <div class="field-group">
       <label for="email">Email</label>
@@ -26,6 +49,21 @@
     </div>
     <div id="login-error" class="error-msg hidden"></div>
     <button id="login-btn" class="btn-primary">Sign In</button>
+
+    <!-- Manual Token Option -->
+    <div style="margin-top:12px;text-align:center;">
+      <button type="button" id="toggle-manual-token" class="text-link-btn" style="font-size:11px;">
+        🔑 Paste JWT Token Manually
+      </button>
+    </div>
+
+    <div id="manual-token-card" class="field-group hidden" style="margin-top:8px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:8px;">
+      <label for="manual-jwt-input" style="font-size:10px;">Paste JWT Token (Bearer)</label>
+      <textarea id="manual-jwt-input" rows="2" placeholder="eyJhbGciOiJIUzI1NiIsIn..." style="width:100%;font-size:11px;font-family:monospace;border:1px solid #CBD5E1;border-radius:6px;padding:6px;"></textarea>
+      <button type="button" id="apply-manual-token-btn" class="btn-primary" style="width:100%;margin-top:6px;padding:6px;font-size:11px;background:#0B1F3A;">
+        ✓ Apply & Verify Token
+      </button>
+    </div>
 
     <div class="login-footer">
       <p style="margin: 12px 0 6px; font-size:12px; color:#667085; text-align:center;">
@@ -49,6 +87,7 @@
       <div class="logo-row">
         <div class="logo-dot"></div>
         <span class="logo-text">OppTrack AI</span>
+        <span id="backend-badge-main" class="badge-tag" style="margin-left:4px;font-size:10px;">Cloud</span>
       </div>
       <div class="header-right">
         <span id="user-name" class="user-chip"></span>
@@ -100,6 +139,15 @@
         <div>
           Groq decommissioned older <code>llama-3.1-8b</code> & <code>llama-3.3-70b-versatile</code>. Recommended: <strong>openai/gpt-oss-120b</strong> or <strong>gemini-2.0-flash</strong>.
         </div>
+      </div>
+
+      <!-- Backend Server Selector -->
+      <div class="field-group">
+        <label for="main-backend-select">OppTrack API Backend</label>
+        <select id="main-backend-select" style="font-size:11px;">
+          <option value="https://opptrack-clinical-placement.onrender.com/api">Render Cloud (Live)</option>
+          <option value="http://localhost:5000/api">Localhost (http://localhost:5000)</option>
+        </select>
       </div>
 
       <!-- AI Provider -->

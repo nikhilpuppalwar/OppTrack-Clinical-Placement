@@ -190,7 +190,7 @@ OppTrack-Clinical-Placement/
 ## 🚀 Live Deployment (Vercel + Render)
 
 - **Frontend (Vercel):** [https://opp-track-clinical-placement.vercel.app](https://opp-track-clinical-placement.vercel.app)
-- **Backend (Render):** [https://opptrack-clinical-placement.onrender.com](https://opptrack-clinical-placement.onrender.com)
+
 
 ### Frontend Configuration (Vercel)
 - **Root Directory:** `client`
@@ -217,13 +217,6 @@ OppTrack-Clinical-Placement/
   SMTP_USER=your_email@gmail.com
   SMTP_PASS=your_app_password
   ```
-
-> **Password Reset Link Resolution:**
-> Password reset links sent via email will automatically use:
-> `https://opp-track-clinical-placement.vercel.app/reset-password?token=...&email=...`
-> The backend dynamically validates requests from your Vercel deployment while preventing host header injection attacks.
-
----
 
 ## 👤 Author
 

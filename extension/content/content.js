@@ -795,7 +795,9 @@ async function performAIAutofill() {
   });
 
   if (!res.ok) {
-    if (res.data?.isKeyMissing) {
+    if (res.status === 401 || res.data?.message?.toLowerCase().includes('token') || res.data?.message?.toLowerCase().includes('authorized')) {
+      alert('OppTrack: Your login session has expired or you are not signed in. Click the OppTrack extension icon in your browser toolbar to sign in or sync your token.');
+    } else if (res.data?.isKeyMissing) {
       alert(`OppTrack AI: ${res.data.message}`);
     } else {
       alert(`AI Autofill Error: ${res.data?.message || res.error || 'Server error'}`);

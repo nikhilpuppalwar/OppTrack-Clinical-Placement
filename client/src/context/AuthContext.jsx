@@ -26,6 +26,16 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  const notifyAuthChange = (token, userData) => {
+    try {
+      window.dispatchEvent(
+        new CustomEvent('opptrack:auth-change', {
+          detail: { token, user: userData, origin: window.location.origin },
+        })
+      );
+    } catch {}
+  };
+
   const login = async (email, password) => {
     const { data } = await authAPI.login({ email, password });
     localStorage.setItem('opptrack_token', data.token);
@@ -33,6 +43,7 @@ export const AuthProvider = ({ children }) => {
     const todayStr = new Date().toISOString().slice(0, 10);
     localStorage.setItem(`opptrack_last_daily_sync_${data._id}`, todayStr);
     setUser(data);
+    notifyAuthChange(data.token, data);
     return data;
   };
 
@@ -41,12 +52,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('opptrack_token', data.token);
     localStorage.setItem('opptrack_user', JSON.stringify(data));
     setUser(data);
+    notifyAuthChange(data.token, data);
     return data;
   };
 
   const logout = () => {
     localStorage.removeItem('opptrack_token');
     localStorage.removeItem('opptrack_user');
+    notifyAuthChange(null, null);
     setUser(null);
     window.location.href = '/login';
   };

@@ -1,11 +1,12 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { opportunityAPI, historyAPI, profileAPI, gmailAPI, settingsAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { 
   Plus, ArrowRight, Clock, Sparkles, Trophy, Activity, CalendarDays, CheckCircle2, 
   TrendingUp, AlertCircle, Briefcase, GraduationCap, Target, FileText, Check, 
-  ExternalLink, Zap, ChevronRight, X, Send, SlidersHorizontal, AlertTriangle, ShieldCheck
+  ExternalLink, Zap, ChevronRight, X, Send, SlidersHorizontal, AlertTriangle, ShieldCheck,
+  Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -37,6 +38,25 @@ export default function Dashboard() {
   const [aiQuery, setAiQuery] = useState('');
   const [aiAnswers, setAiAnswers] = useState([]);
   const [isAiAnswering, setIsAiAnswering] = useState(false);
+  const aiInputRef = useRef(null);
+  const aiFeedEndRef = useRef(null);
+
+  // Close AI panel on Escape key & auto-focus input when opened
+  useEffect(() => {
+    if (!showAiPanel) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setShowAiPanel(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const timer = setTimeout(() => {
+      aiInputRef.current?.focus();
+    }, 120);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      clearTimeout(timer);
+    };
+  }, [showAiPanel]);
 
   // ─── Fetch All Workspace Data ─────────────────────────────────────────────
   useEffect(() => {
@@ -416,45 +436,152 @@ export default function Dashboard() {
 
   // ─── AI Ask Command Answers (RAG on Real OppTrack Data) ───────────────────
   const handleAskOppTrack = (queryText) => {
-    const q = queryText.toLowerCase().trim();
+    if (!queryText || !queryText.trim() || isAiAnswering) return;
+    const cleanText = queryText.trim();
+    const q = cleanText.toLowerCase();
     setIsAiAnswering(true);
-    setAiQuery(queryText);
+    setAiQuery(''); // Clear input so user can easily ask subsequent questions
 
     setTimeout(() => {
       let answer = '';
 
-      if (q.includes('focus') || q.includes('today')) {
-        const topMoves = nextMoves.map((m, i) => `${i + 1}. ${m.title} (${m.subtitle}) — ${m.detail}`).join('\n');
-        answer = `Here is your high-priority focus agenda for today based on active records:\n\n${topMoves || 'No urgent items today! Use this time to research target companies.'}`;
-      } else if (q.includes('follow') || q.includes('update')) {
+      // Check if user asked about a specific company in their tracked list
+      const matchedCompany = opportunities.find(o => 
+        o.company && q.includes(o.company.toLowerCase().trim())
+      );
+
+      if (matchedCompany) {
+        const opp = matchedCompany;
+        const stage = PIPELINE_STAGES.find(s => s.key === opp.status)?.label || opp.status;
+        const parts = [
+          `Company: ${opp.company}`,
+          `Role: ${opp.role || 'Not specified'}`,
+          `Status: ${stage.toUpperCase()}`,
+        ];
+        if (opp.deadline) {
+          parts.push(`Application Deadline: ${new Date(opp.deadline).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+        }
+        if (opp.testDate) {
+          parts.push(`Assessment Date: ${new Date(opp.testDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+        }
+        if (opp.interviewDate) {
+          parts.push(`Interview Date: ${new Date(opp.interviewDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+        }
+        if (opp.salary || opp.ctc) {
+          parts.push(`Package / CTC: ${opp.salary || opp.ctc}`);
+        }
+        if (opp.location) {
+          parts.push(`Location: ${opp.location}`);
+        }
+        if (opp.portalUrl) {
+          parts.push(`Portal Link: ${opp.portalUrl}`);
+        }
+        if (opp.notes) {
+          parts.push(`Notes: ${opp.notes.slice(0, 150)}${opp.notes.length > 150 ? '...' : ''}`);
+        }
+        answer = `Details for ${opp.company}:\n\n` + parts.join('\n');
+      } else if (q.includes('focus') || q.includes('today') || q.includes('priority') || q.includes('action')) {
+        const topMoves = nextMoves.map((m, i) => `${i + 1}. [${m.badge}] ${m.title} (${m.subtitle}) — ${m.detail}`).join('\n\n');
+        answer = `Here is your high-priority focus agenda for today based on active records:\n\n${topMoves || 'No urgent items today! Use this time to research target companies or prepare DSA topics.'}`;
+      } else if (q.includes('interview') || q.includes('round') || q.includes('hr')) {
+        const interviews = opportunities.filter(o => 
+          (o.status === 'interview' || o.status === 'hr' || o.interviewDate) &&
+          o.status !== 'offer' && o.status !== 'rejected'
+        );
+        if (interviews.length > 0) {
+          answer = `You have ${interviews.length} active interview pipeline${interviews.length > 1 ? 's' : ''}:\n\n` +
+            interviews.map(o => {
+              const dateInfo = o.interviewDate 
+                ? ` (Scheduled: ${new Date(o.interviewDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })})`
+                : ' (Awaiting round schedule)';
+              return `• ${o.company} — ${o.role || 'Placement Drive'}${dateInfo}`;
+            }).join('\n') +
+            `\n\nTip: Review company-specific interview archives and core fundamentals.`;
+        } else {
+          answer = 'No interviews currently in progress or scheduled. Keep applying and clearing assessments to unlock interview rounds!';
+        }
+      } else if (q.includes('assessment') || q.includes('oa') || q.includes('test') || q.includes('exam')) {
+        const assessments = opportunities.filter(o => 
+          (o.status === 'oa' || o.testDate) &&
+          o.status !== 'offer' && o.status !== 'rejected'
+        );
+        if (assessments.length > 0) {
+          answer = `Upcoming Online Assessments / Tests (${assessments.length}):\n\n` +
+            assessments.map(o => {
+              const testTime = o.testDate 
+                ? ` — Date: ${new Date(o.testDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                : ' — OA in progress / link awaited';
+              return `• ${o.company} (${o.role || 'Candidate'})${testTime}`;
+            }).join('\n');
+        } else {
+          answer = 'You have zero pending online assessments at this time.';
+        }
+      } else if (q.includes('offer') || q.includes('package') || q.includes('ctc') || q.includes('selected') || q.includes('placed')) {
+        const offerList = opportunities.filter(o => o.status === 'offer');
+        if (offerList.length > 0) {
+          answer = `🎉 Offers Secured (${offerList.length}):\n\n` +
+            offerList.map(o => `• ${o.company} — ${o.role || 'Role'} ${o.salary || o.ctc ? `(CTC: ${o.salary || o.ctc})` : ''}`).join('\n') +
+            `\n\nCongratulations! Make sure to verify acceptance deadlines and background check requirements.`;
+        } else {
+          answer = `No offers secured yet. You have ${active} active opportunities in progress across assessments and interviews. Keep pushing forward!`;
+        }
+      } else if (q.includes('reject')) {
+        const rejectedList = opportunities.filter(o => o.status === 'rejected');
+        answer = `Rejection Overview:\n` +
+          `• Total Rejected: ${rejectedList.length}\n` +
+          `• Rejection Rate: ${stats?.rejectionRate || 0}%\n\n` +
+          (rejectedList.length > 0 ? `Past rejections: ${rejectedList.slice(0, 4).map(o => o.company).join(', ')}${rejectedList.length > 4 ? '...' : ''}\n\n` : '') +
+          `Tip: Rejections are standard in campus placements. Focus on feedback and keep momentum high.`;
+      } else if (q.includes('follow') || q.includes('waiting') || q.includes('update')) {
         const followUps = opportunities.filter(o => o.status === 'applied');
         if (followUps.length > 0) {
-          answer = `You have ${followUps.length} applications in "Applied" status waiting for updates:\n` +
-            followUps.slice(0, 5).map(o => `• ${o.company} (${o.role}) — Applied`).join('\n') +
+          answer = `You have ${followUps.length} applications in "Applied" status waiting for updates:\n\n` +
+            followUps.slice(0, 5).map(o => `• ${o.company} (${o.role || 'Drive'}) — Applied`).join('\n') +
             `\n\nTip: You can use the "Merge Follow-up Email" feature to update rounds automatically.`;
         } else {
           answer = 'All your applications have had recent updates or are already in evaluation stages!';
         }
-      } else if (q.includes('match') || q.includes('profile')) {
+      } else if (q.includes('match') || q.includes('fit') || q.includes('recommend')) {
         if (opportunityMatches.length > 0) {
           answer = `Top opportunities matching your Profile Vault skills (${userSkills.slice(0, 4).join(', ') || 'General'}):\n\n` +
             opportunityMatches.map(m => `• ${m.company} — ${m.role} (${m.matchScore}% Match)`).join('\n') +
             `\n\nBased on your academic profile and stored technical skill keywords.`;
         } else {
-          answer = 'Add more applications to see match scores computed against your Profile Vault skills.';
+          answer = 'Add more applications or update your Profile Vault skills to see match scores computed.';
         }
-      } else if (q.includes('deadline')) {
+      } else if (q.includes('deadline') || q.includes('due') || q.includes('closing') || q.includes('last date')) {
         const dList = opportunities
-          .filter(o => o.deadline && new Date(o.deadline) >= now)
+          .filter(o => o.deadline && new Date(o.deadline) >= now && o.status !== 'offer' && o.status !== 'rejected')
           .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
-          .slice(0, 5);
+          .slice(0, 6);
         if (dList.length > 0) {
           answer = `Your upcoming application deadlines:\n\n` +
-            dList.map(o => `• ${o.company} (${o.role}) — ${new Date(o.deadline).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`).join('\n');
+            dList.map(o => `• ${o.company} (${o.role || 'Role'}) — ${new Date(o.deadline).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`).join('\n');
         } else {
-          answer = 'You have zero upcoming deadlines in the next 7 days. You are completely caught up!';
+          answer = 'You have zero upcoming deadlines closing soon. You are completely caught up!';
         }
-      } else if (q.includes('pipeline') || q.includes('stat') || q.includes('progress')) {
+      } else if (q.includes('profile') || q.includes('vault') || q.includes('resume')) {
+        const missing = [];
+        if (!profile?.candidateName) missing.push('Candidate Name');
+        if (!profile?.phone) missing.push('Phone Number');
+        if (!profile?.collegeEmail && !profile?.personalEmail) missing.push('Email');
+        if (!profile?.branch) missing.push('Branch / Degree');
+        if (!profile?.cgpa) missing.push('CGPA');
+        if (!profile?.tenthPercent) missing.push('10th Percentage');
+        if (!profile?.twelfthPercent) missing.push('12th Percentage');
+        if (!profile?.technicalSkills && !profile?.programmingLanguages) missing.push('Technical Skills');
+        if (!profile?.resumeLink) missing.push('Resume Link');
+        if (!profile?.linkedinLink) missing.push('LinkedIn URL');
+        if (!profile?.githubLink) missing.push('GitHub URL');
+
+        answer = `Profile Vault Status:\n` +
+          `• Completion Score: ${profileCompletion}%\n` +
+          `• Candidate: ${profile?.candidateName || studentName}\n` +
+          `• Branch / CGPA: ${profile?.branch || 'N/A'} | ${profile?.cgpa ? `${profile.cgpa} CGPA` : 'N/A'}\n\n` +
+          (missing.length > 0 
+            ? `Missing items to reach 100% autofill readiness:\n${missing.map(m => `• ${m}`).join('\n')}\n\nGo to the Profile page to fill them in!`
+            : `🎉 Your Profile Vault is 100% complete and ready for instant Chrome Extension autofill!`);
+      } else if (q.includes('pipeline') || q.includes('stat') || q.includes('progress') || q.includes('summary')) {
         answer = `Pipeline Breakdown:\n` +
           `• Total Applications: ${total}\n` +
           `• Active / In Progress: ${active}\n` +
@@ -464,15 +591,20 @@ export default function Dashboard() {
           `• Rejection Rate: ${stats?.rejectionRate || 0}%\n\n` +
           `Your response rate is ${responseRate !== null ? responseRate + '%' : 'calculating as more outcomes arrive'}.`;
       } else {
-        answer = `OppTrack Workspace Summary for ${studentName}:\n` +
-          `You have ${total} tracked opportunities (${active} currently active). ` +
-          `Profile Vault is ${profileCompletion}% complete. ` +
-          `Upcoming deadlines: ${opportunities.filter(o => o.deadline && new Date(o.deadline) >= now).length}.`;
+        answer = `OppTrack Workspace Summary for ${studentName}:\n\n` +
+          `• Tracked Opportunities: ${total} (${active} active)\n` +
+          `• Upcoming Deadlines: ${opportunities.filter(o => o.deadline && new Date(o.deadline) >= now).length}\n` +
+          `• Profile Vault: ${profileCompletion}% Complete\n\n` +
+          `Try asking:\n` +
+          `• "What should I focus on today?"\n` +
+          `• "Show my upcoming deadlines"\n` +
+          `• "Do I have any interviews scheduled?"\n` +
+          `• Or ask about any company by name (e.g., "${opportunities[0]?.company || 'Google'}")`;
       }
 
-      setAiAnswers(prev => [{ query: queryText, answer, time: new Date() }, ...prev]);
+      setAiAnswers(prev => [{ query: cleanText, answer, time: new Date() }, ...prev]);
       setIsAiAnswering(false);
-    }, 300);
+    }, 280);
   };
 
   // ─── Loading Screen ───────────────────────────────────────────────────────
@@ -1320,8 +1452,14 @@ export default function Dashboard() {
 
       {/* ─── 9. "ASK OPPTRACK" COMMAND PANEL (SLIDE-OVER DRAWER) ─────────── */}
       {showAiPanel && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(11,31,58,0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ width: '100%', maxWidth: 440, background: '#FFFFFF', height: '100%', boxShadow: '-4px 0 25px rgba(11,31,58,0.15)', display: 'flex', flexDirection: 'column' }}>
+        <div 
+          onClick={() => setShowAiPanel(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(11,31,58,0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: 440, background: '#FFFFFF', height: '100%', boxShadow: '-4px 0 25px rgba(11,31,58,0.15)', display: 'flex', flexDirection: 'column' }}
+          >
             {/* Header */}
             <div style={{ padding: '20px 22px', borderBottom: '1px solid #E5EAF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1330,13 +1468,26 @@ export default function Dashboard() {
                   ✦ Ask OppTrack
                 </h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowAiPanel(false)}
-                style={{ background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer', padding: 4 }}
-              >
-                <X size={18} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {aiAnswers.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setAiAnswers([])}
+                    style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 4 }}
+                    title="Clear history"
+                  >
+                    <Trash2 size={13} /> Clear
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowAiPanel(false)}
+                  style={{ background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer', padding: 4 }}
+                  title="Close (Esc)"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* Content & Suggested Prompts */}
@@ -1349,13 +1500,15 @@ export default function Dashboard() {
                   {[
                     'What should I focus on today?',
                     'Which applications need follow-up?',
-                    'Which opportunities match my profile?',
                     'Show my upcoming deadlines',
+                    'Do I have any interviews scheduled?',
+                    'Which opportunities match my profile?',
                     'Analyze my application pipeline',
                   ].map(prompt => (
                     <button
                       key={prompt}
                       type="button"
+                      disabled={isAiAnswering}
                       onClick={() => handleAskOppTrack(prompt)}
                       style={{
                         textAlign: 'left',
@@ -1366,7 +1519,7 @@ export default function Dashboard() {
                         borderRadius: 6,
                         fontSize: 12.5,
                         fontWeight: 500,
-                        cursor: 'pointer',
+                        cursor: isAiAnswering ? 'not-allowed' : 'pointer',
                         transition: 'background 0.15s ease'
                       }}
                     >
@@ -1378,15 +1531,30 @@ export default function Dashboard() {
 
               {/* Answers feed */}
               {isAiAnswering && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#087F71', fontSize: 13, fontWeight: 600 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#087F71', fontSize: 13, fontWeight: 600, background: '#E6F4F1', padding: '10px 14px', borderRadius: 8 }}>
                   <div className="spinner" style={{ width: 14, height: 14 }} /> OppTrack is analyzing your data…
+                </div>
+              )}
+
+              {aiAnswers.length === 0 && !isAiAnswering && (
+                <div style={{ textAlign: 'center', padding: '16px 14px', background: '#F8FAFD', borderRadius: 8, border: '1px dashed #CBD5E1' }}>
+                  <p style={{ margin: 0, fontSize: 12.5, color: '#64748B', lineHeight: 1.5 }}>
+                    Click any quick prompt above or type a custom question below to get instant answers about your deadlines, interviews, and applications.
+                  </p>
                 </div>
               )}
 
               {aiAnswers.map((item, idx) => (
                 <div key={idx} style={{ background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 8, padding: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#087F71', marginBottom: 6 }}>
-                    Q: {item.query}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#087F71' }}>
+                      Q: {item.query}
+                    </div>
+                    {item.time && (
+                      <span style={{ fontSize: 11, color: '#94A3B8', fontFamily: 'JetBrains Mono, monospace' }}>
+                        {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: 13, color: '#1E293B', whiteSpace: 'pre-line', lineHeight: 1.55 }}>
                     {item.answer}
@@ -1404,15 +1572,28 @@ export default function Dashboard() {
               style={{ padding: '16px 22px', borderTop: '1px solid #E5EAF0', display: 'flex', gap: 8 }}
             >
               <input
+                ref={aiInputRef}
                 type="text"
-                placeholder="Ask about deadlines, follow-ups, stats..."
+                placeholder="Ask about deadlines, interviews, companies, stats..."
                 value={aiQuery}
+                disabled={isAiAnswering}
                 onChange={e => setAiQuery(e.target.value)}
                 style={{ flex: 1, padding: '9px 12px', borderRadius: 6, border: '1px solid #D0D5DD', fontSize: 13, outline: 'none' }}
               />
               <button
                 type="submit"
-                style={{ background: '#087F71', color: '#FFFFFF', border: 'none', padding: '9px 14px', borderRadius: 6, cursor: 'pointer' }}
+                disabled={!aiQuery.trim() || isAiAnswering}
+                style={{ 
+                  background: (!aiQuery.trim() || isAiAnswering) ? '#94A3B8' : '#087F71', 
+                  color: '#FFFFFF', 
+                  border: 'none', 
+                  padding: '9px 14px', 
+                  borderRadius: 6, 
+                  cursor: (!aiQuery.trim() || isAiAnswering) ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
               >
                 <Send size={14} />
               </button>

@@ -22,7 +22,7 @@ function safeDecrypt(value) {
 
 function resolveApiKeyAndProvider(userSettings = {}) {
   let provider = (userSettings.llmProvider || 'groq').toLowerCase().trim();
-  let apiKey = userSettings.llmApiKey?.trim();
+  let apiKey = safeDecrypt(userSettings.llmApiKey)?.trim();
   let model = userSettings.llmModel?.trim();
   let baseUrl = userSettings.llmBaseUrl?.trim() || '';
 

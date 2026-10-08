@@ -14,7 +14,10 @@
     "https://docs.google.com/forms/*",
     "https://opptrack-clinical-placement.onrender.com/*",
     "https://opp-track-clinical-placement.vercel.app/*",
-    "http://localhost:5000/*"
+    "http://localhost/*",
+    "http://localhost:*/*",
+    "http://127.0.0.1/*",
+    "http://127.0.0.1:*/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -37,6 +40,17 @@
     {
       "matches": ["https://docs.google.com/forms/*"],
       "js": ["content/content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://opp-track-clinical-placement.vercel.app/*",
+        "http://localhost/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:*/*"
+      ],
+      "js": ["content/sync.js"],
       "run_at": "document_idle"
     }
   ]

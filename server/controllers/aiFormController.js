@@ -8,10 +8,21 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const Document = require('../models/Document');
 const vectorService = require('../services/vector.service');
+const cryptoUtil = require('../utils/crypto.util');
+
+function safeDecrypt(value) {
+  if (!value) return '';
+  try {
+    return cryptoUtil.decrypt(value);
+  } catch {
+    return value;
+  }
+}
 
 function resolveApiKeyAndProvider(userSettings = {}) {
   let provider = (userSettings.llmProvider || process.env.LLM_PROVIDER || 'groq').toLowerCase().trim();
-  let apiKey = (userSettings.llmApiKey || process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.LLM_API_KEY)?.trim();
+  const rawKey = userSettings.llmApiKey || process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.LLM_API_KEY;
+  let apiKey = safeDecrypt(rawKey)?.trim();
   let model = (userSettings.llmModel || process.env.LLM_MODEL)?.trim();
   let baseUrl = userSettings.llmBaseUrl?.trim() || '';
 

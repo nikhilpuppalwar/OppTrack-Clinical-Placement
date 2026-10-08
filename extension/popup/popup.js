@@ -95,14 +95,38 @@ async function init() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTab = tab;
 
-  const auth = await msg('GET_AUTH');
+  let auth = await msg('GET_AUTH');
+  updateBackendUI(auth.apiUrl || 'https://opptrack-clinical-placement.onrender.com/api');
+
+  if (!auth.token) {
+    // Attempt silent auto-sync from any open OppTrack tab
+    const autoSynced = await tryAutoSyncWebSession(false);
+    if (autoSynced) {
+      auth = await msg('GET_AUTH');
+      updateBackendUI(auth.apiUrl || 'https://opptrack-clinical-placement.onrender.com/api');
+    }
+  }
+
   if (!auth.token) {
     show('login-view');
+    hide('main-view');
+    return;
+  }
+
+  // Actively verify token with backend
+  const verifyRes = await msg('GET_PROFILE');
+  if (!verifyRes.ok && verifyRes.status === 401) {
+    console.warn('OppTrack: Token expired or rejected by server.');
+    await msg('LOGOUT');
+    showError('Your previous session expired. Please sign in or sync from web tab.');
+    show('login-view');
+    hide('main-view');
     return;
   }
 
   show('main-view');
-  const name = auth.user?.name || auth.user?.email || 'User';
+  hide('login-view');
+  const name = verifyRes.data?.candidateName || auth.user?.name || auth.user?.email || 'User';
   $('user-name').textContent = name;
 
   // Load Settings (API Key, Provider, Model, Base URL)
@@ -412,6 +436,109 @@ $('save-settings-btn').addEventListener('click', async () => {
   }
 });
 
+// ─── Backend & Web Session Helpers ──────────────────────────────────────────
+function updateBackendUI(apiUrl) {
+  const isLocal = apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1');
+  const label = isLocal ? 'Localhost' : 'Cloud';
+  if ($('backend-badge-login')) $('backend-badge-login').textContent = label;
+  if ($('backend-badge-main')) $('backend-badge-main').textContent = label;
+  if ($('backend-server-select')) $('backend-server-select').value = apiUrl;
+  if ($('main-backend-select')) $('main-backend-select').value = apiUrl;
+}
+
+if ($('backend-server-select')) {
+  $('backend-server-select').addEventListener('change', async (e) => {
+    const url = e.target.value;
+    await msg('SET_API_BASE', { apiUrl: url });
+    updateBackendUI(url);
+  });
+}
+
+if ($('main-backend-select')) {
+  $('main-backend-select').addEventListener('change', async (e) => {
+    const url = e.target.value;
+    await msg('SET_API_BASE', { apiUrl: url });
+    updateBackendUI(url);
+    loadSettings();
+  });
+}
+
+async function tryAutoSyncWebSession(showFeedback = true) {
+  const btn = $('sync-web-token-btn');
+  if (btn && showFeedback) {
+    btn.disabled = true;
+    btn.textContent = '🔄 Inspecting open tabs…';
+  }
+
+  try {
+    const tabs = await chrome.tabs.query({});
+    const webTabs = tabs.filter(
+      (t) =>
+        t.url &&
+        (t.url.includes('opp-track-clinical-placement.vercel.app') ||
+          t.url.includes('localhost:') ||
+          t.url.includes('127.0.0.1:'))
+    );
+
+    if (webTabs.length === 0) {
+      if (showFeedback) {
+        showError('No open OppTrack tab found. Please open OppTrack in a tab and log in.');
+      }
+      return false;
+    }
+
+    for (const tab of webTabs) {
+      try {
+        // Try content script message first
+        const res = await chrome.tabs.sendMessage(tab.id, { type: 'GET_WEB_SESSION' }).catch(() => null);
+        if (res?.token) {
+          await msg('SYNC_TOKEN_FROM_WEB', res);
+          if (showFeedback) hideError();
+          return true;
+        }
+
+        // Direct script execution fallback
+        const execRes = await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: () => ({
+            token: localStorage.getItem('opptrack_token'),
+            user: localStorage.getItem('opptrack_user'),
+            origin: window.location.origin,
+          }),
+        }).catch(() => null);
+
+        if (execRes && execRes[0]?.result?.token) {
+          const item = execRes[0].result;
+          let userObj = null;
+          try { userObj = JSON.parse(item.user); } catch {}
+          await msg('SYNC_TOKEN_FROM_WEB', {
+            token: item.token,
+            user: userObj,
+            origin: item.origin,
+          });
+          if (showFeedback) hideError();
+          return true;
+        }
+      } catch (err) {
+        console.warn('Tab inspection error:', err);
+      }
+    }
+
+    if (showFeedback) {
+      showError('Found OppTrack tab, but no active login session was found. Please log in on the website.');
+    }
+    return false;
+  } catch (err) {
+    if (showFeedback) showError(`Auto-sync error: ${err.message}`);
+    return false;
+  } finally {
+    if (btn && showFeedback) {
+      btn.disabled = false;
+      btn.textContent = '🔄 Sync Session from Web Tab';
+    }
+  }
+}
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 $('login-btn').addEventListener('click', async () => {
   const email = $('email').value.trim();
@@ -432,6 +559,35 @@ $('login-btn').addEventListener('click', async () => {
   }
 });
 
+$('sync-web-token-btn')?.addEventListener('click', async () => {
+  const ok = await tryAutoSyncWebSession(true);
+  if (ok) {
+    await init();
+  }
+});
+
+$('toggle-manual-token')?.addEventListener('click', () => {
+  $('manual-token-card')?.classList.toggle('hidden');
+});
+
+$('apply-manual-token-btn')?.addEventListener('click', async () => {
+  const rawToken = $('manual-jwt-input').value.trim();
+  if (!rawToken) {
+    showError('Please paste a valid JWT token.');
+    return;
+  }
+  const cleanToken = rawToken.replace(/^Bearer\s+/i, '');
+  const applyRes = await msg('SET_MANUAL_TOKEN', { token: cleanToken });
+  if (applyRes.ok) {
+    hideError();
+    $('manual-token-card')?.classList.add('hidden');
+    $('manual-jwt-input').value = '';
+    await init();
+  } else {
+    showError(applyRes.error || 'Failed to verify pasted token.');
+  }
+});
+
 $('password').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') $('login-btn').click();
 });
@@ -440,6 +596,14 @@ $('logout-btn').addEventListener('click', async () => {
   await msg('LOGOUT');
   show('login-view');
   hide('main-view');
+});
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'AUTH_EXPIRED') {
+    showError(msg.message || 'Session expired. Please log in or sync your token.');
+    show('login-view');
+    hide('main-view');
+  }
 });
 
 // ─── Auto-apply toggle ───────────────────────────────────────────────────────
