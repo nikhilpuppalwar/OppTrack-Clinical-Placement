@@ -11,23 +11,36 @@ const googleAuthService = require('./googleAuth.service');
 /**
  * Helper to sync a single milestone date to Google Calendar
  */
-async function syncMilestone({ calendar, opportunity, typeKey, dateValue, titleSuffix, existingEventId }) {
+async function syncMilestone({ calendar, opportunity, typeKey, dateValue, titleSuffix, existingEventId, userId }) {
   if (!dateValue) return null;
   const d = new Date(dateValue);
   if (isNaN(d.getTime())) return null;
 
   const isDateOnly = typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue.trim());
-  const startObj = isDateOnly
-    ? { date: dateValue.trim() }
-    : { dateTime: d.toISOString(), timeZone: 'Asia/Kolkata' };
-  const endObj = isDateOnly
-    ? { date: dateValue.trim() }
-    : { dateTime: endDateTime.toISOString(), timeZone: 'Asia/Kolkata' };
+  let startObj;
+  let endObj;
+
+  if (isDateOnly) {
+    const startDateStr = dateValue.trim();
+    // For all-day events, Google Calendar end.date is exclusive, so add 1 day
+    const nextDay = new Date(d.getTime() + 24 * 60 * 60 * 1000);
+    const endDateStr = nextDay.toISOString().split('T')[0];
+    startObj = { date: startDateStr };
+    endObj = { date: endDateStr };
+  } else {
+    const endDateTime = new Date(d.getTime() + 60 * 60 * 1000); // 1 hour event
+    startObj = { dateTime: d.toISOString(), timeZone: 'Asia/Kolkata' };
+    endObj = { dateTime: endDateTime.toISOString(), timeZone: 'Asia/Kolkata' };
+  }
+
+  const linksList = Array.isArray(opportunity.customLinks) && opportunity.customLinks.length > 0
+    ? opportunity.customLinks.map(l => `${l.label || 'Link'}: ${l.url}`).join('\n')
+    : (opportunity.portalUrl ? `Portal: ${opportunity.portalUrl}` : '');
 
   const eventPayload = {
-    summary: `${opportunity.company} — ${titleSuffix}`,
+    summary: `${opportunity.company || 'Placement Opportunity'} — ${titleSuffix}`,
     description: [
-      `Role: ${opportunity.role}`,
+      `Role: ${opportunity.role || 'N/A'}`,
       `Milestone: ${titleSuffix}`,
       `CTC/Stipend: ${opportunity.ctc || opportunity.stipend || 'N/A'}`,
       `Status: ${opportunity.status || 'not_applied'}`,
@@ -57,7 +70,7 @@ async function syncMilestone({ calendar, opportunity, typeKey, dateValue, titleS
       return res.data?.id || existingEventId;
     } catch (err) {
       if (googleAuthService.isInvalidGrant(err)) {
-        await googleAuthService.handleExpiredToken(userId);
+        if (userId) await googleAuthService.handleExpiredToken(userId);
         return null;
       }
       if (err.code !== 404 && err.code !== 410) {
@@ -75,7 +88,7 @@ async function syncMilestone({ calendar, opportunity, typeKey, dateValue, titleS
     return res.data?.id || null;
   } catch (err) {
     if (googleAuthService.isInvalidGrant(err)) {
-      await googleAuthService.handleExpiredToken(userId);
+      if (userId) await googleAuthService.handleExpiredToken(userId);
       return null;
     }
     console.warn(`Could not insert calendar event (${typeKey}):`, err.message);
@@ -125,6 +138,7 @@ async function createOrUpdateEvent(userId, opportunity) {
         dateValue: deadlineVal,
         titleSuffix: 'Application Deadline',
         existingEventId: eventIds.deadline || opportunity.googleCalendarEventId,
+        userId,
       });
       if (id) {
         eventIds.deadline = id;
@@ -141,6 +155,7 @@ async function createOrUpdateEvent(userId, opportunity) {
         dateValue: testDateVal,
         titleSuffix: 'OA / Online Assessment',
         existingEventId: eventIds.test,
+        userId,
       });
       if (id) {
         eventIds.test = id;
@@ -157,6 +172,7 @@ async function createOrUpdateEvent(userId, opportunity) {
         dateValue: driveDateVal,
         titleSuffix: 'Campus Placement Drive',
         existingEventId: eventIds.drive,
+        userId,
       });
       if (id) {
         eventIds.drive = id;
@@ -173,6 +189,7 @@ async function createOrUpdateEvent(userId, opportunity) {
         dateValue: interviewDateVal,
         titleSuffix: 'Interview / Round 2',
         existingEventId: eventIds.interview,
+        userId,
       });
       if (id) {
         eventIds.interview = id;
