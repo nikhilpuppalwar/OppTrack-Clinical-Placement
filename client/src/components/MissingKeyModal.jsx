@@ -47,31 +47,36 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'rgba(11, 31, 58, 0.45)',
-      backdropFilter: 'blur(4px)',
-      padding: 16,
-      animation: 'fadeIn 0.2s ease-out',
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: 480,
-        background: '#FFFFFF',
-        border: '1px solid #E5EAF0',
-        borderTop: '4px solid #18B7A0',
-        borderRadius: 14,
-        padding: 26,
-        boxShadow: '0 20px 40px rgba(11, 31, 58, 0.15)',
-        position: 'relative',
-        color: '#172033',
-        fontFamily: 'inherit',
-      }}>
+    <div
+      className="modal-backdrop-motion"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(11, 17, 32, 0.6)',
+        backdropFilter: 'blur(6px)',
+        padding: 16,
+      }}
+    >
+      <div
+        className="modal-card-motion"
+        style={{
+          width: '100%',
+          maxWidth: 480,
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderTop: '4px solid var(--primary-brand)',
+          borderRadius: 14,
+          padding: 26,
+          boxShadow: 'var(--shadow-lg)',
+          position: 'relative',
+          color: 'var(--text-primary)',
+          fontFamily: 'inherit',
+        }}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -81,7 +86,7 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
             right: 18,
             background: 'transparent',
             border: 'none',
-            color: '#667085',
+            color: 'var(--text-muted)',
             cursor: 'pointer',
             padding: 4,
             borderRadius: 6,
@@ -90,8 +95,8 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
             justifyContent: 'center',
             transition: 'color 0.15s ease',
           }}
-          onMouseEnter={e => e.currentTarget.style.color = '#172033'}
-          onMouseLeave={e => e.currentTarget.style.color = '#667085'}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
         >
           <X size={18} />
         </button>
@@ -101,13 +106,13 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
           width: 46,
           height: 46,
           borderRadius: 10,
-          background: '#E8F8F5',
-          border: '1px solid #A3E5D9',
+          background: 'var(--brand-light)',
+          border: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: 16,
-          color: '#087F71',
+          color: 'var(--primary-brand)',
         }}>
           {isAi ? <Sparkles size={24} /> : <Mail size={24} />}
         </div>
@@ -117,7 +122,7 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
           fontSize: 18,
           fontWeight: 700,
           margin: '0 0 8px 0',
-          color: '#0B1F3A',
+          color: 'var(--text-primary)',
           letterSpacing: '-0.01em',
         }}>
           {modalTitle}
@@ -126,7 +131,7 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
         {/* Message */}
         <p style={{
           fontSize: 13.5,
-          color: '#667085',
+          color: 'var(--text-secondary)',
           lineHeight: 1.5,
           margin: '0 0 16px 0',
         }}>
@@ -135,9 +140,9 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
 
         {/* Direct API Key Entry Form for AI */}
         {isAi && (
-          <form onSubmit={handleQuickSaveKey} style={{ marginBottom: 18, background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 10, padding: 16 }}>
+          <form onSubmit={handleQuickSaveKey} style={{ marginBottom: 18, background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0B1F3A', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                 Select AI Provider
               </label>
               <select
@@ -145,24 +150,24 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
                 onChange={e => setProvider(e.target.value)}
                 style={{
                   width: '100%',
-                  background: '#FFFFFF',
-                  border: '1px solid #D1D5DB',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 6,
                   padding: '7px 10px',
                   fontSize: 13,
-                  color: '#1F2937',
+                  color: 'var(--text-primary)',
                   outline: 'none',
                 }}
               >
-                <option value="groq">Groq (Recommended — Ultra Fast & Free)</option>
-                <option value="gemini">Google Gemini</option>
-                <option value="openai">OpenAI (ChatGPT)</option>
-                <option value="deepseek">DeepSeek</option>
+                <option value="groq" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Groq (Recommended — Ultra Fast & Free)</option>
+                <option value="gemini" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Google Gemini</option>
+                <option value="openai" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>OpenAI (ChatGPT)</option>
+                <option value="deepseek" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>DeepSeek</option>
               </select>
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0B1F3A', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                 Enter API Key
               </label>
               <div style={{ position: 'relative' }}>
@@ -173,12 +178,12 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
                   onChange={e => setApiKeyInput(e.target.value)}
                   style={{
                     width: '100%',
-                    background: '#FFFFFF',
-                    border: '1px solid #D1D5DB',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
                     borderRadius: 6,
                     padding: '8px 36px 8px 10px',
                     fontSize: 13,
-                    color: '#1F2937',
+                    color: 'var(--text-primary)',
                     outline: 'none',
                   }}
                   autoFocus
@@ -193,7 +198,7 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
                     transform: 'translateY(-50%)',
                     background: 'none',
                     border: 'none',
-                    color: '#9CA3AF',
+                    color: 'var(--text-muted)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -209,7 +214,7 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
               disabled={saving || !apiKeyInput.trim()}
               style={{
                 width: '100%',
-                background: '#10B981',
+                background: 'var(--primary-brand)',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: 6,
@@ -222,7 +227,7 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 6,
-                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
+                boxShadow: 'var(--shadow-plum)',
               }}
             >
               <Check size={16} /> {saving ? 'Saving Key…' : 'Save API Key & Continue'}
@@ -232,8 +237,8 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
 
         {/* Key Info Banner */}
         <div style={{
-          background: '#F8FAFD',
-          border: '1px solid #E5EAF0',
+          background: 'var(--card-subtle)',
+          border: '1px solid var(--border)',
           borderRadius: 8,
           padding: '9px 12px',
           marginBottom: 20,
@@ -241,9 +246,9 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
           alignItems: 'center',
           gap: 10,
           fontSize: 11.5,
-          color: '#667085',
+          color: 'var(--text-secondary)',
         }}>
-          <KeyRound size={15} color="#18B7A0" style={{ flexShrink: 0 }} />
+          <KeyRound size={15} color="var(--primary-brand)" style={{ flexShrink: 0 }} />
           <span>Your key is stored securely in your private account and used exclusively for your AI requests.</span>
         </div>
 
@@ -257,9 +262,9 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
               borderRadius: 6,
               fontSize: 13,
               fontWeight: 600,
-              background: '#FFFFFF',
-              border: '1px solid #E5EAF0',
-              color: '#667085',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
@@ -274,14 +279,14 @@ export default function MissingKeyModal({ isOpen, onClose, keyType = 'AI', title
               borderRadius: 6,
               fontSize: 13,
               fontWeight: 600,
-              background: '#0B1F3A',
+              background: 'var(--primary-brand)',
               border: 'none',
               color: '#FFFFFF',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 7,
-              boxShadow: '0 2px 4px rgba(11, 31, 58, 0.1)',
+              boxShadow: 'var(--shadow-plum)',
               transition: 'all 0.15s ease',
             }}
           >

@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, ShieldCheck, CheckCircle2, XCircle, Building2, GraduationCap, Calendar, AlertCircle } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, ShieldCheck, CheckCircle2, XCircle, Building2, GraduationCap, Calendar, AlertCircle, Sun, Moon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
 
@@ -61,6 +62,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
+  const { toggleTheme, isDark } = useTheme();
   const navigate = useNavigate();
 
   // Password rules validation
@@ -187,44 +189,65 @@ export default function Register() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8FAFC', color: '#0F172A', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
       
-      {/* ── TOP BAR ── */}
-      <header
-        style={{
-          height: 60,
-          borderBottom: '1px solid #E2E8F0',
-          background: '#FFFFFF',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-        }}
-      >
-        <div style={{ maxWidth: 1200, width: '100%', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
-            <span style={{ fontSize: 18, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em' }}>OppTrack</span>
-            <span style={{ color: '#CBD5E1', fontSize: 13, userSelect: 'none' }}>|</span>
-            <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 500 }}>Placement Tracking Console</span>
+      {/* ── TOP FLOATING NAVIGATION BAR (DASHBOARD VESSA DOCK) ── */}
+      <div style={{ position: 'sticky', top: 14, zIndex: 100, padding: '0 20px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+        <header className="vessa-topbar">
+          <Link to="/" className="vessa-brand">
+            <div className="vessa-brand-logo" style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 3 }}>
+              <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 8 }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+                OppTrack
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+                Placement Tracking Console
+              </div>
+            </div>
           </Link>
 
-          <Link
-            to="/login"
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#0F172A',
-              textDecoration: 'none',
-              padding: '6px 14px',
-              borderRadius: 6,
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            Already registered? Sign In
-          </Link>
-        </div>
-      </header>
+          {/* Center: Segmented Navigation Pill Switcher */}
+          <nav className="vessa-pill-tabs">
+            <Link to="/" className="vessa-pill-tab">Home</Link>
+            <Link to="/login" className="vessa-pill-tab">Sign In</Link>
+            <Link to="/register" className="vessa-pill-tab active">Sign Up</Link>
+          </nav>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'var(--card-subtle)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+            >
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
+            <Link
+              to="/login"
+              className="vessa-btn-primary"
+              style={{ padding: '7px 18px' }}
+            >
+              <span>Sign In</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </header>
+      </div>
 
       {/* ── MAIN 2-COLUMN SIGNUP LAYOUT ── */}
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '36px 20px 60px' }}>
@@ -243,19 +266,19 @@ export default function Register() {
                 width: '100%',
                 maxWidth: 480,
                 margin: '0 auto',
-                background: '#FFFFFF',
+                background: 'var(--surface)',
                 borderRadius: 12,
-                border: '1px solid #E2E8F0',
+                border: '1px solid var(--border)',
                 padding: '36px 32px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+                boxShadow: 'var(--shadow)',
               }}
             >
               {/* Header */}
               <div style={{ marginBottom: 24 }}>
-                <h1 style={{ fontSize: '1.65rem', fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
+                <h1 style={{ fontSize: '1.65rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
                   Create your OppTrack account
                 </h1>
-                <p style={{ fontSize: 13.5, color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
                   Set up your account and start organizing your placement journey.
                 </p>
               </div>
@@ -271,9 +294,9 @@ export default function Register() {
                     gap: 8,
                     padding: '10px 14px',
                     borderRadius: 8,
-                    background: '#FEF2F2',
-                    border: '1px solid #FEE2E2',
-                    color: '#B91C1C',
+                    background: 'var(--danger-bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--danger)',
                     fontSize: 13,
                     marginBottom: 18,
                   }}
@@ -288,11 +311,11 @@ export default function Register() {
                 
                 {/* Full Name */}
                 <div>
-                  <label htmlFor="reg-name" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                  <label htmlFor="reg-name" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                     Full name
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: touched.name && errors.name ? '#EF4444' : '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', left: 12, color: touched.name && errors.name ? 'var(--danger)' : 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                       <User size={16} />
                     </span>
                     <input
@@ -312,17 +335,18 @@ export default function Register() {
                         height: 42,
                         paddingLeft: 38,
                         paddingRight: 12,
-                        background: '#FFFFFF',
-                        border: `1px solid ${touched.name && errors.name ? '#EF4444' : '#CBD5E1'}`,
+                        background: 'var(--surface)',
+                        border: `1px solid ${touched.name && errors.name ? 'var(--danger)' : 'var(--border)'}`,
                         borderRadius: 8,
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                   </div>
                   {touched.name && errors.name && (
-                    <p id="name-error" role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '4px 0 0' }}>
+                    <p id="name-error" role="alert" style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0' }}>
                       {errors.name}
                     </p>
                   )}
@@ -330,11 +354,11 @@ export default function Register() {
 
                 {/* Email Address */}
                 <div>
-                  <label htmlFor="reg-email" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                  <label htmlFor="reg-email" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                     Email address
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: touched.email && errors.email ? '#EF4444' : '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', left: 12, color: touched.email && errors.email ? 'var(--danger)' : 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                       <Mail size={16} />
                     </span>
                     <input
@@ -354,17 +378,18 @@ export default function Register() {
                         height: 42,
                         paddingLeft: 38,
                         paddingRight: 12,
-                        background: '#FFFFFF',
-                        border: `1px solid ${touched.email && errors.email ? '#EF4444' : '#CBD5E1'}`,
+                        background: 'var(--surface)',
+                        border: `1px solid ${touched.email && errors.email ? 'var(--danger)' : 'var(--border)'}`,
                         borderRadius: 8,
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                   </div>
                   {touched.email && errors.email && (
-                    <p id="email-error" role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '4px 0 0' }}>
+                    <p id="email-error" role="alert" style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0' }}>
                       {errors.email}
                     </p>
                   )}
@@ -372,11 +397,11 @@ export default function Register() {
 
                 {/* Password Field */}
                 <div>
-                  <label htmlFor="reg-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                  <label htmlFor="reg-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                     Password
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: touched.password && errors.password ? '#EF4444' : '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', left: 12, color: touched.password && errors.password ? 'var(--danger)' : 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                       <Lock size={16} />
                     </span>
                     <input
@@ -395,12 +420,13 @@ export default function Register() {
                         height: 42,
                         paddingLeft: 38,
                         paddingRight: 42,
-                        background: '#FFFFFF',
-                        border: `1px solid ${touched.password && errors.password ? '#EF4444' : '#CBD5E1'}`,
+                        background: 'var(--surface)',
+                        border: `1px solid ${touched.password && errors.password ? 'var(--danger)' : 'var(--border)'}`,
                         borderRadius: 8,
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                     <button
@@ -412,7 +438,7 @@ export default function Register() {
                         right: 8,
                         background: 'transparent',
                         border: 'none',
-                        color: '#64748B',
+                        color: 'var(--text-muted)',
                         cursor: 'pointer',
                         padding: 6,
                         borderRadius: 4,
@@ -429,7 +455,7 @@ export default function Register() {
                   {form.password.length > 0 && (
                     <div style={{ marginTop: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, color: '#64748B' }}>Password strength:</span>
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Password strength:</span>
                         <span style={{ fontSize: 12, fontWeight: 600, color: passwordStrength.color }}>
                           {passwordStrength.label}
                         </span>
@@ -441,7 +467,7 @@ export default function Register() {
                             style={{
                               height: 4,
                               borderRadius: 2,
-                              background: passwordStrength.level >= step ? passwordStrength.color : '#E2E8F0',
+                              background: passwordStrength.level >= step ? passwordStrength.color : 'var(--border)',
                               transition: 'background-color 0.2s ease',
                             }}
                           />
@@ -453,37 +479,37 @@ export default function Register() {
                   {/* Password Requirements Checklist */}
                   <div
                     style={{
-                      background: '#F8FAFC',
+                      background: 'var(--card-subtle)',
                       borderRadius: 6,
-                      border: '1px solid #E2E8F0',
+                      border: '1px solid var(--border)',
                       padding: '10px 12px',
                       marginTop: 8,
                       fontSize: 12,
-                      color: '#475569',
+                      color: 'var(--text-secondary)',
                     }}
                   >
-                    <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                       Password must contain:
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.minLength ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.minLength ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.minLength ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.minLength ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>At least 8 characters</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasUpper ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.hasUpper ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasUpper ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.hasUpper ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>One uppercase letter</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasLower ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.hasLower ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasLower ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.hasLower ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>One lowercase letter</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasNumber ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.hasNumber ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasNumber ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.hasNumber ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>One number</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasSpecial ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.hasSpecial ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasSpecial ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.hasSpecial ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>One special character (!@#$%^&*)</span>
                       </div>
                     </div>
@@ -492,11 +518,11 @@ export default function Register() {
 
                 {/* Confirm Password Field */}
                 <div>
-                  <label htmlFor="reg-confirm-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                  <label htmlFor="reg-confirm-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                     Confirm password
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: touched.confirmPassword && errors.confirmPassword ? '#EF4444' : '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', left: 12, color: touched.confirmPassword && errors.confirmPassword ? 'var(--danger)' : 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                       <Lock size={16} />
                     </span>
                     <input
@@ -523,12 +549,13 @@ export default function Register() {
                         height: 42,
                         paddingLeft: 38,
                         paddingRight: 42,
-                        background: '#FFFFFF',
-                        border: `1px solid ${touched.confirmPassword && errors.confirmPassword ? '#EF4444' : '#CBD5E1'}`,
+                        background: 'var(--surface)',
+                        border: `1px solid ${touched.confirmPassword && errors.confirmPassword ? 'var(--danger)' : 'var(--border)'}`,
                         borderRadius: 8,
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                     <button
@@ -540,7 +567,7 @@ export default function Register() {
                         right: 8,
                         background: 'transparent',
                         border: 'none',
-                        color: '#64748B',
+                        color: 'var(--text-muted)',
                         cursor: 'pointer',
                         padding: 6,
                         borderRadius: 4,
@@ -553,7 +580,7 @@ export default function Register() {
                     </button>
                   </div>
                   {touched.confirmPassword && errors.confirmPassword && (
-                    <p role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '4px 0 0' }}>
+                    <p role="alert" style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0' }}>
                       {errors.confirmPassword}
                     </p>
                   )}
@@ -561,11 +588,11 @@ export default function Register() {
 
                 {/* College / Institute Selection */}
                 <div>
-                  <label htmlFor="reg-college" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                  <label htmlFor="reg-college" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                     College / Institute
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', left: 12, color: 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                       <Building2 size={16} />
                     </span>
                     <select
@@ -577,11 +604,11 @@ export default function Register() {
                         height: 42,
                         paddingLeft: 38,
                         paddingRight: 12,
-                        background: '#FFFFFF',
-                        border: '1px solid #CBD5E1',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
                         borderRadius: 8,
                         fontSize: 13.5,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
                       }}
                     >
@@ -595,11 +622,11 @@ export default function Register() {
                 {/* Branch & Batch */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label htmlFor="reg-branch" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: '#0F172A', marginBottom: 5 }}>
+                    <label htmlFor="reg-branch" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 5 }}>
                       Branch / Dept
                     </label>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ position: 'absolute', left: 10, color: '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                      <span style={{ position: 'absolute', left: 10, color: 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                         <GraduationCap size={15} />
                       </span>
                       <select
@@ -611,11 +638,11 @@ export default function Register() {
                           height: 40,
                           paddingLeft: 34,
                           paddingRight: 10,
-                          background: '#FFFFFF',
-                          border: '1px solid #CBD5E1',
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
                           borderRadius: 8,
                           fontSize: 13,
-                          color: '#0F172A',
+                          color: 'var(--text-primary)',
                           outline: 'none',
                         }}
                       >
@@ -627,11 +654,11 @@ export default function Register() {
                   </div>
 
                   <div>
-                    <label htmlFor="reg-batch" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: '#0F172A', marginBottom: 5 }}>
+                    <label htmlFor="reg-batch" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 5 }}>
                       Graduation Year
                     </label>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ position: 'absolute', left: 10, color: '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                      <span style={{ position: 'absolute', left: 10, color: 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                         <Calendar size={15} />
                       </span>
                       <select
@@ -643,11 +670,11 @@ export default function Register() {
                           height: 40,
                           paddingLeft: 34,
                           paddingRight: 10,
-                          background: '#FFFFFF',
-                          border: '1px solid #CBD5E1',
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
                           borderRadius: 8,
                           fontSize: 13,
-                          color: '#0F172A',
+                          color: 'var(--text-primary)',
                           outline: 'none',
                         }}
                       >
@@ -673,25 +700,25 @@ export default function Register() {
                         width: 16,
                         height: 16,
                         marginTop: 2,
-                        accentColor: '#2563EB',
+                        accentColor: 'var(--primary-brand)',
                         cursor: 'pointer',
                         flexShrink: 0,
                       }}
                     />
-                    <label htmlFor="agreeTerms" style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.5, cursor: 'pointer' }}>
+                    <label htmlFor="agreeTerms" style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5, cursor: 'pointer' }}>
                       I agree to the{' '}
-                      <Link to="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#2563EB', textDecoration: 'underline' }}>
+                      <Link to="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--teal)', textDecoration: 'underline' }}>
                         Terms & Conditions
                       </Link>{' '}
                       and{' '}
-                      <Link to="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#2563EB', textDecoration: 'underline' }}>
+                      <Link to="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--teal)', textDecoration: 'underline' }}>
                         Privacy Policy
                       </Link>
                       .
                     </label>
                   </div>
                   {touched.agreeTerms && errors.agreeTerms && (
-                    <p role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '4px 0 0 26px' }}>
+                    <p role="alert" style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0 26px' }}>
                       {errors.agreeTerms}
                     </p>
                   )}
@@ -704,7 +731,7 @@ export default function Register() {
                   style={{
                     width: '100%',
                     height: 44,
-                    background: '#2563EB',
+                    background: 'var(--primary-brand)',
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: 8,
@@ -715,7 +742,7 @@ export default function Register() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    boxShadow: '0 2px 10px var(--primary-brand-glow)',
                     transition: 'background-color 0.15s ease',
                     marginTop: 6,
                     opacity: loading ? 0.8 : 1,
@@ -735,22 +762,22 @@ export default function Register() {
                     gap: 6,
                     padding: '4px 10px',
                     borderRadius: 6,
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
+                    background: 'var(--card-subtle)',
+                    border: '1px solid var(--border)',
                     fontSize: 11.5,
-                    color: '#64748B',
+                    color: 'var(--text-secondary)',
                     fontWeight: 500,
                   }}
                 >
-                  <ShieldCheck size={14} color="#0D9488" />
+                  <ShieldCheck size={14} color="var(--primary-brand)" />
                   <span>Secure credential management • Passwords hashed with bcrypt</span>
                 </div>
               </div>
 
               {/* Bottom Sign In Link */}
-              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #F1F5F9', textAlign: 'center', fontSize: 13, color: '#64748B' }}>
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', textAlign: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
                 Already have an account?{' '}
-                <Link to="/login" style={{ color: '#2563EB', fontWeight: 600, textDecoration: 'none' }}>
+                <Link to="/login" style={{ color: 'var(--teal)', fontWeight: 600, textDecoration: 'none' }}>
                   Sign In
                 </Link>
               </div>
@@ -763,11 +790,12 @@ export default function Register() {
             <div
               style={{
                 width: '100%',
-                background: '#0F172A',
+                background: 'linear-gradient(135deg, #0B1120 0%, #131E32 100%)',
+                border: '1px solid var(--border)',
                 borderRadius: 14,
                 padding: '36px 32px',
                 color: '#FFFFFF',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                boxShadow: 'var(--shadow)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -782,12 +810,12 @@ export default function Register() {
                     gap: 6,
                     padding: '3px 10px',
                     borderRadius: 4,
-                    background: 'rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(20, 184, 166, 0.12)',
                     fontSize: 11,
                     fontWeight: 600,
                     letterSpacing: '0.04em',
                     textTransform: 'uppercase',
-                    color: '#93C5FD',
+                    color: 'var(--teal-text)',
                     marginBottom: 16,
                   }}
                 >
@@ -804,7 +832,7 @@ export default function Register() {
                 {/* Core Features */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: 4, background: '#1E293B', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(20, 184, 166, 0.15)', color: 'var(--teal-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                       <CheckCircle2 size={14} />
                     </div>
                     <div>
@@ -814,7 +842,7 @@ export default function Register() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: 4, background: '#1E293B', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(20, 184, 166, 0.15)', color: 'var(--teal-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                       <CheckCircle2 size={14} />
                     </div>
                     <div>
@@ -824,7 +852,7 @@ export default function Register() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: 4, background: '#1E293B', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(20, 184, 166, 0.15)', color: 'var(--teal-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                       <CheckCircle2 size={14} />
                     </div>
                     <div>

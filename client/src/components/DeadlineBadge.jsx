@@ -22,32 +22,32 @@ export default function DeadlineBadge({ deadline }) {
   if (diff < 0) {
     badgeStyle = {
       ...badgeStyle,
-      background: '#F1F5F9',
-      color: '#64748B',
-      border: '1px solid #CBD5E1',
+      background: 'var(--card-subtle)',
+      color: 'var(--text-muted)',
+      border: '1px solid var(--border)',
     };
     label = 'Passed';
   } else if (hours < 24) {
     badgeStyle = {
       ...badgeStyle,
-      background: '#FEF2F2',
-      color: '#B91C1C',
+      background: 'rgba(239, 68, 68, 0.12)',
+      color: '#EF4444',
       border: '1px solid rgba(239, 68, 68, 0.35)',
     };
     label = `${Math.ceil(hours)}h left`;
   } else if (days < 3) {
     badgeStyle = {
       ...badgeStyle,
-      background: '#FFFBEB',
-      color: '#B45309',
+      background: 'rgba(245, 158, 11, 0.12)',
+      color: '#F59E0B',
       border: '1px solid rgba(245, 158, 11, 0.35)',
     };
     label = `${Math.ceil(days)}d left`;
   } else {
     badgeStyle = {
       ...badgeStyle,
-      background: '#EFF6FF',
-      color: '#1D4ED8',
+      background: 'rgba(59, 130, 246, 0.12)',
+      color: '#3B82F6',
       border: '1px solid rgba(59, 130, 246, 0.3)',
     };
     label = `${Math.ceil(days)}d left`;

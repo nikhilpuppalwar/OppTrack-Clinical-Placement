@@ -120,11 +120,11 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
         display: 'flex',
         flexDirection: 'column',
         gap: 6,
-        borderBottom: '1px solid #F0F4F8',
+        borderBottom: '1px solid var(--border)',
         paddingBottom: 12,
         borderRadius: 8,
         padding: '8px 10px',
-        backgroundColor: hovered ? '#F8FAFD' : 'transparent',
+        backgroundColor: hovered ? 'var(--card-subtle)' : 'transparent',
         transition: 'background-color 0.15s ease',
       }}
     >
@@ -133,7 +133,7 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
           <span style={{
             fontSize: 11,
             fontWeight: 600,
-            color: '#667085',
+            color: 'var(--text-secondary)',
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
           }}>
@@ -145,9 +145,9 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
               fontWeight: 700,
               padding: '1px 5px',
               borderRadius: 4,
-              background: '#EEF2FF',
-              color: '#4F46E5',
-              border: '1px solid #C7D2FE',
+              background: 'rgba(99, 102, 241, 0.12)',
+              color: '#6366F1',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
             }}>
               Custom
             </span>
@@ -160,9 +160,9 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
                 fontWeight: 700,
                 padding: '1px 6px',
                 borderRadius: 4,
-                background: '#F0FDF4',
-                color: '#15803D',
-                border: '1px solid #BBF7D0',
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: '#10B981',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 3,
@@ -187,15 +187,15 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
               title={`Copy ${field.label}`}
               type="button"
               style={{
-                background: copied ? '#E8F8F5' : '#FFFFFF',
-                border: `1px solid ${copied ? '#A3E5D9' : '#E2E8F0'}`,
+                background: copied ? 'rgba(16, 185, 129, 0.12)' : 'var(--surface)',
+                border: `1px solid ${copied ? '#10B981' : 'var(--border)'}`,
                 borderRadius: 5,
                 padding: '3px 6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: copied ? '#087F71' : '#64748B',
+                color: copied ? '#10B981' : 'var(--text-secondary)',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -208,15 +208,15 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
             title={`Edit ${field.label}`}
             type="button"
             style={{
-              background: '#FFFFFF',
-              border: '1px solid #BFDBFE',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: 5,
               padding: '3px 6px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#2563EB',
+              color: 'var(--primary-brand)',
               transition: 'all 0.15s ease',
             }}
           >
@@ -228,15 +228,15 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
             title={`Delete ${field.label}`}
             type="button"
             style={{
-              background: '#FFFFFF',
-              border: '1px solid #FECACA',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: 5,
               padding: '3px 6px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#DC2626',
+              color: '#EF4444',
               transition: 'all 0.15s ease',
             }}
           >
@@ -255,7 +255,7 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
               style={{
                 fontSize: 13.5,
                 fontWeight: 600,
-                color: '#2563EB',
+                color: 'var(--primary-brand)',
                 textDecoration: 'none',
                 wordBreak: 'break-all',
                 display: 'inline-flex',
@@ -270,7 +270,7 @@ function VaultField({ field, onEdit, onDelete, isMonospace }) {
             <span style={{
               fontSize: 14,
               fontWeight: 500,
-              color: trimmed ? '#172033' : '#98A2B3',
+              color: trimmed ? 'var(--text-primary)' : 'var(--text-muted)',
               fontStyle: trimmed ? 'normal' : 'italic',
               fontFamily: isMonospace ? 'ui-monospace, monospace' : 'inherit',
               wordBreak: 'break-word',
@@ -821,13 +821,13 @@ export default function Profile() {
     <div style={{ maxWidth: 980, margin: '0 auto', paddingBottom: 80 }}>
       
       {/* ── HEADER ── */}
-      <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 24, marginBottom: 24 }}>
+      <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: 24, marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0B1F3A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
               Student Profile Vault
             </h1>
-            <p style={{ margin: 0, fontSize: 14, color: '#667085' }}>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>
               Central intelligence repository for your academic credentials, test ratings, and placement autofill data.
             </p>
           </div>
@@ -837,9 +837,9 @@ export default function Profile() {
               type="button"
               onClick={() => setShowImportModal(true)}
               style={{
-                background: '#FFFFFF',
-                color: '#087F71',
-                border: '1px solid #A3E5D9',
+                background: 'var(--surface)',
+                color: 'var(--primary-brand)',
+                border: '1px solid var(--border)',
                 padding: '9px 15px',
                 borderRadius: 8,
                 fontSize: 13,
@@ -848,7 +848,7 @@ export default function Profile() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                boxShadow: '0 1px 2px rgba(8, 127, 113, 0.06)'
+                boxShadow: 'var(--shadow-sm)'
               }}
             >
               <Sparkles size={14} /> AI Form Import
@@ -858,9 +858,9 @@ export default function Profile() {
               type="button"
               onClick={() => setShowResumeModal(true)}
               style={{
-                background: '#F0FDF4',
-                color: '#15803D',
-                border: '1px solid #BBF7D0',
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: '#10B981',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
                 padding: '9px 15px',
                 borderRadius: 8,
                 fontSize: 13,
@@ -869,7 +869,7 @@ export default function Profile() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                boxShadow: '0 1px 2px rgba(21, 128, 61, 0.06)'
+                boxShadow: 'var(--shadow-sm)'
               }}
             >
               <FileUp size={14} /> Import Resume
@@ -879,9 +879,9 @@ export default function Profile() {
               type="button"
               onClick={handleOpenHistoryModal}
               style={{
-                background: '#FFFFFF',
-                color: '#475569',
-                border: '1px solid #E2E8F0',
+                background: 'var(--surface)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border)',
                 padding: '9px 13px',
                 borderRadius: 8,
                 fontSize: 13,
@@ -903,9 +903,9 @@ export default function Profile() {
                   onClick={() => setEditing(false)}
                   disabled={saving}
                   style={{
-                    background: '#FFFFFF',
-                    color: '#667085',
-                    border: '1px solid #E5EAF0',
+                    background: 'var(--card-subtle)',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border)',
                     padding: '9px 16px',
                     borderRadius: 8,
                     fontSize: 13,
@@ -920,7 +920,7 @@ export default function Profile() {
                   onClick={handleSave}
                   disabled={saving}
                   style={{
-                    background: '#0B1F3A',
+                    background: 'var(--primary-brand)',
                     color: '#FFFFFF',
                     border: 'none',
                     padding: '9px 18px',
@@ -943,9 +943,9 @@ export default function Profile() {
                     type="button"
                     onClick={handleRestoreDefaults}
                     style={{
-                      background: '#FEF3C7',
-                      color: '#92400E',
-                      border: '1px solid #FCD34D',
+                      background: 'rgba(245, 158, 11, 0.12)',
+                      color: '#F59E0B',
+                      border: '1px solid rgba(245, 158, 11, 0.25)',
                       padding: '9px 14px',
                       borderRadius: 8,
                       fontSize: 13,
@@ -964,7 +964,7 @@ export default function Profile() {
                   type="button"
                   onClick={() => setEditing(true)}
                   style={{
-                    background: '#0B1F3A',
+                    background: 'var(--primary-brand)',
                     color: '#FFFFFF',
                     border: 'none',
                     padding: '9px 18px',
@@ -975,12 +975,12 @@ export default function Profile() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 7,
-                  boxShadow: '0 2px 6px rgba(11, 31, 58, 0.15)'
-                }}
-              >
-                <Edit size={14} /> Edit Vault
-              </button>
-            </div>
+                    boxShadow: 'var(--shadow-plum)'
+                  }}
+                >
+                  <Edit size={14} /> Edit Vault
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1004,12 +1004,12 @@ export default function Profile() {
         return (
           <div
             style={{
-              background: '#FFFFFF',
-              border: `2px solid ${isResume ? '#15803D' : '#2563EB'}`,
+              background: 'var(--surface)',
+              border: `2px solid ${isResume ? '#10B981' : 'var(--primary-brand)'}`,
               borderRadius: 14,
               padding: 24,
               marginBottom: 28,
-              boxShadow: `0 4px 24px ${isResume ? 'rgba(21, 128, 61, 0.1)' : 'rgba(37, 99, 235, 0.1)'}`,
+              boxShadow: 'var(--shadow-md)',
               animation: 'fadeIn 0.2s ease-out',
             }}
           >
@@ -1018,23 +1018,23 @@ export default function Profile() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 10,
-                  background: isResume ? '#DCFCE7' : '#EAF2FF',
-                  border: `1px solid ${isResume ? '#BBF7D0' : '#BFDBFE'}`,
+                  background: isResume ? 'rgba(16, 185, 129, 0.12)' : 'rgba(99, 102, 241, 0.12)',
+                  border: `1px solid ${isResume ? 'rgba(16, 185, 129, 0.25)' : 'rgba(99, 102, 241, 0.25)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: isResume ? '#15803D' : '#2563EB'
+                  color: isResume ? '#10B981' : 'var(--primary-brand)'
                 }}>
                   {isResume ? <FileUp size={24} /> : <Puzzle size={22} />}
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0B1F3A' }}>
+                    <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text-primary)' }}>
                       Incoming Data from {currentSync.source || 'Import'}
                     </h3>
                     <span style={{
                       fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4,
-                      background: isResume ? '#F0FDF4' : '#EFF6FF',
-                      color: isResume ? '#15803D' : '#1D4ED8',
-                      border: `1px solid ${isResume ? '#BBF7D0' : '#BFDBFE'}`,
+                      background: isResume ? 'rgba(16, 185, 129, 0.12)' : 'rgba(99, 102, 241, 0.12)',
+                      color: isResume ? '#10B981' : 'var(--primary-brand)',
+                      border: `1px solid ${isResume ? 'rgba(16, 185, 129, 0.25)' : 'rgba(99, 102, 241, 0.25)'}`,
                       display: 'inline-flex', alignItems: 'center', gap: 5
                     }}>
                       {isResume ? <FileUp size={12} /> : <FileText size={12} />}
@@ -1043,7 +1043,7 @@ export default function Profile() {
                     {currentSync.fileName && (
                       <span style={{
                         fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4,
-                        background: '#F1F5F9', color: '#475569', border: '1px solid #E2E8F0',
+                        background: 'var(--card-subtle)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
                         display: 'inline-flex', alignItems: 'center', gap: 5
                       }}>
                         <FileText size={11} /> {currentSync.fileName}
@@ -1051,12 +1051,12 @@ export default function Profile() {
                     )}
                     <span style={{
                       fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4,
-                      background: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D'
+                      background: 'rgba(245, 158, 11, 0.12)', color: '#F59E0B', border: '1px solid rgba(245, 158, 11, 0.25)'
                     }}>
                       {pendingSyncs.length} Submission{pendingSyncs.length > 1 ? 's' : ''} Queued
                     </span>
                   </div>
-                  <p style={{ margin: '4px 0 0 0', fontSize: 12.5, color: '#667085' }}>
+                  <p style={{ margin: '4px 0 0 0', fontSize: 12.5, color: 'var(--text-secondary)' }}>
                     Captured from <strong>{currentSync.formTitle || currentSync.formUrl || currentSync.fileName || 'External Source'}</strong> • {new Date(currentSync.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                   </p>
                 </div>
@@ -1065,15 +1065,15 @@ export default function Profile() {
               {/* Multi-submission queue selector */}
               {pendingSyncs.length > 1 && (
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, color: '#667085' }}>Submission:</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Submission:</span>
                   {pendingSyncs.map((s, idx) => (
                     <button
                       key={s._id}
                       onClick={() => handleSelectSync(idx)}
                       style={{
-                        background: selectedSyncIndex === idx ? (isResume ? '#15803D' : '#2563EB') : '#F1F5F9',
-                        color: selectedSyncIndex === idx ? '#FFFFFF' : '#475569',
-                        border: 'none',
+                        background: selectedSyncIndex === idx ? (isResume ? '#10B981' : 'var(--primary-brand)') : 'var(--card-subtle)',
+                        color: selectedSyncIndex === idx ? '#FFFFFF' : 'var(--text-secondary)',
+                        border: '1px solid var(--border)',
                         borderRadius: 6,
                         padding: '4px 10px',
                         fontSize: 12,
@@ -1095,36 +1095,36 @@ export default function Profile() {
               flexWrap: 'wrap',
               marginBottom: 16,
             }}>
-              <div style={{ background: '#F8FAFD', border: '1px solid #E2E8F0', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
-                <span style={{ color: '#64748B' }}>Total Detected: </span>
-                <strong style={{ color: '#0B1F3A' }}>{totalCount}</strong>
+              <div style={{ background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Total Detected: </span>
+                <strong style={{ color: 'var(--text-primary)' }}>{totalCount}</strong>
               </div>
-              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
-                <span style={{ color: '#166534' }}>New Fields: </span>
-                <strong style={{ color: '#15803D' }}>{newCount}</strong>
+              <div style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                <span style={{ color: '#10B981' }}>New Fields: </span>
+                <strong style={{ color: '#10B981' }}>{newCount}</strong>
               </div>
-              <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
-                <span style={{ color: '#92400E' }}>Updated Values: </span>
-                <strong style={{ color: '#B45309' }}>{updatedCount}</strong>
+              <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                <span style={{ color: '#F59E0B' }}>Updated Values: </span>
+                <strong style={{ color: '#F59E0B' }}>{updatedCount}</strong>
               </div>
               {conflictCount > 0 && (
-                <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
-                  <span style={{ color: '#991B1B', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <AlertTriangle size={13} color="#DC2626" /> Conflicts:
+                <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                  <span style={{ color: '#EF4444', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <AlertTriangle size={13} color="#EF4444" /> Conflicts:
                   </span>{' '}
-                  <strong style={{ color: '#DC2626' }}>{conflictCount}</strong>
+                  <strong style={{ color: '#EF4444' }}>{conflictCount}</strong>
                 </div>
               )}
-              <div style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
-                <span style={{ color: '#64748B' }}>Identical: </span>
-                <strong style={{ color: '#475569' }}>{identicalCount}</strong>
+              <div style={{ background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
+                <span style={{ color: 'var(--text-muted)' }}>Identical: </span>
+                <strong style={{ color: 'var(--text-secondary)' }}>{identicalCount}</strong>
               </div>
             </div>
 
             {/* AI Staging Notice */}
             <div style={{
-              background: '#F8FAFD',
-              border: '1px solid #E5EAF0',
+              background: 'var(--card-subtle)',
+              border: '1px solid var(--border)',
               borderRadius: 10,
               padding: '12px 16px',
               marginBottom: 16,
@@ -1135,8 +1135,8 @@ export default function Profile() {
               gap: 12
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Sparkles size={16} color={isResume ? '#15803D' : '#2563EB'} style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: '#172033', lineHeight: 1.5 }}>
+                <Sparkles size={16} color={isResume ? '#10B981' : 'var(--primary-brand)'} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
                   <strong>AI Review Staging:</strong> Review extracted candidate information below. Only selected and accepted fields will be saved into your active Profile Vault. Your existing credentials will <strong>never be silently overwritten</strong>.
                 </span>
               </div>
@@ -1147,20 +1147,20 @@ export default function Profile() {
                   type="button"
                   onClick={() => handleSelectAllSyncFields(!allSelected)}
                   style={{
-                    background: '#FFFFFF',
-                    border: '1px solid #CBD5E1',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
                     borderRadius: 6,
                     padding: '5px 10px',
                     fontSize: 11.5,
                     fontWeight: 600,
-                    color: '#475569',
+                    color: 'var(--text-secondary)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 5,
                   }}
                 >
-                  {allSelected ? <CheckSquare size={13} color="#15803D" /> : <Square size={13} />}
+                  {allSelected ? <CheckSquare size={13} color="#10B981" /> : <Square size={13} />}
                   {allSelected ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
@@ -1168,7 +1168,7 @@ export default function Profile() {
 
             {/* Side-by-Side Verification Diff Table */}
             <div style={{
-              border: '1px solid #E5EAF0',
+              border: '1px solid var(--border)',
               borderRadius: 10,
               overflow: 'hidden',
               marginBottom: 20,
@@ -1176,12 +1176,12 @@ export default function Profile() {
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '36px 2.2fr 2.2fr 2.4fr 1.8fr',
-                background: '#F1F5F9',
+                background: 'var(--card-subtle)',
                 padding: '10px 16px',
                 fontSize: 11.5,
                 fontWeight: 700,
-                color: '#475569',
-                borderBottom: '1px solid #E5EAF0',
+                color: 'var(--text-secondary)',
+                borderBottom: '1px solid var(--border)',
                 alignItems: 'center',
                 gap: 10,
               }}>
@@ -1212,8 +1212,8 @@ export default function Profile() {
                         display: 'grid',
                         gridTemplateColumns: '36px 2.2fr 2.2fr 2.4fr 1.8fr',
                         padding: '12px 16px',
-                        background: !isSelected ? '#F8FAFD' : currentAction === 'accept' ? '#FFFFFF' : '#F8FAFD',
-                        borderBottom: '1px solid #F1F5F9',
+                        background: !isSelected ? 'var(--card-subtle)' : currentAction === 'accept' ? 'var(--surface)' : 'var(--card-subtle)',
+                        borderBottom: '1px solid var(--border)',
                         alignItems: 'center',
                         gap: 10,
                         opacity: !isSelected || currentAction === 'keep' ? 0.65 : 1,
@@ -1226,38 +1226,38 @@ export default function Profile() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectField(item.fieldId)}
-                          style={{ width: 16, height: 16, cursor: 'pointer', accentColor: isResume ? '#15803D' : '#087F71' }}
+                          style={{ width: 16, height: 16, cursor: 'pointer', accentColor: isResume ? '#10B981' : 'var(--primary-brand)' }}
                           title="Include this field in save"
                         />
                       </div>
 
                       {/* Column 1: Field, Section, Status, Confidence */}
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                           {item.label}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                             {item.section?.replace('_', ' ')}
                           </span>
 
                           {isNew && (
-                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#E8F8F5', color: '#087F71' }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(16, 185, 129, 0.12)', color: '#10B981' }}>
                               NEW FIELD
                             </span>
                           )}
                           {isUpdated && (
-                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#FEF3C7', color: '#B45309' }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(245, 158, 11, 0.12)', color: '#F59E0B' }}>
                               UPDATED
                             </span>
                           )}
                           {isConflict && (
-                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#FEE2E2', color: '#DC2626', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                              <AlertTriangle size={10} color="#DC2626" /> CONFLICT
+                            <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(239, 68, 68, 0.12)', color: '#EF4444', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                              <AlertTriangle size={10} color="#EF4444" /> CONFLICT
                             </span>
                           )}
                           {isIdentical && (
-                            <span style={{ fontSize: 9.5, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: '#F1F5F9', color: '#64748B' }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: 'var(--surface)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                               IDENTICAL
                             </span>
                           )}
@@ -1269,9 +1269,9 @@ export default function Profile() {
                               fontWeight: 700,
                               padding: '1px 6px',
                               borderRadius: 4,
-                              background: isLowConfidence ? '#FEF2F2' : '#ECFDF5',
-                              color: isLowConfidence ? '#DC2626' : '#059669',
-                              border: `1px solid ${isLowConfidence ? '#FECACA' : '#A7F3D0'}`,
+                              background: isLowConfidence ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+                              color: isLowConfidence ? '#EF4444' : '#10B981',
+                              border: `1px solid ${isLowConfidence ? 'rgba(239, 68, 68, 0.25)' : 'rgba(16, 185, 129, 0.25)'}`,
                             }}>
                               {isLowConfidence ? `Low (${Math.round(item.confidence * 100)}%)` : `${Math.round(item.confidence * 100)}% conf`}
                             </span>
@@ -1282,11 +1282,11 @@ export default function Profile() {
                       {/* Column 2: Current Vault Value */}
                       <div>
                         {item.currentValue ? (
-                          <div style={{ fontSize: 12.5, color: '#172033', fontWeight: 500, wordBreak: 'break-word' }}>
+                          <div style={{ fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500, wordBreak: 'break-word' }}>
                             {item.currentValue}
                           </div>
                         ) : (
-                          <span style={{ fontSize: 12, fontStyle: 'italic', color: '#98A2B3' }}>
+                          <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--text-muted)' }}>
                             (Empty in Vault)
                           </span>
                         )}
@@ -1303,9 +1303,9 @@ export default function Profile() {
                             width: '100%',
                             fontSize: 12.5,
                             fontWeight: 600,
-                            color: currentAction === 'accept' ? '#087F71' : currentAction === 'append' ? '#2563EB' : '#667085',
-                            background: currentAction === 'accept' ? '#E8F8F5' : currentAction === 'append' ? '#EFF6FF' : '#F1F5F9',
-                            border: `1px solid ${currentAction === 'accept' ? '#A3E5D9' : currentAction === 'append' ? '#BFDBFE' : '#E2E8F0'}`,
+                            color: currentAction === 'accept' ? '#10B981' : currentAction === 'append' ? '#3B82F6' : 'var(--text-secondary)',
+                            background: currentAction === 'accept' ? 'rgba(16, 185, 129, 0.08)' : currentAction === 'append' ? 'rgba(59, 130, 246, 0.08)' : 'var(--surface)',
+                            border: `1px solid ${currentAction === 'accept' ? 'rgba(16, 185, 129, 0.3)' : currentAction === 'append' ? 'rgba(59, 130, 246, 0.3)' : 'var(--border)'}`,
                             borderRadius: 6,
                             padding: '6px 9px',
                             boxSizing: 'border-box',
@@ -1313,13 +1313,13 @@ export default function Profile() {
                           }}
                         />
                         {item.reason && (
-                          <div style={{ fontSize: 11, color: '#64748B', marginTop: 3 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 3 }}>
                             {item.reason}
                           </div>
                         )}
                         {isLowConfidence && (
-                          <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 2, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <AlertTriangle size={11} color="#DC2626" /> Low confidence. Verify before saving.
+                          <div style={{ fontSize: 10.5, color: '#EF4444', marginTop: 2, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <AlertTriangle size={11} color="#EF4444" /> Low confidence. Verify before saving.
                           </div>
                         )}
                       </div>
@@ -1330,9 +1330,9 @@ export default function Profile() {
                           type="button"
                           onClick={() => handleSetFieldAction(item.fieldId, 'accept')}
                           style={{
-                            background: currentAction === 'accept' ? '#087F71' : '#FFFFFF',
-                            color: currentAction === 'accept' ? '#FFFFFF' : '#087F71',
-                            border: `1px solid ${currentAction === 'accept' ? '#087F71' : '#A3E5D9'}`,
+                            background: currentAction === 'accept' ? '#10B981' : 'var(--surface)',
+                            color: currentAction === 'accept' ? '#FFFFFF' : '#10B981',
+                            border: `1px solid ${currentAction === 'accept' ? '#10B981' : 'rgba(16, 185, 129, 0.3)'}`,
                             padding: '4px 8px',
                             borderRadius: 5,
                             fontSize: 11,
@@ -1351,9 +1351,9 @@ export default function Profile() {
                           type="button"
                           onClick={() => handleSetFieldAction(item.fieldId, 'append')}
                           style={{
-                            background: currentAction === 'append' ? '#2563EB' : '#FFFFFF',
-                            color: currentAction === 'append' ? '#FFFFFF' : '#2563EB',
-                            border: `1px solid ${currentAction === 'append' ? '#2563EB' : '#BFDBFE'}`,
+                            background: currentAction === 'append' ? '#3B82F6' : 'var(--surface)',
+                            color: currentAction === 'append' ? '#FFFFFF' : '#3B82F6',
+                            border: `1px solid ${currentAction === 'append' ? '#3B82F6' : 'rgba(59, 130, 246, 0.3)'}`,
                             padding: '4px 8px',
                             borderRadius: 5,
                             fontSize: 11,
@@ -1372,9 +1372,9 @@ export default function Profile() {
                           type="button"
                           onClick={() => handleSetFieldAction(item.fieldId, 'keep')}
                           style={{
-                            background: currentAction === 'keep' ? '#64748B' : '#FFFFFF',
-                            color: currentAction === 'keep' ? '#FFFFFF' : '#64748B',
-                            border: `1px solid ${currentAction === 'keep' ? '#64748B' : '#E2E8F0'}`,
+                            background: currentAction === 'keep' ? 'var(--text-secondary)' : 'var(--surface)',
+                            color: currentAction === 'keep' ? '#FFFFFF' : 'var(--text-secondary)',
+                            border: `1px solid ${currentAction === 'keep' ? 'var(--text-secondary)' : 'var(--border)'}`,
                             padding: '4px 8px',
                             borderRadius: 5,
                             fontSize: 11,
@@ -1394,8 +1394,8 @@ export default function Profile() {
 
             {/* Action Footer */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ fontSize: 12.5, color: '#667085' }}>
-                Only selected fields marked with <strong style={{ color: '#087F71' }}>"Accept"</strong> or <strong style={{ color: '#2563EB' }}>"Merge"</strong> will be saved to your active Profile Vault.
+              <div style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                Only selected fields marked with <strong style={{ color: '#10B981' }}>"Accept"</strong> or <strong style={{ color: '#3B82F6' }}>"Merge"</strong> will be saved to your active Profile Vault.
               </div>
 
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -1404,9 +1404,9 @@ export default function Profile() {
                   onClick={handleRejectSync}
                   disabled={dismissingSync || verifyingSync}
                   style={{
-                    background: '#FFFFFF',
-                    color: '#DC2626',
-                    border: '1px solid #FCA5A5',
+                    background: 'var(--surface)',
+                    color: '#EF4444',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
                     padding: '8px 16px',
                     borderRadius: 8,
                     fontSize: 13,
@@ -1430,7 +1430,7 @@ export default function Profile() {
                   }}
                   disabled={verifyingSync || dismissingSync || selectedApprovedCount === 0}
                   style={{
-                    background: isResume ? '#15803D' : '#0B1F3A',
+                    background: isResume ? '#10B981' : 'var(--primary-brand)',
                     color: '#FFFFFF',
                     border: 'none',
                     padding: '9px 20px',
@@ -1441,7 +1441,7 @@ export default function Profile() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
-                    boxShadow: `0 2px 8px ${isResume ? 'rgba(21, 128, 61, 0.2)' : 'rgba(11, 31, 58, 0.2)'}`
+                    boxShadow: isResume ? '0 2px 8px rgba(16, 185, 129, 0.25)' : 'var(--shadow-plum)'
                   }}
                 >
                   <CheckCheck size={15} />
@@ -1457,21 +1457,21 @@ export default function Profile() {
       {pendingSyncs.length === 0 && (
         <div
           style={{
-            background: '#E8F8F5',
+            background: 'rgba(24, 183, 160, 0.08)',
+            border: '1px solid rgba(24, 183, 160, 0.22)',
             borderLeft: '4px solid #18B7A0',
             padding: '16px 20px',
             borderRadius: 8,
             marginBottom: 28,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
-            border: '1px solid #D1F2EB'
+            justifyContent: 'center'
           }}
         >
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: '#087F71', textTransform: 'uppercase', marginBottom: 4 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: '#18B7A0', textTransform: 'uppercase', marginBottom: 4 }}>
             ✦ VERIFIED DATA VAULT
           </span>
-          <span style={{ fontSize: 13, color: '#172033', lineHeight: 1.5 }}>
+          <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             Your Profile Vault is up to date and verified. When you autofill Google Forms or company portals via the OppTrack Chrome Extension, these verified values are automatically populated.
           </span>
         </div>
@@ -1486,18 +1486,18 @@ export default function Profile() {
             <div
               key={sec.key}
               style={{
-                background: '#FFFFFF',
-                border: '1px solid #E5EAF0',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
                 borderRadius: 14,
                 padding: 28,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 20,
-                boxShadow: '0 1px 3px rgba(11,31,58,0.03)'
+                boxShadow: 'var(--shadow-sm)'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F0F4F8', paddingBottom: 14 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   {sec.title}
                 </h2>
 
@@ -1505,17 +1505,17 @@ export default function Profile() {
                   type="button"
                   onClick={() => handleOpenAddField(sec.key)}
                   style={{
-                    background: '#FFFFFF',
-                    border: '1px solid #BFDBFE',
-                    color: '#2563EB',
+                    background: 'var(--card-subtle)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--primary-brand)',
                     fontSize: 12,
                     fontWeight: 600,
-                    padding: '4px 10px',
+                    padding: '5px 12px',
                     borderRadius: 6,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 4
+                    gap: 5
                   }}
                 >
                   <Plus size={13} /> Add Field
@@ -1523,7 +1523,7 @@ export default function Profile() {
               </div>
 
               {sectionFields.length === 0 && !editing && (
-                <div style={{ fontSize: 13, color: '#98A2B3', fontStyle: 'italic' }}>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>
                   No fields populated in this section yet. Click "+ Add Field" to create one.
                 </div>
               )}
@@ -1534,10 +1534,10 @@ export default function Profile() {
                     <div
                       key={field.id}
                       style={{
-                        background: '#F8FAFD',
+                        background: 'var(--card-subtle)',
                         padding: 16,
                         borderRadius: 8,
-                        border: '1px solid #E5EAF0',
+                        border: '1px solid var(--border)',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 8,
@@ -1545,7 +1545,7 @@ export default function Profile() {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: '#172033' }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
                             {field.label}
                           </span>
                           {field.isCustom && (
@@ -1554,9 +1554,9 @@ export default function Profile() {
                               fontWeight: 700,
                               padding: '1px 5px',
                               borderRadius: 4,
-                              background: '#EEF2FF',
-                              color: '#4F46E5',
-                              border: '1px solid #C7D2FE',
+                              background: 'rgba(99, 102, 241, 0.12)',
+                              color: '#6366F1',
+                              border: '1px solid rgba(99, 102, 241, 0.25)',
                             }}>
                               Custom
                             </span>
@@ -1568,11 +1568,11 @@ export default function Profile() {
                             type="button"
                             onClick={() => handleOpenQuickEdit(field)}
                             style={{
-                              background: '#FFFFFF',
-                              border: '1px solid #BFDBFE',
-                              color: '#2563EB',
+                              background: 'var(--surface)',
+                              border: '1px solid var(--border)',
+                              color: 'var(--primary-brand)',
                               borderRadius: 5,
-                              padding: '3px 8px',
+                              padding: '4px 10px',
                               fontSize: 11.5,
                               fontWeight: 600,
                               cursor: 'pointer',
@@ -1588,11 +1588,11 @@ export default function Profile() {
                             type="button"
                             onClick={() => handleDeleteField(field.id, field.label)}
                             style={{
-                              background: '#FFFFFF',
-                              border: '1px solid #FECACA',
-                              color: '#DC2626',
+                              background: 'var(--surface)',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              color: '#EF4444',
                               borderRadius: 5,
-                              padding: '3px 8px',
+                              padding: '4px 10px',
                               fontSize: 11.5,
                               fontWeight: 600,
                               cursor: 'pointer',
@@ -1614,14 +1614,15 @@ export default function Profile() {
                           style={{
                             padding: '8px 12px',
                             borderRadius: 6,
-                            border: '1px solid #CBD5E1',
+                            border: '1px solid var(--border)',
                             fontSize: 13,
-                            background: '#FFFFFF',
+                            background: 'var(--surface)',
+                            color: 'var(--text-primary)',
                             outline: 'none',
                           }}
                         >
                           {(field.options || []).map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
+                            <option key={opt} value={opt} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{opt}</option>
                           ))}
                         </select>
                       ) : field.fieldType === 'paragraph' ? (
@@ -1632,9 +1633,10 @@ export default function Profile() {
                           style={{
                             padding: '8px 12px',
                             borderRadius: 6,
-                            border: '1px solid #CBD5E1',
+                            border: '1px solid var(--border)',
                             fontSize: 13,
-                            background: '#FFFFFF',
+                            background: 'var(--surface)',
+                            color: 'var(--text-primary)',
                             outline: 'none',
                             fontFamily: 'inherit',
                           }}
@@ -1647,9 +1649,10 @@ export default function Profile() {
                           style={{
                             padding: '8px 12px',
                             borderRadius: 6,
-                            border: '1px solid #CBD5E1',
+                            border: '1px solid var(--border)',
                             fontSize: 13,
-                            background: '#FFFFFF',
+                            background: 'var(--surface)',
+                            color: 'var(--text-primary)',
                             outline: 'none',
                           }}
                         />
@@ -1681,8 +1684,8 @@ export default function Profile() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.45)',
-            backdropFilter: 'blur(3px)',
+            background: 'rgba(11, 31, 58, 0.55)',
+            backdropFilter: 'blur(4px)',
             zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
@@ -1693,26 +1696,27 @@ export default function Profile() {
         >
           <div
             style={{
-              background: '#FFFFFF',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: 14,
               padding: 24,
               width: '100%',
               maxWidth: 480,
-              boxShadow: '0 20px 40px rgba(11, 31, 58, 0.2)',
+              boxShadow: 'var(--shadow-xl)',
             }}
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Edit size={16} color="#2563EB" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0B1F3A' }}>
+                <Edit size={16} color="var(--primary-brand)" />
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                   Edit Field: {quickEditModal.label}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setQuickEditModal(null)}
-                style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 <X size={18} />
               </button>
@@ -1720,19 +1724,29 @@ export default function Profile() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#667085', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                   Field Label / Title
                 </label>
                 <input
                   type="text"
                   value={quickEditModal.label}
                   onChange={e => setQuickEditModal(prev => ({ ...prev, label: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box' }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    border: '1px solid var(--border)',
+                    background: 'var(--card-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#667085', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                   Field Value
                 </label>
                 {quickEditModal.fieldType === 'paragraph' ? (
@@ -1740,20 +1754,42 @@ export default function Profile() {
                     rows={4}
                     value={quickEditModal.value || ''}
                     onChange={e => setQuickEditModal(prev => ({ ...prev, value: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      border: '1px solid var(--border)',
+                      background: 'var(--card-subtle)',
+                      color: 'var(--text-primary)',
+                      fontSize: 13,
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
                   />
                 ) : quickEditModal.fieldType === 'select' ? (
                   <div>
                     <select
                       value={quickEditModal.value || ''}
                       onChange={e => setQuickEditModal(prev => ({ ...prev, value: e.target.value }))}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 13, background: '#FFFFFF', boxSizing: 'border-box', marginBottom: 8 }}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: 6,
+                        border: '1px solid var(--border)',
+                        fontSize: 13,
+                        background: 'var(--surface)',
+                        color: 'var(--text-primary)',
+                        boxSizing: 'border-box',
+                        marginBottom: 8,
+                        outline: 'none',
+                      }}
                     >
                       {(quickEditModal.options || []).map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
+                        <option key={opt} value={opt} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{opt}</option>
                       ))}
                     </select>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 4 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
                       Dropdown Options (comma separated)
                     </label>
                     <input
@@ -1765,7 +1801,17 @@ export default function Profile() {
                         setQuickEditModal(prev => ({ ...prev, optionsText: val, options: opts }));
                       }}
                       placeholder="Option 1, Option 2, Option 3"
-                      style={{ width: '100%', padding: '7px 10px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 12, boxSizing: 'border-box' }}
+                      style={{
+                        width: '100%',
+                        padding: '7px 10px',
+                        borderRadius: 6,
+                        border: '1px solid var(--border)',
+                        background: 'var(--card-subtle)',
+                        color: 'var(--text-primary)',
+                        fontSize: 12,
+                        boxSizing: 'border-box',
+                        outline: 'none',
+                      }}
                     />
                   </div>
                 ) : (
@@ -1773,38 +1819,68 @@ export default function Profile() {
                     type="text"
                     value={quickEditModal.value || ''}
                     onChange={e => setQuickEditModal(prev => ({ ...prev, value: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      border: '1px solid var(--border)',
+                      background: 'var(--card-subtle)',
+                      color: 'var(--text-primary)',
+                      fontSize: 13,
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
                   />
                 )}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#667085', display: 'block', marginBottom: 4 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                     Field Type
                   </label>
                   <select
                     value={quickEditModal.fieldType}
                     onChange={e => setQuickEditModal(prev => ({ ...prev, fieldType: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 12.5, background: '#FFFFFF', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      border: '1px solid var(--border)',
+                      fontSize: 12.5,
+                      background: 'var(--surface)',
+                      color: 'var(--text-primary)',
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
                   >
                     {FIELD_TYPES.map(ft => (
-                      <option key={ft.key} value={ft.key}>{ft.label}</option>
+                      <option key={ft.key} value={ft.key} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{ft.label}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#667085', display: 'block', marginBottom: 4 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                     Section
                   </label>
                   <select
                     value={quickEditModal.section}
                     onChange={e => setQuickEditModal(prev => ({ ...prev, section: e.target.value }))}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 12.5, background: '#FFFFFF', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      border: '1px solid var(--border)',
+                      fontSize: 12.5,
+                      background: 'var(--surface)',
+                      color: 'var(--text-primary)',
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
                   >
                     {SECTIONS.map(s => (
-                      <option key={s.key} value={s.key}>{s.title}</option>
+                      <option key={s.key} value={s.key} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{s.title}</option>
                     ))}
                   </select>
                 </div>
@@ -1821,9 +1897,9 @@ export default function Profile() {
                   handleDeleteField(id, lbl);
                 }}
                 style={{
-                  background: '#FEE2E2',
-                  border: '1px solid #FCA5A5',
-                  color: '#DC2626',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  color: '#EF4444',
                   padding: '7px 12px',
                   borderRadius: 6,
                   fontSize: 12,
@@ -1842,7 +1918,16 @@ export default function Profile() {
                   type="button"
                   onClick={() => setQuickEditModal(null)}
                   disabled={quickEditSaving}
-                  style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', padding: '8px 14px', borderRadius: 6, fontSize: 12.5, fontWeight: 600, color: '#667085', cursor: 'pointer' }}
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    padding: '8px 14px',
+                    borderRadius: 6,
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                  }}
                 >
                   Cancel
                 </button>
@@ -1851,7 +1936,7 @@ export default function Profile() {
                   onClick={handleSaveQuickEdit}
                   disabled={quickEditSaving}
                   style={{
-                    background: '#0B1F3A',
+                    background: 'var(--primary-brand)',
                     border: 'none',
                     padding: '8px 18px',
                     borderRadius: 6,
@@ -1879,8 +1964,8 @@ export default function Profile() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.45)',
-            backdropFilter: 'blur(3px)',
+            background: 'rgba(11, 31, 58, 0.55)',
+            backdropFilter: 'blur(4px)',
             zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
@@ -1891,22 +1976,23 @@ export default function Profile() {
         >
           <div
             style={{
-              background: '#FFFFFF',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: 12,
               padding: 24,
               width: '100%',
               maxWidth: 420,
-              boxShadow: '0 20px 40px rgba(11, 31, 58, 0.2)',
+              boxShadow: 'var(--shadow-xl)',
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#0B1F3A' }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
               Add Custom Profile Field
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#667085', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                   Field Label
                 </label>
                 <input
@@ -1914,27 +2000,47 @@ export default function Profile() {
                   placeholder="e.g. Master's Thesis Topic"
                   value={newField.label}
                   onChange={e => setNewField(f => ({ ...f, label: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 13 }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    border: '1px solid var(--border)',
+                    background: 'var(--card-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#667085', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                   Field Type
                 </label>
                 <select
                   value={newField.fieldType}
                   onChange={e => setNewField(f => ({ ...f, fieldType: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 13, background: '#FFFFFF' }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    border: '1px solid var(--border)',
+                    fontSize: 13,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                  }}
                 >
                   {FIELD_TYPES.map(ft => (
-                    <option key={ft.key} value={ft.key}>{ft.label}</option>
+                    <option key={ft.key} value={ft.key} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{ft.label}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#667085', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                   Initial Value
                 </label>
                 <input
@@ -1942,7 +2048,17 @@ export default function Profile() {
                   placeholder="Enter initial value…"
                   value={newField.value}
                   onChange={e => setNewField(f => ({ ...f, value: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #CBD5E1', fontSize: 13 }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    border: '1px solid var(--border)',
+                    background: 'var(--card-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                  }}
                 />
               </div>
             </div>
@@ -1951,18 +2067,195 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => setAddingSection(null)}
-                style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', padding: '7px 14px', borderRadius: 6, fontSize: 12.5, fontWeight: 600, color: '#667085', cursor: 'pointer' }}
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  padding: '7px 14px',
+                  borderRadius: 6,
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                }}
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmAddField}
-                style={{ background: '#0B1F3A', border: 'none', padding: '7px 16px', borderRadius: 6, fontSize: 12.5, fontWeight: 600, color: '#FFFFFF', cursor: 'pointer' }}
+                style={{
+                  background: 'var(--primary-brand)',
+                  border: 'none',
+                  padding: '7px 16px',
+                  borderRadius: 6,
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--shadow-plum)',
+                }}
               >
                 Add Field
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI FORM IMPORT MODAL (PASTE GOOGLE FORM / TEXT) ── */}
+      {showImportModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(11, 31, 58, 0.55)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={() => !analyzingText && setShowImportModal(false)}
+        >
+          <div
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 14,
+              padding: 24,
+              width: '100%',
+              maxWidth: 560,
+              boxShadow: 'var(--shadow-xl)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 10,
+                  background: 'rgba(24, 183, 160, 0.12)',
+                  border: '1px solid rgba(24, 183, 160, 0.25)',
+                  color: '#18B7A0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: 'var(--text-primary)' }}>
+                    AI Form Import & Autofill Scanner
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    Scan placement forms, questions, or portal text into your Profile Vault
+                  </p>
+                </div>
+              </div>
+              {!analyzingText && (
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            <p style={{ margin: '0 0 14px', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Paste questions or field labels from a <strong>Google Form</strong>, <strong>company registration portal</strong>, or <strong>placement spreadsheet</strong>. OppTrack AI maps them against your Profile Vault, extracting existing values or staging new entries for review.
+            </p>
+
+            <form onSubmit={handleAnalyzeText}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
+                  Paste Form Content / Field Labels
+                </label>
+                <textarea
+                  rows={6}
+                  value={importText}
+                  onChange={e => setImportText(e.target.value)}
+                  placeholder={`Example:\n1. Full Name (as per 10th marksheet)\n2. College PRN Number\n3. Engineering Aggregate CGPA\n4. GitHub / Portfolio URL\n5. Are you open for 6 months internship?`}
+                  disabled={analyzingText}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'var(--card-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                    fontFamily: 'inherit',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    resize: 'vertical',
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <div style={{
+                background: 'var(--card-subtle)',
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                padding: '10px 12px',
+                marginBottom: 18,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 12,
+                color: 'var(--text-secondary)',
+              }}>
+                <Puzzle size={15} color="var(--primary-brand)" style={{ flexShrink: 0 }} />
+                <span>Extracted fields will appear in the <strong>AI Review Staging</strong> area before any values are merged.</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  disabled={analyzingText}
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    padding: '8px 16px',
+                    borderRadius: 6,
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={analyzingText || !importText.trim()}
+                  style={{
+                    background: 'var(--primary-brand)',
+                    border: 'none',
+                    padding: '8px 18px',
+                    borderRadius: 6,
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    cursor: analyzingText || !importText.trim() ? 'not-allowed' : 'pointer',
+                    opacity: analyzingText || !importText.trim() ? 0.7 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: 'var(--shadow-plum)',
+                  }}
+                >
+                  <Sparkles size={14} />
+                  {analyzingText ? 'Analyzing with AI…' : 'Scan & Extract Fields'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -1973,8 +2266,8 @@ export default function Profile() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.45)',
-            backdropFilter: 'blur(3px)',
+            background: 'rgba(11, 31, 58, 0.55)',
+            backdropFilter: 'blur(4px)',
             zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
@@ -1985,25 +2278,26 @@ export default function Profile() {
         >
           <div
             style={{
-              background: '#FFFFFF',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: 14,
               padding: 24,
               width: '100%',
               maxWidth: 540,
-              boxShadow: '0 20px 40px rgba(11, 31, 58, 0.2)',
+              boxShadow: 'var(--shadow-xl)',
             }}
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <FileUp size={20} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: '#0B1F3A' }}>
+                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                     Import Resume with AI
                   </h3>
-                  <p style={{ margin: 0, fontSize: 12, color: '#667085' }}>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
                     Automate credentials, skills, links & education extraction
                   </p>
                 </div>
@@ -2012,14 +2306,14 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setShowResumeModal(false)}
-                  style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
                   <X size={18} />
                 </button>
               )}
             </div>
 
-            <p style={{ margin: '0 0 16px', fontSize: 12.5, color: '#667085', lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 16px', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
               Upload your resume in <strong>PDF</strong> or <strong>DOCX</strong> format. OppTrack AI parses your contact details, education, CGPA, technical skills, projects, and online portfolios, staging them for your review and selective approval.
             </p>
 
@@ -2045,11 +2339,11 @@ export default function Profile() {
                 }}
                 onClick={() => document.getElementById('resume-file-input')?.click()}
                 style={{
-                  border: `2px dashed ${resumeDragOver ? '#15803D' : resumeFile ? '#15803D' : '#CBD5E1'}`,
+                  border: `2px dashed ${resumeDragOver ? '#10B981' : resumeFile ? '#10B981' : 'var(--border)'}`,
                   borderRadius: 12,
                   padding: '24px 16px',
                   textAlign: 'center',
-                  background: resumeDragOver ? '#F0FDF4' : resumeFile ? '#F0FDF4' : '#F8FAFD',
+                  background: resumeDragOver ? 'rgba(16, 185, 129, 0.12)' : resumeFile ? 'rgba(16, 185, 129, 0.08)' : 'var(--card-subtle)',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                   marginBottom: 20,
@@ -2077,25 +2371,25 @@ export default function Profile() {
 
                 {resumeFile ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 10, background: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <FileText size={24} />
                     </div>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                       {resumeFile.name}
                     </div>
-                    <div style={{ fontSize: 11.5, color: '#667085' }}>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
                       {(resumeFile.size / 1024).toFixed(1)} KB • Click or drop another file to replace
                     </div>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 10, background: '#E2E8F0', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <UploadCloud size={24} />
                     </div>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                       Drag & drop your resume here, or browse files
                     </div>
-                    <div style={{ fontSize: 11.5, color: '#667085' }}>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
                       Supported formats: PDF, DOCX (Max 10MB)
                     </div>
                   </div>
@@ -2103,10 +2397,10 @@ export default function Profile() {
               </div>
             ) : (
               /* Progressive Loading Indicator */
-              <div style={{ padding: '20px 16px', background: '#F8FAFD', borderRadius: 12, border: '1px solid #E2E8F0', marginBottom: 20 }}>
+              <div style={{ padding: '20px 16px', background: 'var(--card-subtle)', borderRadius: 12, border: '1px solid var(--border)', marginBottom: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                  <RefreshCw size={18} color="#15803D" style={{ animation: 'spin 1.2s linear infinite' }} />
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
+                  <RefreshCw size={18} color="#10B981" style={{ animation: 'spin 1.2s linear infinite' }} />
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                     Extracting Candidate Credentials...
                   </div>
                 </div>
@@ -2120,13 +2414,13 @@ export default function Profile() {
                     { num: 4, label: 'Diff analysis against existing vault & confidence scoring' },
                     { num: 5, label: 'Preparing interactive review staging' },
                   ].map(step => (
-                    <div key={step.num} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: resumeStep >= step.num ? '#15803D' : '#94A3B8' }}>
+                    <div key={step.num} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: resumeStep >= step.num ? '#10B981' : 'var(--text-muted)' }}>
                       {resumeStep > step.num ? (
-                        <CheckCircle2 size={14} color="#15803D" />
+                        <CheckCircle2 size={14} color="#10B981" />
                       ) : resumeStep === step.num ? (
-                        <RefreshCw size={12} color="#15803D" style={{ animation: 'spin 1.2s linear infinite' }} />
+                        <RefreshCw size={12} color="#10B981" style={{ animation: 'spin 1.2s linear infinite' }} />
                       ) : (
-                        <div style={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>
                           {step.num}
                         </div>
                       )}
@@ -2138,12 +2432,12 @@ export default function Profile() {
                 </div>
 
                 {/* Progress bar */}
-                <div style={{ width: '100%', height: 6, background: '#E2E8F0', borderRadius: 3, marginTop: 16, overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 3, marginTop: 16, overflow: 'hidden' }}>
                   <div
                     style={{
                       width: `${(resumeStep / 5) * 100}%`,
                       height: '100%',
-                      background: '#15803D',
+                      background: '#10B981',
                       borderRadius: 3,
                       transition: 'width 0.4s ease',
                     }}
@@ -2157,7 +2451,7 @@ export default function Profile() {
                 type="button"
                 onClick={() => setShowResumeModal(false)}
                 disabled={analyzingResume}
-                style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', padding: '8px 16px', borderRadius: 6, fontSize: 12.5, fontWeight: 600, color: '#667085', cursor: 'pointer' }}
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: 6, fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}
               >
                 Cancel
               </button>
@@ -2166,7 +2460,7 @@ export default function Profile() {
                 onClick={handleAnalyzeResume}
                 disabled={analyzingResume || !resumeFile}
                 style={{
-                  background: '#15803D',
+                  background: '#10B981',
                   border: 'none',
                   padding: '8px 18px',
                   borderRadius: 6,
@@ -2176,7 +2470,8 @@ export default function Profile() {
                   cursor: analyzingResume || !resumeFile ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6
+                  gap: 6,
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
                 }}
               >
                 <Sparkles size={14} />
@@ -2211,8 +2506,8 @@ export default function Profile() {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(11, 31, 58, 0.5)',
-              backdropFilter: 'blur(3px)',
+              background: 'rgba(11, 31, 58, 0.55)',
+              backdropFilter: 'blur(4px)',
               zIndex: 99999,
               display: 'flex',
               alignItems: 'center',
@@ -2223,39 +2518,40 @@ export default function Profile() {
           >
             <div
               style={{
-                background: '#FFFFFF',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
                 borderRadius: 14,
                 padding: 24,
                 width: '100%',
                 maxWidth: 520,
-                boxShadow: '0 20px 40px rgba(11, 31, 58, 0.25)',
+                boxShadow: 'var(--shadow-xl)',
               }}
               onClick={e => e.stopPropagation()}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <CheckCircle2 size={22} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: '#0B1F3A' }}>
+                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                     Confirm Profile Vault Update
                   </h3>
-                  <p style={{ margin: 0, fontSize: 12, color: '#667085' }}>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
                     Source: {currentSync.fileName || currentSync.formTitle || currentSync.source}
                   </p>
                 </div>
               </div>
 
-              <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, margin: '0 0 14px' }}>
+              <p style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5, margin: '0 0 14px' }}>
                 You are about to save <strong>{selectedFields.length} approved field(s)</strong> into your Profile Vault. Unselected fields or fields set to "Keep DB" will remain untouched.
               </p>
 
-              <div style={{ maxHeight: 220, overflowY: 'auto', background: '#F8FAFD', border: '1px solid #E2E8F0', borderRadius: 8, padding: 12, marginBottom: 20 }}>
+              <div style={{ maxHeight: 220, overflowY: 'auto', background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, marginBottom: 20 }}>
                 {selectedFields.map(f => (
-                  <div key={f.fieldId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '5px 0', borderBottom: '1px solid #EDF2F7', gap: 10 }}>
-                    <span style={{ fontWeight: 600, color: '#0B1F3A' }}>{f.label}</span>
+                  <div key={f.fieldId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '6px 0', borderBottom: '1px solid var(--border)', gap: 10 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{f.label}</span>
                     <span style={{
-                      color: f.action === 'append' ? '#2563EB' : '#15803D',
+                      color: f.action === 'append' ? '#3B82F6' : '#10B981',
                       fontWeight: 600,
                       maxWidth: '60%',
                       textOverflow: 'ellipsis',
@@ -2272,7 +2568,7 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmMergeModal(false)}
-                  style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: '#475569', cursor: 'pointer' }}
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
@@ -2281,7 +2577,7 @@ export default function Profile() {
                   onClick={handleVerifyAndMerge}
                   disabled={verifyingSync}
                   style={{
-                    background: '#0B1F3A',
+                    background: 'var(--primary-brand)',
                     border: 'none',
                     padding: '8px 20px',
                     borderRadius: 6,
@@ -2291,7 +2587,8 @@ export default function Profile() {
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 6
+                    gap: 6,
+                    boxShadow: 'var(--shadow-plum)',
                   }}
                 >
                   {verifyingSync ? 'Saving to Vault…' : 'Save to Profile Vault'}
@@ -2308,8 +2605,8 @@ export default function Profile() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.45)',
-            backdropFilter: 'blur(3px)',
+            background: 'rgba(11, 31, 58, 0.55)',
+            backdropFilter: 'blur(4px)',
             zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
@@ -2320,7 +2617,8 @@ export default function Profile() {
         >
           <div
             style={{
-              background: '#FFFFFF',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: 14,
               padding: 24,
               width: '100%',
@@ -2328,20 +2626,20 @@ export default function Profile() {
               maxHeight: '85vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 20px 40px rgba(11, 31, 58, 0.25)',
+              boxShadow: 'var(--shadow-xl)',
             }}
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#E0E7FF', color: '#4338CA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.25)', color: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <History size={20} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: '#0B1F3A' }}>
+                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                     Resume & Form Import History
                   </h3>
-                  <p style={{ margin: 0, fontSize: 12, color: '#667085' }}>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
                     Track past imports, verified submissions, and rollback changes
                   </p>
                 </div>
@@ -2349,7 +2647,7 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 <X size={18} />
               </button>
@@ -2358,15 +2656,15 @@ export default function Profile() {
             {/* List of past syncs */}
             <div style={{ overflowY: 'auto', flex: 1, paddingRight: 4 }}>
               {loadingHistory ? (
-                <div style={{ textAlign: 'center', padding: '30px 0', color: '#667085', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-secondary)', fontSize: 13 }}>
                   <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite', marginBottom: 8 }} />
                   <div>Loading import history…</div>
                 </div>
               ) : syncHistory.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#667085' }}>
-                  <FileText size={32} color="#CBD5E1" style={{ marginBottom: 8 }} />
-                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>No import records found</div>
-                  <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
+                  <FileText size={32} color="var(--text-muted)" style={{ marginBottom: 8 }} />
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>No import records found</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
                     Uploaded resumes or scanned forms will be logged here.
                   </div>
                 </div>
@@ -2381,10 +2679,10 @@ export default function Profile() {
                       <div
                         key={item._id}
                         style={{
-                          border: '1px solid #E2E8F0',
+                          border: '1px solid var(--border)',
                           borderRadius: 10,
                           padding: '12px 16px',
-                          background: isMerged ? '#FAFAF9' : '#FFFFFF',
+                          background: isMerged ? 'var(--card-subtle)' : 'var(--surface)',
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
@@ -2395,17 +2693,17 @@ export default function Profile() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{
                             width: 34, height: 34, borderRadius: 8,
-                            background: isResume ? '#DCFCE7' : '#EAF2FF',
-                            color: isResume ? '#15803D' : '#2563EB',
+                            background: isResume ? 'rgba(16, 185, 129, 0.12)' : 'rgba(99, 102, 241, 0.12)',
+                            color: isResume ? '#10B981' : '#6366F1',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                           }}>
                             {isResume ? <FileText size={18} /> : <Puzzle size={18} />}
                           </div>
                           <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                               {item.fileName || item.formTitle || 'External Form'}
                             </div>
-                            <div style={{ fontSize: 11.5, color: '#667085', marginTop: 2 }}>
+                            <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 2 }}>
                               {new Date(item.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} • {item.analysis?.length || 0} fields detected
                             </div>
                           </div>
@@ -2417,8 +2715,9 @@ export default function Profile() {
                             fontWeight: 700,
                             padding: '3px 8px',
                             borderRadius: 6,
-                            background: isMerged ? '#DCFCE7' : isRejected ? '#F1F5F9' : '#FEF3C7',
-                            color: isMerged ? '#15803D' : isRejected ? '#64748B' : '#B45309',
+                            background: isMerged ? 'rgba(16, 185, 129, 0.12)' : isRejected ? 'var(--surface)' : 'rgba(245, 158, 11, 0.12)',
+                            color: isMerged ? '#10B981' : isRejected ? 'var(--text-muted)' : '#F59E0B',
+                            border: `1px solid ${isMerged ? 'rgba(16, 185, 129, 0.25)' : isRejected ? 'var(--border)' : 'rgba(245, 158, 11, 0.25)'}`,
                           }}>
                             {isMerged ? '✓ Merged' : isRejected ? 'Dismissed' : 'Pending Review'}
                           </span>
@@ -2430,13 +2729,13 @@ export default function Profile() {
                               onClick={() => handleUndoUpdate(item._id)}
                               disabled={rollingBackId === item._id}
                               style={{
-                                background: '#FFFFFF',
-                                border: '1px solid #CBD5E1',
+                                background: 'var(--surface)',
+                                border: '1px solid var(--border)',
                                 padding: '4px 10px',
                                 borderRadius: 6,
                                 fontSize: 11.5,
                                 fontWeight: 600,
-                                color: '#475569',
+                                color: 'var(--text-primary)',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -2460,7 +2759,7 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
-                style={{ background: '#0B1F3A', border: 'none', padding: '8px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: '#FFFFFF', cursor: 'pointer' }}
+                style={{ background: 'var(--primary-brand)', border: 'none', padding: '8px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: '#FFFFFF', cursor: 'pointer', boxShadow: 'var(--shadow-plum)' }}
               >
                 Close
               </button>

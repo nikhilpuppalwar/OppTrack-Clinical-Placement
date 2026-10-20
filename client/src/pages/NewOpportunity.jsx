@@ -48,15 +48,15 @@ const DEFAULT_SECTIONS = [
 ];
 
 const inputStyle = {
-  width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0',
-  color: '#172033', padding: '9px 12px', borderRadius: 8, fontSize: 13,
+  width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
+  color: 'var(--text-primary)', padding: '9px 12px', borderRadius: 8, fontSize: 13,
   outline: 'none', fontFamily: 'Inter, sans-serif',
   boxSizing: 'border-box',
 };
 
 const selectStyle = {
-  width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0',
-  color: '#172033', padding: '9px 12px', borderRadius: 8, fontSize: 13,
+  width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
+  color: 'var(--text-primary)', padding: '9px 12px', borderRadius: 8, fontSize: 13,
   outline: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif',
   boxSizing: 'border-box',
 };
@@ -133,10 +133,10 @@ export default function NewOpportunity() {
           });
         }
         const STYLES = [
-          { icon: '🏢', color: '#b7e34a' }, { icon: '🎓', color: '#9A8CFF' },
-          { icon: '⚖️', color: '#f59e0b' }, { icon: '📞', color: '#3b82f6' }, { icon: '🔗', color: '#ec4899' },
+          { icon: '🏢', color: '#18B7A0' }, { icon: '🎓', color: '#3B82F6' },
+          { icon: '⚖️', color: '#F59E0B' }, { icon: '📞', color: '#10B981' }, { icon: '🔗', color: '#EC4899' },
         ];
-        setSections(f.sections.map((s, i) => ({ ...s, icon: STYLES[i]?.icon || '📋', color: STYLES[i]?.color || '#b7e34a', fields: (s.fields || []).map(fld => ({ ...fld, hidden: false })) })));
+        setSections(f.sections.map((s, i) => ({ ...s, icon: STYLES[i]?.icon || '📋', color: STYLES[i]?.color || '#18B7A0', fields: (s.fields || []).map(fld => ({ ...fld, hidden: false })) })));
       }
       toast.success('✅ Fields extracted & form filled!', { id });
       setTab('manual');
@@ -184,27 +184,27 @@ export default function NewOpportunity() {
     <div style={{ maxWidth: 860, margin: '0 auto', paddingBottom: 60, fontFamily: 'Inter, sans-serif' }}>
 
       {/* Page Header */}
-      <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 24, marginBottom: 28 }}>
-        <h1 style={{ fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 700, color: '#0B1F3A', margin: '0 0 6px 0' }}>
+      <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: 24, marginBottom: 28 }}>
+        <h1 style={{ fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
           New Opportunity
         </h1>
-        <p style={{ margin: 0, fontSize: 14, color: '#667085' }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>
           Fill in placement record details manually, or use AI Smart Paste to extract from email.
         </p>
       </header>
 
       {/* Mode Toggle Tabs */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 28, background: '#F1F4F9', border: '1px solid #E5EAF0', borderRadius: 10, padding: 4 }}>
+      <div style={{ display: 'flex', gap: 0, marginBottom: 28, background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 10, padding: 4 }}>
         {[
-          { key: 'manual', label: '✏️  Manual Form', accentColor: '#18B7A0' },
-          { key: 'smart', label: '✦  AI Smart Paste', accentColor: '#123C73' },
+          { key: 'manual', label: '✏️  Manual Form' },
+          { key: 'smart', label: '✦  AI Smart Paste' },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            background: tab === t.key ? '#FFFFFF' : 'transparent',
-            color: tab === t.key ? '#0B1F3A' : '#667085',
-            border: tab === t.key ? '1px solid #E5EAF0' : '1px solid transparent',
-            boxShadow: tab === t.key ? '0 1px 3px rgba(11,31,58,0.06)' : 'none',
+            background: tab === t.key ? 'var(--surface)' : 'transparent',
+            color: tab === t.key ? 'var(--text-primary)' : 'var(--text-secondary)',
+            border: tab === t.key ? '1px solid var(--border)' : '1px solid transparent',
+            boxShadow: tab === t.key ? '0 1px 3px rgba(0, 0, 0, 0.06)' : 'none',
             transition: 'all 0.15s ease',
           }}>
             {t.label}
@@ -214,19 +214,19 @@ export default function NewOpportunity() {
 
       {/* ── AI SMART PASTE TAB ── */}
       {tab === 'smart' && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderTop: '3px solid #18B7A0', borderRadius: 16, padding: 32, boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderTop: '3px solid var(--primary-brand)', borderRadius: 16, padding: 32, boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <Wand2 size={18} color="#18B7A0" />
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A' }}>AI Email Auto-Ingestion</span>
+            <Wand2 size={18} color="var(--primary-brand)" />
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>AI Email Auto-Ingestion</span>
           </div>
-          <p style={{ fontSize: 13, color: '#667085', marginBottom: 20, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
             Paste the full placement notification email below. AI will extract Company, Role, Eligibility, Bond, HR Contact and Important Links — then auto-fill the form for you to review.
           </p>
           <textarea
             style={{
               width: '100%', minHeight: 220, resize: 'vertical',
               fontFamily: 'monospace', lineHeight: 1.6, marginBottom: 16,
-              background: '#F8FAFD', border: '1px solid #E5EAF0', color: '#172033',
+              background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)',
               padding: '12px 14px', borderRadius: 8, fontSize: 13, outline: 'none',
               boxSizing: 'border-box'
             }}
@@ -238,19 +238,19 @@ export default function NewOpportunity() {
             onClick={handleExtract}
             disabled={extracting || !rawEmail.trim()}
             style={{
-              width: '100%', background: extracting ? '#94A3B8' : '#0B1F3A',
+              width: '100%', background: extracting ? 'var(--card-subtle)' : 'var(--primary-brand)',
               color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '12px 0',
               fontSize: 14, fontWeight: 700, cursor: extracting ? 'default' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               transition: 'background 0.2s',
             }}
           >
-            <Sparkles size={16} color="#18B7A0" /> {extracting ? 'Extracting fields…' : 'Extract & Fill All Sections'}
+            <Sparkles size={16} color="#FFFFFF" /> {extracting ? 'Extracting fields…' : 'Extract & Fill All Sections'}
           </button>
           {extracted && (
-            <div style={{ marginTop: 16, background: '#E8F8F5', border: '1px solid rgba(24,183,160,0.3)', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 13, color: '#0D7A6B', fontWeight: 600 }}>✅ Fields extracted — review & save in Manual Form</span>
-              <button onClick={() => setTab('manual')} style={{ background: 'transparent', border: 'none', color: '#0D7A6B', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 700 }}>
+            <div style={{ marginTop: 16, background: 'rgba(24, 183, 160, 0.15)', border: '1px solid rgba(24, 183, 160, 0.3)', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 13, color: 'var(--primary-brand)', fontWeight: 600 }}>✅ Fields extracted — review & save in Manual Form</span>
+              <button onClick={() => setTab('manual')} style={{ background: 'transparent', border: 'none', color: 'var(--primary-brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 700 }}>
                 Review <ArrowRight size={14} />
               </button>
             </div>
@@ -263,7 +263,7 @@ export default function NewOpportunity() {
         <div>
           {/* Duplicate warning */}
           {duplicate?.isDuplicate && (
-            <div style={{ background: '#FEF3C7', border: '1px solid #F59E0B', borderLeft: '3px solid #D97706', color: '#B45309', padding: '12px 16px', borderRadius: 8, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', borderLeft: '3px solid #D97706', color: '#F59E0B', padding: '12px 16px', borderRadius: 8, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
               <AlertTriangle size={16} />
               <span style={{ fontSize: 13 }}>Possible duplicate: <strong>{duplicate.existingCompany} — {duplicate.existingRole}</strong></span>
             </div>
@@ -271,17 +271,17 @@ export default function NewOpportunity() {
 
           {/* Extracted Links Banner */}
           {extracted?.links?.length > 0 && (
-            <div style={{ background: '#E8F8F5', border: '1px solid rgba(24,183,160,0.3)', borderLeft: '3px solid #18B7A0', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#0D7A6B', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ background: 'rgba(24, 183, 160, 0.15)', border: '1px solid rgba(24, 183, 160, 0.3)', borderLeft: '3px solid var(--primary-brand)', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary-brand)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <ExternalLink size={13} /> AI Extracted Links ({extracted.links.length})
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {extracted.links.map((l, i) => (
                   <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{
-                    background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#123C73',
+                    background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--primary-brand)',
                     padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600,
                     textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6,
-                    boxShadow: '0 1px 2px rgba(11,31,58,0.04)'
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
                   }}>
                     {l.label || `Link ${i + 1}`} <ExternalLink size={11} />
                   </a>
@@ -298,26 +298,26 @@ export default function NewOpportunity() {
               const collapsed = collapsedSections[si];
 
               return (
-                <div key={si} style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderLeft: `4px solid ${sec.color}`, borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(11,31,58,0.03)' }}>
+                <div key={si} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `4px solid ${sec.color}`, borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)' }}>
                   {/* Section header */}
-                  <div style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: collapsed ? 'none' : '1px solid #E5EAF0', background: '#F8FAFD' }}>
+                  <div style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: collapsed ? 'none' : '1px solid var(--border)', background: 'var(--card-subtle)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
                       <span style={{ fontSize: 16 }}>{sec.icon}</span>
                       <input
                         value={sec.name}
                         onChange={e => handleUpdateSectionName(si, e.target.value)}
-                        style={{ background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 14, color: '#0B1F3A', flex: 1 }}
+                        style={{ background: 'transparent', border: 'none', outline: 'none', fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', flex: 1 }}
                         title="Click to rename section"
                       />
-                      <span style={{ fontSize: 11, color: '#8896AB', fontWeight: 500 }}>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
                         {visible.length} field{visible.length !== 1 ? 's' : ''}
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: 10, marginLeft: 12 }}>
-                      <button onClick={() => setAddingToSection(si)} style={{ background: 'transparent', border: 'none', color: '#123C73', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      <button onClick={() => setAddingToSection(si)} style={{ background: 'transparent', border: 'none', color: 'var(--primary-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                         + Field
                       </button>
-                      <button onClick={() => toggleSection(si)} style={{ background: 'transparent', border: 'none', color: '#8896AB', cursor: 'pointer' }}>
+                      <button onClick={() => toggleSection(si)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                         {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                       </button>
                     </div>
@@ -328,8 +328,8 @@ export default function NewOpportunity() {
 
                       {/* Add-field inline form */}
                       {addingToSection === si && (
-                        <div style={{ background: '#F8FAFD', border: `1px solid #CBD5E1`, borderRadius: 8, padding: 14, marginBottom: 4 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#123C73', marginBottom: 10, letterSpacing: '0.04em' }}>
+                        <div style={{ background: 'var(--card-subtle)', border: `1px solid var(--border)`, borderRadius: 8, padding: 14, marginBottom: 4 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary-brand)', marginBottom: 10, letterSpacing: '0.04em' }}>
                             Add Field to {sec.name}
                           </div>
                           <div style={{ display: 'flex', gap: 10 }}>
@@ -348,10 +348,10 @@ export default function NewOpportunity() {
                             />
                           </div>
                           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                            <button onClick={() => handleAddField(si)} style={{ background: '#0B1F3A', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                            <button onClick={() => handleAddField(si)} style={{ background: 'var(--primary-brand)', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                               Add Field
                             </button>
-                            <button onClick={() => setAddingToSection(null)} style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#667085', padding: '7px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>
+                            <button onClick={() => setAddingToSection(null)} style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)', padding: '7px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>
                               Cancel
                             </button>
                           </div>
@@ -360,9 +360,9 @@ export default function NewOpportunity() {
 
                       {/* Field rows */}
                       {visible.length === 0 && addingToSection !== si ? (
-                        <div style={{ textAlign: 'center', padding: '20px 0', color: '#8896AB', fontSize: 13 }}>
+                        <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)', fontSize: 13 }}>
                           No fields yet.{' '}
-                          <button onClick={() => setAddingToSection(si)} style={{ background: 'transparent', border: 'none', color: '#18B7A0', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>+ Add one</button>
+                          <button onClick={() => setAddingToSection(si)} style={{ background: 'transparent', border: 'none', color: 'var(--primary-brand)', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>+ Add one</button>
                         </div>
                       ) : (
                         visible.map(field => (
@@ -372,13 +372,13 @@ export default function NewOpportunity() {
                               <input
                                 value={field.label}
                                 onChange={e => handleUpdateField(si, field.id, 'label', e.target.value)}
-                                style={{ background: 'transparent', border: 'none', outline: 'none', color: '#475467', fontSize: 13, fontWeight: 600, width: '100%' }}
+                                style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, width: '100%' }}
                               />
                             </div>
                             {/* Value */}
                             {field.fieldType === 'select' ? (
                               <select value={field.value} onChange={e => handleUpdateField(si, field.id, 'value', e.target.value)} style={selectStyle}>
-                                {(field.options || ['No', 'Yes']).map(o => <option key={o} value={o}>{o}</option>)}
+                                {(field.options || ['No', 'Yes']).map(o => <option key={o} value={o} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{o}</option>)}
                               </select>
                             ) : (
                               <input
@@ -390,7 +390,7 @@ export default function NewOpportunity() {
                               />
                             )}
                             {/* Delete */}
-                            <button onClick={() => handleHideField(si, field.id)} style={{ background: 'transparent', border: 'none', color: '#98A2B3', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#EF4444'} onMouseLeave={e => e.currentTarget.style.color = '#98A2B3'}>
+                            <button onClick={() => handleHideField(si, field.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#EF4444'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
                               <Trash2 size={15} />
                             </button>
                           </div>
@@ -400,7 +400,7 @@ export default function NewOpportunity() {
                       {/* Removed fields restore bar */}
                       {hidden.length > 0 && (
                         <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-                          <span style={{ fontSize: 11, color: '#8896AB' }}>Removed:</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Removed:</span>
                           {hidden.map(hf => (
                             <button key={hf.id} onClick={() => {
                               setSections(p => {
@@ -409,7 +409,7 @@ export default function NewOpportunity() {
                                 if (f) f.hidden = false;
                                 return c;
                               });
-                            }} style={{ fontSize: 11, padding: '2px 10px', background: '#F1F4F9', border: '1px dashed #D0D5DD', borderRadius: 20, color: '#475467', cursor: 'pointer' }}>
+                            }} style={{ fontSize: 11, padding: '2px 10px', background: 'var(--card-subtle)', border: '1px dashed var(--border)', borderRadius: 20, color: 'var(--text-secondary)', cursor: 'pointer' }}>
                               ↩ {hf.label}
                             </button>
                           ))}
@@ -423,21 +423,19 @@ export default function NewOpportunity() {
           </div>
 
           {/* Save Bar */}
-          <div style={{ marginTop: 28, background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
-            <span style={{ fontSize: 13, color: '#667085' }}>
+          <div style={{ marginTop: 28, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)' }}>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
               {sections.reduce((t, s) => t + s.fields.filter(f => !f.hidden).length, 0)} fields across {sections.length} sections
             </span>
             <button
               onClick={handleSave}
               disabled={saving}
               style={{
-                background: '#0B1F3A', color: '#FFFFFF', border: 'none',
+                background: 'var(--primary-brand)', color: '#FFFFFF', border: 'none',
                 borderRadius: 8, padding: '10px 28px', fontSize: 14, fontWeight: 700,
                 cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                transition: 'background 0.2s',
+                transition: 'opacity 0.2s, transform 0.15s',
               }}
-              onMouseEnter={e => !saving && (e.currentTarget.style.background = '#18B7A0')}
-              onMouseLeave={e => !saving && (e.currentTarget.style.background = '#0B1F3A')}
             >
               <Save size={15} /> {saving ? 'Saving…' : 'Save Opportunity'}
             </button>

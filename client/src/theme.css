@@ -1,0 +1,183 @@
+/**
+ * ==============================================================================
+ * 🎨 OppTrack Central Color & Theme Tokens
+ * ==============================================================================
+ * This is the SINGLE SOURCE OF TRUTH for all color palettes and visual styling.
+ * To change the website's color theme, simply modify the values in this file!
+ *
+ * It provides both:
+ *  1. :root -> Light Theme (Signature Teal, Warm Slate Navy, Crisp Cards)
+ *  2. [data-theme="dark"] -> Dark Theme (Midnight Navy, Glowing Mint Teal)
+ * ==============================================================================
+ */
+
+:root {
+  /* ── 1. BRAND & PRIMARY ACCENT COLORS ────────────────────────────────────── */
+  --primary-brand: #0D9488;         /* Main Teal */
+  --primary-brand-hover: #0F766E;   /* Darker Teal on hover */
+  --primary-brand-light: #F0FDFA;   /* Soft mint tint for badges & selected items */
+  --primary-brand-text: #0F766E;    /* High-contrast teal text */
+  --primary-brand-glow: rgba(13, 148, 136, 0.25); /* Focus & button glow */
+
+  /* Aliases matching client/src/theme/colors.js */
+  --brand: var(--primary-brand);
+  --brand-hover: var(--primary-brand-hover);
+  --brand-light: var(--primary-brand-light);
+  --brand-text: var(--primary-brand-text);
+  --teal: var(--primary-brand);
+  --teal-hover: var(--primary-brand-hover);
+  --teal-light: var(--primary-brand-light);
+  --teal-text: var(--primary-brand-text);
+  --vessa-plum: var(--primary-brand);
+  --vessa-plum-hover: var(--primary-brand-hover);
+  --vessa-plum-glow: var(--primary-brand-glow);
+
+  /* ── 2. BACKGROUNDS & SURFACES ───────────────────────────────────────────── */
+  --bg: #F8FAFC;                    /* Page Canvas Background */
+  --bg-gradient: radial-gradient(circle at 90% 10%, rgba(13, 148, 136, 0.08) 0%, transparent 60%);
+  --surface: #FFFFFF;               /* Card & dialog surface */
+  --card: #FFFFFF;                  /* Main card background */
+  --card-subtle: #F1F5F9;           /* Secondary card & panel background */
+  --capsule-bg: #E2E8F0;            /* Pill & tab capsule background */
+
+  /* ── 3. BORDERS & DIVIDERS ───────────────────────────────────────────────── */
+  --border: #E2E8F0;                /* Hairline border */
+  --border-hover: #CBD5E1;          /* Border on mouse hover */
+  --border-focus: var(--primary-brand); /* Outline on keyboard focus */
+
+  /* ── 4. TYPOGRAPHY & TEXT ────────────────────────────────────────────────── */
+  --primary-navy: #0F172A;          /* Deep Slate Navy for bold headers */
+  --primary-blue: #2563EB;          /* Blue accent links */
+  --text-primary: #0F172A;          /* Main headings & primary body text */
+  --text-secondary: #475569;        /* Descriptive text, subheadings, labels */
+  --text-muted: #94A3B8;            /* Timestamps, disabled text, icons */
+
+  /* ── 5. STATUS & SEMANTIC COLORS ─────────────────────────────────────────── */
+  --success: #16A34A;               /* Offers, delivered, positive trends */
+  --success-bg: #F0FDF4;            /* Light green pill tint */
+  --warning: #D97706;               /* Deadlines approaching, caution */
+  --warning-bg: #FFFBEB;            /* Light amber pill tint */
+  --danger: #DC2626;                /* Overdue, rejection, urgent alerts */
+  --danger-bg: #FEF2F2;             /* Light red pill tint */
+  --info: #2563EB;                  /* Active applications, calendar */
+  --info-bg: #EFF6FF;               /* Light blue pill tint */
+  --purple: #7E22CE;                /* Assessment rounds, skills */
+  --purple-bg: #FAF5FF;             /* Light purple pill tint */
+  --indigo: #4F46E5;
+  --indigo-bg: #EEF2FF;
+  --amber: #F59E0B;
+  --amber-bg: #FEF3C7;
+  --rose: #E11D48;
+  --rose-bg: #FFE4E6;
+  --input-bg: #FFFFFF;
+  --input-border: #E2E8F0;
+  --input-text: #0F172A;
+
+  /* ── 6. GEOMETRY & CORNER RADII ─────────────────────────────────────────── */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius: 18px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+  --radius-squircle: 14px;
+
+  /* ── 7. SHADOWS & ELEVATION ──────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 3px 8px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 14px 34px -4px rgba(15, 23, 42, 0.1), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+  --shadow-plum: 0 6px 20px var(--primary-brand-glow);
+
+  /* ── 8. MOTION & TIMINGS (Harmonized with src/theme/motion.css) ────────── */
+  --motion-instant: 100ms;
+  --motion-micro: 140ms;
+  --motion-fast: 180ms;
+  --motion-overlay: 220ms;
+  --motion-panel: 220ms;
+  --motion-content: 280ms;
+  --motion-page: 320ms;
+  --motion-deliberate: 380ms;
+  --motion-chart: 350ms;
+  
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-entering: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-entrance: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-exiting: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --transition: all 0.18s var(--ease-standard);
+}
+
+/* ==============================================================================
+ * 🌙 DARK THEME TOKENS (Midnight Navy & Glowing Mint Teal)
+ * ============================================================================== */
+[data-theme="dark"] {
+  /* ── 1. BRAND & PRIMARY ACCENT COLORS ────────────────────────────────────── */
+  --primary-brand: #14B8A6;         /* Glowing Mint Teal */
+  --primary-brand-hover: #2DD4BF;   /* Bright Mint Teal on hover */
+  --primary-brand-light: #0C2D32;   /* Deep teal dark glass tint */
+  --primary-brand-text: #2DD4BF;    /* Bright legible teal text */
+  --primary-brand-glow: rgba(20, 184, 166, 0.38);
+
+  /* Aliases matching client/src/theme/colors.js */
+  --brand: var(--primary-brand);
+  --brand-hover: var(--primary-brand-hover);
+  --brand-light: var(--primary-brand-light);
+  --brand-text: var(--primary-brand-text);
+  --teal: var(--primary-brand);
+  --teal-hover: var(--primary-brand-hover);
+  --teal-light: var(--primary-brand-light);
+  --teal-text: var(--primary-brand-text);
+  --vessa-plum: var(--primary-brand);
+  --vessa-plum-hover: var(--primary-brand-hover);
+  --vessa-plum-glow: var(--primary-brand-glow);
+
+  /* ── 2. BACKGROUNDS & SURFACES ───────────────────────────────────────────── */
+  --bg: #0B1120;                    /* Deep Midnight Navy Canvas */
+  --bg-gradient: radial-gradient(circle at 90% 10%, rgba(20, 184, 166, 0.12) 0%, transparent 60%);
+  --surface: #131E32;               /* Elevated Velvet Navy Surface */
+  --card: #131E32;                  /* Card Background */
+  --card-subtle: #1E293B;           /* Inset & secondary box background */
+  --capsule-bg: #1E293B;            /* Pill capsule background */
+
+  /* ── 3. BORDERS & DIVIDERS ───────────────────────────────────────────────── */
+  --border: #22334F;                /* Dark subtle border */
+  --border-hover: #33486B;          /* Border on hover */
+  --border-focus: var(--primary-brand);
+
+  /* ── 4. TYPOGRAPHY & TEXT ────────────────────────────────────────────────── */
+  --primary-navy: #F8FAFC;          /* Clean white text for headings */
+  --primary-blue: #3B82F6;          /* Vivid blue accent in dark mode */
+  --text-primary: #F8FAFC;          /* Crisp white readable text */
+  --text-secondary: #94A3B8;        /* Light muted slate */
+  --text-muted: #64748B;            /* Secondary muted text */
+
+  /* ── 5. STATUS & SEMANTIC COLORS ─────────────────────────────────────────── */
+  --success: #22C55E;
+  --success-bg: #0D2818;
+  --warning: #F59E0B;
+  --warning-bg: #2B1D09;
+  --danger: #EF4444;
+  --danger-bg: #2B1113;
+  --info: #60A5FA;
+  --info-bg: #10233D;
+  --purple: #C084FC;
+  --purple-bg: #221238;
+  --indigo: #818CF8;
+  --indigo-bg: #1E1B4B;
+  --amber: #FBBF24;
+  --amber-bg: #2A1B07;
+  --rose: #FB7185;
+  --rose-bg: #2D1017;
+  --input-bg: #131E32;
+  --input-border: #22334F;
+  --input-text: #F8FAFC;
+
+  /* ── 6. SHADOWS & ELEVATION ──────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 28px -4px rgba(0, 0, 0, 0.65);
+  --shadow-lg: 0 14px 38px -4px rgba(0, 0, 0, 0.8);
+  --shadow-plum: 0 6px 20px var(--primary-brand-glow);
+}

@@ -32,7 +32,7 @@ const STATUS_COLORS = {
   rejected: '#ef4444',
 };
 
-// Custom Toolbar matching Stitch AI design
+// Custom Toolbar matching OppTrack design
 const CustomToolbar = (toolbar) => {
   const goToBack = () => toolbar.onNavigate('PREV');
   const goToNext = () => toolbar.onNavigate('NEXT');
@@ -45,8 +45,8 @@ const CustomToolbar = (toolbar) => {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '14px 20px',
-        background: '#FFFFFF',
-        borderBottom: '1px solid #E5EAF0',
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
         flexWrap: 'wrap',
         gap: 14
       }}
@@ -57,9 +57,9 @@ const CustomToolbar = (toolbar) => {
           onClick={goToToday}
           type="button"
           style={{
-            background: '#FFFFFF',
-            border: '1px solid #E5EAF0',
-            color: '#172033',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-primary)',
             padding: '6px 14px',
             borderRadius: 6,
             fontSize: 13,
@@ -78,7 +78,7 @@ const CustomToolbar = (toolbar) => {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#667085',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -95,7 +95,7 @@ const CustomToolbar = (toolbar) => {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#667085',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -107,29 +107,29 @@ const CustomToolbar = (toolbar) => {
           </button>
         </div>
 
-        <h2 style={{ fontSize: 17, fontWeight: 700, color: '#0B1F3A', margin: 0 }}>
+        <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
           {toolbar.label}
         </h2>
       </div>
 
       {/* Right view buttons */}
-      <div style={{ display: 'flex', gap: 6, background: '#F8FAFD', padding: 3, borderRadius: 6, border: '1px solid #E5EAF0' }}>
+      <div style={{ display: 'flex', gap: 6, background: 'var(--card-subtle)', padding: 3, borderRadius: 6, border: '1px solid var(--border)' }}>
         {['month', 'week', 'day', 'agenda'].map((viewName) => (
           <button
             key={viewName}
             onClick={() => toolbar.onView(viewName)}
             type="button"
             style={{
-              background: toolbar.view === viewName ? '#FFFFFF' : 'transparent',
-              border: toolbar.view === viewName ? '1px solid #E5EAF0' : 'none',
-              color: toolbar.view === viewName ? '#0B1F3A' : '#667085',
+              background: toolbar.view === viewName ? 'var(--surface)' : 'transparent',
+              border: toolbar.view === viewName ? '1px solid var(--border)' : 'none',
+              color: toolbar.view === viewName ? 'var(--text-primary)' : 'var(--text-secondary)',
               padding: '5px 12px',
               borderRadius: 4,
               fontSize: 12,
               fontWeight: toolbar.view === viewName ? 700 : 500,
               cursor: 'pointer',
               textTransform: 'capitalize',
-              boxShadow: toolbar.view === viewName ? '0 1px 2px rgba(11, 31, 58, 0.04)' : 'none'
+              boxShadow: toolbar.view === viewName ? 'var(--shadow-sm)' : 'none'
             }}
           >
             {viewName}
@@ -335,16 +335,16 @@ export default function CalendarPage() {
 
   const eventStyle = (event) => ({
     style: {
-      background: '#FFFFFF',
-      border: '1px solid #E5EAF0',
-      borderLeft: `4px solid ${event.color || '#2563EB'}`,
-      borderRadius: 4,
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderLeft: `4px solid ${event.color || 'var(--primary-brand)'}`,
+      borderRadius: 5,
       fontSize: 12,
       fontWeight: 600,
-      padding: '2px 6px',
-      color: '#172033',
+      padding: '2px 7px',
+      color: 'var(--text-primary)',
       cursor: 'pointer',
-      boxShadow: '0 1px 2px rgba(11, 31, 58, 0.04)'
+      boxShadow: 'var(--shadow-sm)'
     },
   });
 
@@ -389,23 +389,23 @@ export default function CalendarPage() {
   return (
     <div style={{ maxWidth: 1240, margin: '0 auto', paddingBottom: 40 }}>
       {/* Page Header */}
-      <div style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 20, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+      <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 20, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0B1F3A', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
             Placement Calendar
           </h1>
-          <p style={{ margin: 0, fontSize: 13.5, color: '#667085' }}>
+          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-secondary)' }}>
             Track application deadlines, OA assessment tests, drive schedules, and interview rounds
           </p>
         </div>
 
         {/* Legend & Google Calendar Sync Badge */}
-        <div style={{ display: 'flex', gap: 14, fontSize: 12, color: '#667085', alignItems: 'center', flexWrap: 'wrap', fontWeight: 500 }}>
+        <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--text-secondary)', alignItems: 'center', flexWrap: 'wrap', fontWeight: 500 }}>
           {googleConnected ? (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: '#EAF2FF', border: '1px solid rgba(37, 99, 235, 0.25)',
-              color: '#2563EB', padding: '4px 10px', borderRadius: 20, fontSize: 11.5, fontWeight: 700
+              background: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(37, 99, 235, 0.25)',
+              color: '#3B82F6', padding: '4px 10px', borderRadius: 20, fontSize: 11.5, fontWeight: 700
             }}>
               <CalendarDays size={13} /> Google Calendar Connected ({googleEmail || 'Active'})
             </span>
@@ -414,8 +414,8 @@ export default function CalendarPage() {
               to="/settings"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: '#FFFBEB', border: '1px solid #FCD34D',
-                color: '#B45309', padding: '4px 10px', borderRadius: 20, fontSize: 11.5, fontWeight: 700, textDecoration: 'none'
+                background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)',
+                color: 'var(--amber-text, #F59E0B)', padding: '4px 10px', borderRadius: 20, fontSize: 11.5, fontWeight: 700, textDecoration: 'none'
               }}
             >
               <CalendarDays size={13} /> Connect Google Calendar
@@ -439,12 +439,12 @@ export default function CalendarPage() {
       {/* Control Bar: Milestone Filter & View Mode Switcher */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 10,
+        background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10,
         padding: '10px 16px', marginBottom: 20, flexWrap: 'wrap', gap: 12,
-        boxShadow: '0 1px 3px rgba(11, 31, 58, 0.03)'
+        boxShadow: 'var(--shadow-sm)'
       }}>
         {/* Left: Milestone Filter Pills */}
-        <div style={{ display: 'flex', background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: 3, gap: 4, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: 3, gap: 4, flexWrap: 'wrap' }}>
           {[
             { key: 'all', label: `All (${displayedEvents.length})` },
             { key: 'deadline', label: 'Deadlines' },
@@ -457,15 +457,15 @@ export default function CalendarPage() {
               type="button"
               onClick={() => setMilestoneFilter(mf.key)}
               style={{
-                background: milestoneFilter === mf.key ? '#FFFFFF' : 'transparent',
-                border: milestoneFilter === mf.key ? '1px solid #E5EAF0' : 'none',
-                color: milestoneFilter === mf.key ? '#0B1F3A' : '#667085',
+                background: milestoneFilter === mf.key ? 'var(--surface)' : 'transparent',
+                border: milestoneFilter === mf.key ? '1px solid var(--border)' : '1px solid transparent',
+                color: milestoneFilter === mf.key ? 'var(--text-primary)' : 'var(--text-secondary)',
                 padding: '5px 12px',
                 borderRadius: 4,
                 fontSize: 12,
                 fontWeight: milestoneFilter === mf.key ? 700 : 500,
                 cursor: 'pointer',
-                boxShadow: milestoneFilter === mf.key ? '0 1px 2px rgba(11, 31, 58, 0.04)' : 'none'
+                boxShadow: milestoneFilter === mf.key ? 'var(--shadow-sm)' : 'none'
               }}
             >
               {mf.label}
@@ -474,14 +474,14 @@ export default function CalendarPage() {
         </div>
 
         {/* Center: Calendar Mode Toggle (OppTrack vs Google Calendar vs Unified) */}
-        <div style={{ display: 'flex', background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: 3, gap: 4, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: 3, gap: 4, flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={() => setCalendarMode('opptrack')}
             style={{
-              background: calendarMode === 'opptrack' ? '#E8F8F5' : 'transparent',
-              border: calendarMode === 'opptrack' ? '1px solid rgba(24, 183, 160, 0.3)' : 'none',
-              color: calendarMode === 'opptrack' ? '#087F71' : '#667085',
+              background: calendarMode === 'opptrack' ? 'rgba(24, 183, 160, 0.15)' : 'transparent',
+              border: calendarMode === 'opptrack' ? '1px solid var(--primary-brand)' : '1px solid transparent',
+              color: calendarMode === 'opptrack' ? 'var(--primary-brand)' : 'var(--text-secondary)',
               padding: '6px 14px',
               borderRadius: 4,
               fontSize: 12.5,
@@ -492,7 +492,7 @@ export default function CalendarPage() {
               gap: 6
             }}
           >
-            <CalendarDays size={14} color={calendarMode === 'opptrack' ? '#18B7A0' : 'currentColor'} />
+            <CalendarDays size={14} color={calendarMode === 'opptrack' ? 'var(--primary-brand)' : 'currentColor'} />
             OppTrack View
           </button>
 
@@ -500,9 +500,9 @@ export default function CalendarPage() {
             type="button"
             onClick={() => setCalendarMode('google')}
             style={{
-              background: calendarMode === 'google' ? '#EAF2FF' : 'transparent',
-              border: calendarMode === 'google' ? '1px solid rgba(37, 99, 235, 0.3)' : 'none',
-              color: calendarMode === 'google' ? '#2563EB' : '#667085',
+              background: calendarMode === 'google' ? 'rgba(37, 99, 235, 0.15)' : 'transparent',
+              border: calendarMode === 'google' ? '1px solid rgba(37, 99, 235, 0.35)' : '1px solid transparent',
+              color: calendarMode === 'google' ? '#3B82F6' : 'var(--text-secondary)',
               padding: '6px 14px',
               borderRadius: 4,
               fontSize: 12.5,
@@ -513,11 +513,11 @@ export default function CalendarPage() {
               gap: 6
             }}
           >
-            <CalendarIcon size={14} color={calendarMode === 'google' ? '#2563EB' : 'currentColor'} />
+            <CalendarIcon size={14} color={calendarMode === 'google' ? '#3B82F6' : 'currentColor'} />
             Google Calendar
             {googleEvents.length > 0 && (
               <span style={{
-                background: '#2563EB', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 10, fontWeight: 700
+                background: '#3B82F6', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 10, fontWeight: 700
               }}>
                 {googleEvents.length}
               </span>
@@ -528,9 +528,9 @@ export default function CalendarPage() {
             type="button"
             onClick={() => setCalendarMode('unified')}
             style={{
-              background: calendarMode === 'unified' ? '#F3E8FF' : 'transparent',
-              border: calendarMode === 'unified' ? '1px solid rgba(168, 85, 247, 0.3)' : 'none',
-              color: calendarMode === 'unified' ? '#7E22CE' : '#667085',
+              background: calendarMode === 'unified' ? 'rgba(168, 85, 247, 0.15)' : 'transparent',
+              border: calendarMode === 'unified' ? '1px solid rgba(168, 85, 247, 0.35)' : '1px solid transparent',
+              color: calendarMode === 'unified' ? '#A855F7' : 'var(--text-secondary)',
               padding: '6px 14px',
               borderRadius: 4,
               fontSize: 12.5,
@@ -541,7 +541,7 @@ export default function CalendarPage() {
               gap: 6
             }}
           >
-            <Layers size={14} color={calendarMode === 'unified' ? '#7E22CE' : 'currentColor'} />
+            <Layers size={14} color={calendarMode === 'unified' ? '#A855F7' : 'currentColor'} />
             Unified View
           </button>
         </div>
@@ -553,9 +553,9 @@ export default function CalendarPage() {
             onClick={handleSyncNow}
             disabled={syncing}
             style={{
-              background: '#EAF2FF',
+              background: 'rgba(37, 99, 235, 0.12)',
               border: '1px solid rgba(37, 99, 235, 0.25)',
-              color: '#2563EB',
+              color: '#3B82F6',
               padding: '7px 14px',
               borderRadius: 6,
               fontSize: 12.5,
@@ -575,8 +575,9 @@ export default function CalendarPage() {
             target="_blank"
             rel="noreferrer"
             style={{
-              background: '#0B1F3A',
-              color: '#ffffff',
+              background: 'var(--surface)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
               padding: '7px 14px',
               borderRadius: 6,
               fontSize: 12.5,
@@ -585,7 +586,7 @@ export default function CalendarPage() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              boxShadow: '0 2px 6px rgba(11, 31, 58, 0.12)'
+              boxShadow: 'var(--shadow-sm)'
             }}
           >
             <ExternalLink size={13} /> Open Google Calendar
@@ -596,7 +597,7 @@ export default function CalendarPage() {
       {/* Google Calendar Mode Sub-Navigation / Status Bar */}
       {calendarMode === 'google' && (
         <div style={{
-          background: '#F0F7FF', border: '1px solid #BFDBFE', borderRadius: 10,
+          background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 10,
           padding: '12px 18px', marginBottom: 18, display: 'flex', justifyContent: 'space-between',
           alignItems: 'center', flexWrap: 'wrap', gap: 12
         }}>
@@ -608,15 +609,15 @@ export default function CalendarPage() {
               <CalendarIcon size={18} />
             </div>
             <div>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1E3A8A', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 Google Calendar Feed
                 {googleConnected && (
-                  <span style={{ background: '#DCFCE7', color: '#166534', fontSize: 11, padding: '2px 8px', borderRadius: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)', fontSize: 11, padding: '2px 8px', borderRadius: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <CheckCircle2 size={11} /> Connected ({googleEmail})
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: '#475569' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                 {googleConnected
                   ? `Showing ${displayedEvents.length} events synchronized with your primary Google Calendar.`
                   : 'Google account not connected. Milestones will be mirrored once authorized.'}
@@ -626,13 +627,13 @@ export default function CalendarPage() {
 
           {/* Sub-view switcher: Interactive Grid vs Web Embed */}
           {googleConnected && (
-            <div style={{ display: 'flex', background: '#FFFFFF', border: '1px solid #BFDBFE', borderRadius: 6, padding: 3, gap: 4 }}>
+            <div style={{ display: 'flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: 3, gap: 4 }}>
               <button
                 type="button"
                 onClick={() => setGoogleSubView('grid')}
                 style={{
-                  background: googleSubView === 'grid' ? '#2563EB' : 'transparent',
-                  color: googleSubView === 'grid' ? '#FFFFFF' : '#475569',
+                  background: googleSubView === 'grid' ? 'var(--primary-brand)' : 'transparent',
+                  color: googleSubView === 'grid' ? '#FFFFFF' : 'var(--text-secondary)',
                   border: 'none',
                   padding: '5px 12px',
                   borderRadius: 4,
@@ -650,8 +651,8 @@ export default function CalendarPage() {
                 type="button"
                 onClick={() => setGoogleSubView('embed')}
                 style={{
-                  background: googleSubView === 'embed' ? '#2563EB' : 'transparent',
-                  color: googleSubView === 'embed' ? '#FFFFFF' : '#475569',
+                  background: googleSubView === 'embed' ? 'var(--primary-brand)' : 'transparent',
+                  color: googleSubView === 'embed' ? '#FFFFFF' : 'var(--text-secondary)',
                   border: 'none',
                   padding: '5px 12px',
                   borderRadius: 4,
@@ -674,23 +675,23 @@ export default function CalendarPage() {
       {calendarMode === 'google' && !googleConnected ? (
         /* Not Connected State Card */
         <div style={{
-          background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12,
-          padding: 48, textAlign: 'center', boxShadow: '0 2px 8px rgba(11, 31, 58, 0.04)'
+          background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12,
+          padding: 48, textAlign: 'center', boxShadow: 'var(--shadow-sm)'
         }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#EAF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#2563EB' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(37, 99, 235, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#3B82F6' }}>
             <CalendarIcon size={28} />
           </div>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: 20, color: '#0B1F3A', fontWeight: 700 }}>
+          <h3 style={{ margin: '0 0 8px 0', fontSize: 20, color: 'var(--text-primary)', fontWeight: 700 }}>
             Connect Google Calendar for Live Sync
           </h3>
-          <p style={{ margin: '0 auto 24px auto', fontSize: 14, color: '#667085', maxWidth: 480, lineHeight: 1.5 }}>
+          <p style={{ margin: '0 auto 24px auto', fontSize: 14, color: 'var(--text-secondary)', maxWidth: 480, lineHeight: 1.5 }}>
             Link your Google account to automatically mirror application deadlines, OA assessment tests, drive schedules, and interview milestones directly to your Google Calendar with custom reminders.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
             <Link
               to="/settings"
               style={{
-                background: '#0B1F3A',
+                background: 'var(--primary-brand)',
                 color: '#fff',
                 padding: '10px 22px',
                 borderRadius: 6,
@@ -700,7 +701,7 @@ export default function CalendarPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                boxShadow: '0 2px 6px rgba(11, 31, 58, 0.12)'
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
               }}
             >
               <CalendarDays size={16} /> Go to Settings & Connect Google Account
@@ -709,9 +710,9 @@ export default function CalendarPage() {
               type="button"
               onClick={() => setCalendarMode('opptrack')}
               style={{
-                background: '#FFFFFF',
-                color: '#475569',
-                border: '1px solid #CBD5E1',
+                background: 'var(--card-subtle)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border)',
                 padding: '10px 18px',
                 borderRadius: 6,
                 fontSize: 13.5,
@@ -725,11 +726,11 @@ export default function CalendarPage() {
         </div>
       ) : calendarMode === 'google' && googleSubView === 'embed' ? (
         /* Web Embed Iframe Sub-View with Fallback Notice */
-        <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, overflow: 'hidden', padding: 16, boxShadow: '0 2px 8px rgba(11, 31, 58, 0.04)' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', padding: 16, boxShadow: 'var(--shadow-sm)' }}>
           <div style={{
-            background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 8,
+            background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 8,
             padding: '10px 16px', marginBottom: 14, display: 'flex', justifyContent: 'space-between',
-            alignItems: 'center', flexWrap: 'wrap', gap: 10, fontSize: 13, color: '#92400E'
+            alignItems: 'center', flexWrap: 'wrap', gap: 10, fontSize: 13, color: 'var(--amber-text, #F59E0B)'
           }}>
             <span>
               ℹ️ <strong>Note:</strong> Browsers restrict private calendar viewing inside iframes. If this frame shows an empty calendar, use the <strong>Interactive Grid</strong> view or click Open in Google Calendar.
@@ -739,7 +740,7 @@ export default function CalendarPage() {
               target="_blank"
               rel="noreferrer"
               style={{
-                background: '#B45309', color: '#FFFFFF', padding: '6px 14px', borderRadius: 6,
+                background: '#D97706', color: '#FFFFFF', padding: '6px 14px', borderRadius: 6,
                 fontWeight: 600, textDecoration: 'none', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6
               }}
             >
@@ -753,21 +754,21 @@ export default function CalendarPage() {
             style={{
               width: '100%',
               height: 720,
-              border: '1px solid #E5EAF0',
+              border: '1px solid var(--border)',
               borderRadius: 8,
-              background: '#ffffff',
+              background: 'var(--surface)',
             }}
           />
         </div>
       ) : (
         /* Interactive Grid Container (Used for OppTrack View, Google Calendar Grid View, and Unified View) */
-        <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, overflow: 'hidden', position: 'relative', boxShadow: '0 2px 8px rgba(11, 31, 58, 0.04)' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', position: 'relative', boxShadow: 'var(--shadow-sm)' }}>
           {loadingGoogle && calendarMode === 'google' && (
             <div style={{
               position: 'absolute', top: 12, right: 16, zIndex: 10,
-              background: 'rgba(255,255,255,0.92)', border: '1px solid #BFDBFE',
-              borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#2563EB',
-              display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, boxShadow: '0 2px 6px rgba(37,99,235,0.1)'
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#3B82F6',
+              display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, boxShadow: 'var(--shadow-sm)'
             }}>
               <RefreshCw size={12} className="spin" /> Updating from Google Calendar…
             </div>
@@ -789,18 +790,18 @@ export default function CalendarPage() {
               toolbar: CustomToolbar,
               event: ({ event }) => (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, width: '100%', overflow: 'hidden' }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11.5 }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11.5, color: 'var(--text-primary)' }}>
                     {event.title}
                   </span>
                   {(event.source === 'google' || event.googleCalendarEventId || calendarSyncActive) && (
                     <span
                       title="Google Calendar Synced"
                       style={{
-                        background: event.source === 'google' ? '#2563EB' : '#EAF2FF',
+                        background: event.source === 'google' ? '#2563EB' : 'rgba(37, 99, 235, 0.15)',
                         border: '1px solid rgba(37, 99, 235, 0.3)',
                         borderRadius: 3,
                         padding: '0 4px',
-                        color: event.source === 'google' ? '#FFFFFF' : '#2563EB',
+                        color: event.source === 'google' ? '#FFFFFF' : '#3B82F6',
                         fontSize: 9,
                         fontWeight: 800,
                         flexShrink: 0
@@ -820,14 +821,12 @@ export default function CalendarPage() {
       {/* Event Details Popover Modal */}
       {selectedEvent && (
         <div
+          className="modal-backdrop-motion"
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(11, 31, 58, 0.45)',
-            backdropFilter: 'blur(4px)',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(6px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -838,14 +837,15 @@ export default function CalendarPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            className="modal-card-motion"
             style={{
-              background: '#FFFFFF',
-              border: '1px solid #E5EAF0',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: 14,
               width: '100%',
               maxWidth: 460,
               padding: 24,
-              boxShadow: '0 20px 50px rgba(11, 31, 58, 0.2)'
+              boxShadow: 'var(--shadow-xl)'
             }}
           >
             {/* Modal Header */}
@@ -853,12 +853,12 @@ export default function CalendarPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 12, height: 12, borderRadius: '50%', background: selectedEvent.color || '#2563EB' }} />
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0B1F3A' }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
                     {selectedEvent.company || selectedEvent.title}
                   </h3>
                   <span style={{
                     fontSize: 11.5, fontWeight: 700, color: selectedEvent.color || '#2563EB',
-                    background: `${selectedEvent.color || '#2563EB'}15`, padding: '2px 8px', borderRadius: 4, display: 'inline-block', marginTop: 3
+                    background: `${selectedEvent.color || '#2563EB'}20`, padding: '2px 8px', borderRadius: 4, display: 'inline-block', marginTop: 3
                   }}>
                     {selectedEvent.milestoneLabel || (selectedEvent.milestoneType?.toUpperCase()) || 'Event'}
                   </span>
@@ -867,16 +867,16 @@ export default function CalendarPage() {
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
-                style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer', padding: 4 }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div style={{ fontSize: 13.5, color: '#4B5563', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {selectedEvent.role && (
-                <div><strong>Role:</strong> {selectedEvent.role}</div>
+                <div><strong>Role:</strong> <span style={{ color: 'var(--text-primary)' }}>{selectedEvent.role}</span></div>
               )}
               {selectedEvent.ctc && (
                 <div><strong>Compensation:</strong> <span style={{ color: '#16A34A', fontWeight: 700 }}>{selectedEvent.ctc}</span></div>
@@ -887,20 +887,20 @@ export default function CalendarPage() {
                 </div>
               )}
               <div>
-                <strong>Date & Time:</strong> {selectedEvent.start ? selectedEvent.start.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                <strong>Date & Time:</strong> <span style={{ color: 'var(--text-primary)' }}>{selectedEvent.start ? selectedEvent.start.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
               </div>
 
               {selectedEvent.location && (
-                <div><strong>Location / Venue:</strong> {selectedEvent.location}</div>
+                <div><strong>Location / Venue:</strong> <span style={{ color: 'var(--text-primary)' }}>{selectedEvent.location}</span></div>
               )}
 
               {selectedEvent.description && (
                 <div style={{
                   padding: '10px 14px', borderRadius: 8,
-                  background: '#F9FAFB', border: '1px solid #E5EAF0',
-                  fontSize: 12.5, color: '#1F2937', whiteSpace: 'pre-line', maxHeight: 160, overflowY: 'auto'
+                  background: 'var(--card-subtle)', border: '1px solid var(--border)',
+                  fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'pre-line', maxHeight: 160, overflowY: 'auto'
                 }}>
-                  <strong>Event Description:</strong>
+                  <strong style={{ color: 'var(--text-secondary)' }}>Event Description:</strong>
                   <div style={{ marginTop: 4 }}>{selectedEvent.description}</div>
                 </div>
               )}
@@ -908,20 +908,20 @@ export default function CalendarPage() {
               {selectedEvent.shortlistInfo && (
                 <div style={{
                   padding: '8px 12px', borderRadius: 6,
-                  background: '#F9FAFB', border: '1px solid #E5EAF0',
-                  fontSize: 12.5, color: '#1F2937'
+                  background: 'var(--card-subtle)', border: '1px solid var(--border)',
+                  fontSize: 12.5, color: 'var(--text-primary)'
                 }}>
-                  <strong>Shortlist / Notes:</strong> {selectedEvent.shortlistInfo}
+                  <strong style={{ color: 'var(--text-secondary)' }}>Shortlist / Notes:</strong> {selectedEvent.shortlistInfo}
                 </div>
               )}
 
               {/* Google Calendar Status Pill */}
               <div style={{
                 marginTop: 4, padding: '9px 14px', borderRadius: 8,
-                background: '#EAF2FF', border: '1px solid rgba(37, 99, 235, 0.25)',
-                color: '#1E40AF', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8
+                background: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(37, 99, 235, 0.25)',
+                color: 'var(--text-primary)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8
               }}>
-                <CalendarDays size={15} color="#2563EB" />
+                <CalendarDays size={15} color="#3B82F6" />
                 <span>
                   <strong>Google Calendar Status:</strong> {selectedEvent.source === 'google' || selectedEvent.googleCalendarEventId || calendarSyncActive ? 'Synchronized (24h & 1h prior popups active)' : 'Pending synchronization'}
                 </span>
@@ -936,7 +936,7 @@ export default function CalendarPage() {
                   onClick={() => navigate(`/opportunities/${selectedEvent.oppId}`)}
                   style={{
                     width: '100%',
-                    background: '#0B1F3A',
+                    background: 'var(--primary-brand)',
                     color: '#FFFFFF',
                     border: 'none',
                     padding: '10px 16px',
@@ -960,9 +960,9 @@ export default function CalendarPage() {
                 rel="noreferrer"
                 style={{
                   width: '100%',
-                  background: '#2563EB',
-                  border: '1px solid #1D4ED8',
-                  color: '#FFFFFF',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
                   padding: '9px 16px',
                   borderRadius: 6,
                   fontWeight: 600,

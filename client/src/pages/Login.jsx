@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck, Clock, AlertCircle } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck, Clock, AlertCircle, Sun, Moon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
 
@@ -17,6 +18,7 @@ export default function Login() {
   const [sessionExpired, setSessionExpired] = useState(false);
 
   const { login } = useAuth();
+  const { toggleTheme, isDark } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -84,45 +86,65 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8FAFC', color: '#0F172A', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
       
-      {/* ── TOP NAVIGATION ── */}
-      <header
-        style={{
-          height: 60,
-          borderBottom: '1px solid #E2E8F0',
-          background: '#FFFFFF',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-        }}
-      >
-        <div style={{ maxWidth: 1200, width: '100%', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
-            <span style={{ fontSize: 18, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em' }}>OppTrack</span>
-            <span style={{ color: '#CBD5E1', fontSize: 13, userSelect: 'none' }}>|</span>
-            <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 500 }}>Placement Tracking Console</span>
+      {/* ── TOP FLOATING NAVIGATION BAR (DASHBOARD VESSA DOCK) ── */}
+      <div style={{ position: 'sticky', top: 14, zIndex: 100, padding: '0 20px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+        <header className="vessa-topbar">
+          <Link to="/" className="vessa-brand">
+            <div className="vessa-brand-logo" style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 3 }}>
+              <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 8 }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+                OppTrack
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+                Placement Tracking Console
+              </div>
+            </div>
           </Link>
 
-          <Link
-            to="/register"
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#2563EB',
-              textDecoration: 'none',
-              padding: '6px 14px',
-              borderRadius: 6,
-              background: '#EFF6FF',
-              border: '1px solid #BFDBFE',
-              transition: 'background-color 0.15s ease',
-            }}
-          >
-            Create an account →
-          </Link>
-        </div>
-      </header>
+          {/* Center: Segmented Navigation Pill Switcher */}
+          <nav className="vessa-pill-tabs">
+            <Link to="/" className="vessa-pill-tab">Home</Link>
+            <Link to="/login" className="vessa-pill-tab active">Sign In</Link>
+            <Link to="/register" className="vessa-pill-tab">Sign Up</Link>
+          </nav>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'var(--card-subtle)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+            >
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
+            <Link
+              to="/register"
+              className="vessa-btn-primary"
+              style={{ padding: '7px 18px' }}
+            >
+              <span>Create account</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </header>
+      </div>
 
       {/* ── MAIN 2-COLUMN AUTH LAYOUT ── */}
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px 60px' }}>
@@ -141,11 +163,11 @@ export default function Login() {
                 width: '100%',
                 maxWidth: 460,
                 margin: '0 auto',
-                background: '#FFFFFF',
+                background: 'var(--surface)',
                 borderRadius: 12,
-                border: '1px solid #E2E8F0',
+                border: '1px solid var(--border)',
                 padding: '36px 32px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+                boxShadow: 'var(--shadow)',
               }}
             >
               {/* Session Expired Notice */}
@@ -158,9 +180,9 @@ export default function Login() {
                     gap: 10,
                     padding: '12px 14px',
                     borderRadius: 8,
-                    background: '#FEF3C7',
-                    border: '1px solid #FDE68A',
-                    color: '#92400E',
+                    background: 'var(--warning-bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--warning)',
                     fontSize: 13,
                     marginBottom: 20,
                   }}
@@ -175,10 +197,10 @@ export default function Login() {
 
               {/* Header */}
               <div style={{ marginBottom: 28 }}>
-                <h1 style={{ fontSize: '1.65rem', fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
+                <h1 style={{ fontSize: '1.65rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
                   Welcome back
                 </h1>
-                <p style={{ fontSize: 13.5, color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
                   Sign in to manage your placement applications, deadlines, and Profile Vault.
                 </p>
               </div>
@@ -194,9 +216,9 @@ export default function Login() {
                     gap: 8,
                     padding: '10px 14px',
                     borderRadius: 8,
-                    background: '#FEF2F2',
-                    border: '1px solid #FEE2E2',
-                    color: '#B91C1C',
+                    background: 'var(--danger-bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--danger)',
                     fontSize: 13,
                     marginBottom: 18,
                   }}
@@ -213,7 +235,7 @@ export default function Login() {
                 <div>
                   <label
                     htmlFor="email"
-                    style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}
+                    style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}
                   >
                     Email address
                   </label>
@@ -222,7 +244,7 @@ export default function Login() {
                       style={{
                         position: 'absolute',
                         left: 12,
-                        color: errors.email && touched.email ? '#EF4444' : '#94A3B8',
+                        color: errors.email && touched.email ? 'var(--danger)' : 'var(--text-muted)',
                         display: 'flex',
                         pointerEvents: 'none',
                       }}
@@ -246,18 +268,18 @@ export default function Login() {
                         height: 44,
                         paddingLeft: 38,
                         paddingRight: 12,
-                        background: '#FFFFFF',
-                        border: `1px solid ${touched.email && errors.email ? '#EF4444' : '#CBD5E1'}`,
+                        background: 'var(--surface)',
+                        border: `1px solid ${touched.email && errors.email ? 'var(--danger)' : 'var(--border)'}`,
                         borderRadius: 8,
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
                         transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                   </div>
                   {touched.email && errors.email && (
-                    <p id="email-error" role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '5px 0 0' }}>
+                    <p id="email-error" role="alert" style={{ fontSize: 12, color: 'var(--danger)', margin: '5px 0 0' }}>
                       {errors.email}
                     </p>
                   )}
@@ -268,13 +290,13 @@ export default function Login() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                     <label
                       htmlFor="password"
-                      style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}
+                      style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}
                     >
                       Password
                     </label>
                     <Link
                       to="/forgot-password"
-                      style={{ fontSize: 12, color: '#2563EB', textDecoration: 'none', fontWeight: 500 }}
+                      style={{ fontSize: 12, color: 'var(--teal)', textDecoration: 'none', fontWeight: 500 }}
                     >
                       Forgot password?
                     </Link>
@@ -284,7 +306,7 @@ export default function Login() {
                       style={{
                         position: 'absolute',
                         left: 12,
-                        color: errors.password && touched.password ? '#EF4444' : '#94A3B8',
+                        color: errors.password && touched.password ? 'var(--danger)' : 'var(--text-muted)',
                         display: 'flex',
                         pointerEvents: 'none',
                       }}
@@ -308,11 +330,11 @@ export default function Login() {
                         height: 44,
                         paddingLeft: 38,
                         paddingRight: 42,
-                        background: '#FFFFFF',
-                        border: `1px solid ${touched.password && errors.password ? '#EF4444' : '#CBD5E1'}`,
+                        background: 'var(--surface)',
+                        border: `1px solid ${touched.password && errors.password ? 'var(--danger)' : 'var(--border)'}`,
                         borderRadius: 8,
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
                         transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
@@ -326,7 +348,7 @@ export default function Login() {
                         right: 8,
                         background: 'transparent',
                         border: 'none',
-                        color: '#64748B',
+                        color: 'var(--text-muted)',
                         cursor: 'pointer',
                         padding: 6,
                         borderRadius: 4,
@@ -339,7 +361,7 @@ export default function Login() {
                     </button>
                   </div>
                   {touched.password && errors.password && (
-                    <p id="password-error" role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '5px 0 0' }}>
+                    <p id="password-error" role="alert" style={{ fontSize: 12, color: 'var(--danger)', margin: '5px 0 0' }}>
                       {errors.password}
                     </p>
                   )}
@@ -352,7 +374,7 @@ export default function Login() {
                   style={{
                     width: '100%',
                     height: 44,
-                    background: '#2563EB',
+                    background: 'var(--primary-brand)',
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: 8,
@@ -363,7 +385,7 @@ export default function Login() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    boxShadow: '0 2px 10px var(--primary-brand-glow)',
                     transition: 'background-color 0.15s ease',
                     marginTop: 4,
                     opacity: loading ? 0.8 : 1,
@@ -383,22 +405,22 @@ export default function Login() {
                     gap: 6,
                     padding: '4px 10px',
                     borderRadius: 6,
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
+                    background: 'var(--card-subtle)',
+                    border: '1px solid var(--border)',
                     fontSize: 11.5,
-                    color: '#64748B',
+                    color: 'var(--text-secondary)',
                     fontWeight: 500,
                   }}
                 >
-                  <ShieldCheck size={14} color="#0D9488" />
+                  <ShieldCheck size={14} color="var(--primary-brand)" />
                   <span>Secure authentication • Passwords hashed with bcrypt</span>
                 </div>
               </div>
 
               {/* Footer Switch to Register */}
-              <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid #F1F5F9', textAlign: 'center', fontSize: 13, color: '#64748B' }}>
+              <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--border)', textAlign: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
                 Don't have an account?{' '}
-                <Link to="/register" style={{ color: '#2563EB', fontWeight: 600, textDecoration: 'none' }}>
+                <Link to="/register" style={{ color: 'var(--teal)', fontWeight: 600, textDecoration: 'none' }}>
                   Create an account
                 </Link>
               </div>
@@ -411,11 +433,12 @@ export default function Login() {
             <div
               style={{
                 width: '100%',
-                background: '#0F172A',
+                background: 'linear-gradient(135deg, #0B1120 0%, #131E32 100%)',
+                border: '1px solid var(--border)',
                 borderRadius: 14,
                 padding: '36px 32px',
                 color: '#FFFFFF',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                boxShadow: 'var(--shadow)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -431,15 +454,15 @@ export default function Login() {
                       gap: 6,
                       padding: '3px 10px',
                       borderRadius: 4,
-                      background: 'rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(20, 184, 166, 0.12)',
                       fontSize: 11,
                       fontWeight: 600,
                       letterSpacing: '0.04em',
                       textTransform: 'uppercase',
-                      color: '#93C5FD',
+                      color: 'var(--teal-text)',
                     }}
                   >
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#38BDF8' }} />
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--teal)' }} />
                     Workspace Preview
                   </div>
                   <span style={{ fontSize: 12, color: '#94A3B8' }}>Student Portal</span>

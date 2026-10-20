@@ -561,12 +561,12 @@ export default function Opportunities() {
   return (
     <div style={{ maxWidth: 1160, margin: '0 auto', paddingBottom: 60 }}>
       {/* Header */}
-      <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 24, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+      <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: 24, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0B1F3A', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
             Opportunities
           </h1>
-          <p style={{ margin: 0, fontSize: 13.5, color: '#667085' }}>
+          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-secondary)' }}>
             {opps.length} placement & internship opportunities tracked
           </p>
         </div>
@@ -574,7 +574,7 @@ export default function Opportunities() {
         <Link
           to="/opportunities/new"
           style={{
-            background: '#0B1F3A',
+            background: 'var(--primary-brand)',
             color: '#FFFFFF',
             fontSize: 13.5,
             fontWeight: 600,
@@ -584,7 +584,7 @@ export default function Opportunities() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 7,
-            boxShadow: '0 2px 6px rgba(11, 31, 58, 0.12)',
+            boxShadow: '0 2px 8px var(--primary-brand-glow)',
             transition: 'background 0.15s ease'
           }}
         >
@@ -593,20 +593,20 @@ export default function Opportunities() {
       </header>
 
       {/* Primary View Switcher: Tracked Opportunities vs Pending Review */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 28, borderBottom: '1px solid #E5EAF0', paddingBottom: 16, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 28, borderBottom: '1px solid var(--border)', paddingBottom: 16, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             onClick={() => setViewTab('tracked')}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-              background: viewTab === 'tracked' ? '#E8F8F5' : 'transparent',
-              color: viewTab === 'tracked' ? '#087F71' : '#667085',
-              border: viewTab === 'tracked' ? '1px solid rgba(24, 183, 160, 0.3)' : '1px solid transparent',
+              background: viewTab === 'tracked' ? 'var(--primary-brand-light)' : 'transparent',
+              color: viewTab === 'tracked' ? 'var(--primary-brand-text)' : 'var(--text-secondary)',
+              border: viewTab === 'tracked' ? '1px solid var(--border)' : '1px solid transparent',
               cursor: 'pointer'
             }}
           >
-            <CalendarDays size={15} color={viewTab === 'tracked' ? '#18B7A0' : 'currentColor'} />
+            <CalendarDays size={15} color={viewTab === 'tracked' ? 'var(--primary-brand)' : 'currentColor'} />
             Tracked Opportunities ({opps.length})
           </button>
 
@@ -615,13 +615,13 @@ export default function Opportunities() {
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-              background: viewTab === 'pending' ? '#FEF0F0' : 'transparent',
-              color: viewTab === 'pending' ? '#DC3545' : '#667085',
-              border: viewTab === 'pending' ? '1px solid rgba(220, 53, 69, 0.3)' : '1px solid transparent',
+              background: viewTab === 'pending' ? 'var(--danger-bg)' : 'transparent',
+              color: viewTab === 'pending' ? 'var(--danger)' : 'var(--text-secondary)',
+              border: viewTab === 'pending' ? '1px solid var(--border)' : '1px solid transparent',
               cursor: 'pointer'
             }}
           >
-            <Mail size={15} color={viewTab === 'pending' ? '#DC3545' : 'currentColor'} />
+            <Mail size={15} color={viewTab === 'pending' ? 'var(--danger)' : 'currentColor'} />
             Pending Review (Gmail)
             {pendingItems.length > 0 && (
               <span style={{
@@ -639,8 +639,8 @@ export default function Opportunities() {
             onClick={handleSyncGmail}
             disabled={syncingGmail}
             style={{
-              background: '#FEF0F0', border: '1px solid rgba(220, 53, 69, 0.25)',
-              color: '#DC3545', padding: '7px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+              background: 'rgba(220, 53, 69, 0.12)', border: '1px solid rgba(220, 53, 69, 0.25)',
+              color: 'var(--danger, #DC3545)', padding: '7px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600,
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
             }}
           >
@@ -655,8 +655,8 @@ export default function Opportunities() {
           {/* Missing API Key Warning Banner */}
           {!hasApiKey && (
             <div style={{
-              background: '#FFFBEB',
-              border: '1px solid #FCD34D',
+              background: 'rgba(245, 158, 11, 0.1)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
               borderLeft: '4px solid #F59E0B',
               borderRadius: 10,
               padding: '14px 18px',
@@ -669,12 +669,12 @@ export default function Opportunities() {
               boxShadow: '0 1px 3px rgba(245, 158, 11, 0.08)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <KeyRound size={20} color="#D97706" style={{ flexShrink: 0 }} />
+                <KeyRound size={20} color="#F59E0B" style={{ flexShrink: 0 }} />
                 <div>
-                  <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#92400E' }}>
+                  <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
                     Please enter your API key to enable AI extraction
                   </h4>
-                  <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#B45309' }}>
+                  <p style={{ margin: '2px 0 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
                     An LLM API key (Groq, Gemini, OpenAI, etc.) is required to parse company details, packages, drive dates, and eligibility from incoming Gmail emails.
                   </p>
                 </div>
@@ -708,37 +708,38 @@ export default function Opportunities() {
 
           {/* Top Control & Filter Bar for Pending Review */}
           <div style={{
-            background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 10,
-            padding: 16, marginBottom: 20, boxShadow: '0 1px 3px rgba(11, 31, 58, 0.03)',
+            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10,
+            padding: 16, marginBottom: 20, boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
             display: 'flex', flexDirection: 'column', gap: 14
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                   Filter & Categorize Incoming Emails
                 </span>
-                <span style={{ fontSize: 12, color: '#667085', marginLeft: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)', marginLeft: 8 }}>
                   ({pendingItems.length} pending review)
                 </span>
               </div>
 
               {/* Date Filter Pills */}
-              <div style={{ display: 'flex', background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: 3, gap: 3 }}>
+              <div style={{ display: 'flex', background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: 3, gap: 3 }}>
                 {PENDING_DATE_FILTERS.map(df => (
                   <button
                     key={df.key}
                     type="button"
                     onClick={() => { setPendingDateFilter(df.key); setPendingPage(1); }}
                     style={{
-                      background: pendingDateFilter === df.key ? '#FFFFFF' : 'transparent',
-                      color: pendingDateFilter === df.key ? '#0B1F3A' : '#667085',
-                      border: pendingDateFilter === df.key ? '1px solid #E5EAF0' : 'none',
+                      background: pendingDateFilter === df.key ? 'var(--surface)' : 'transparent',
+                      color: pendingDateFilter === df.key ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      border: pendingDateFilter === df.key ? '1px solid var(--border)' : '1px solid transparent',
                       padding: '4px 10px',
                       borderRadius: 4,
                       fontSize: 12,
                       fontWeight: pendingDateFilter === df.key ? 700 : 500,
                       cursor: 'pointer',
-                      boxShadow: pendingDateFilter === df.key ? '0 1px 2px rgba(11, 31, 58, 0.04)' : 'none'
+                      boxShadow: pendingDateFilter === df.key ? '0 1px 2px rgba(0, 0, 0, 0.06)' : 'none',
+                      transition: 'all 0.15s ease'
                     }}
                   >
                     {df.label}
@@ -750,50 +751,50 @@ export default function Opportunities() {
             {/* Category & Branch Selectors + Search */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
               {/* Quick Search */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: '5px 10px', flex: '1 1 200px' }}>
-                <Search size={13} color="#667085" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', flex: '1 1 200px' }}>
+                <Search size={13} color="var(--text-muted)" />
                 <input
                   type="text"
                   placeholder="Filter pending by company, role, or text..."
                   value={pendingSearch}
                   onChange={e => { setPendingSearch(e.target.value); setPendingPage(1); }}
-                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12, outline: 'none', width: '100%', fontFamily: 'inherit' }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12, outline: 'none', width: '100%', fontFamily: 'inherit' }}
                 />
                 {pendingSearch && (
                   <button
                     type="button"
                     onClick={() => { setPendingSearch(''); setPendingPage(1); }}
-                    style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer', padding: 0 }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
                   >
                     <X size={12} />
                   </button>
                 )}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: '5px 10px' }}>
-                <Briefcase size={13} color="#667085" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px' }}>
+                <Briefcase size={13} color="var(--text-muted)" />
                 <select
                   value={pendingTypeFilter}
                   onChange={e => { setPendingTypeFilter(e.target.value); setPendingPage(1); }}
-                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
                 >
-                  <option value="">All Opportunity Types</option>
-                  <option value="placement">Placements Only</option>
-                  <option value="internship">Internships Only</option>
-                  <option value="internship+ppo">Internship + PPO</option>
-                  <option value="off-campus">Off-Campus</option>
+                  <option value="" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>All Opportunity Types</option>
+                  <option value="placement" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Placements Only</option>
+                  <option value="internship" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Internships Only</option>
+                  <option value="internship+ppo" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Internship + PPO</option>
+                  <option value="off-campus" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Off-Campus</option>
                 </select>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: '5px 10px' }}>
-                <GraduationCap size={13} color="#667085" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px' }}>
+                <GraduationCap size={13} color="var(--text-muted)" />
                 <select
                   value={pendingBranchFilter}
                   onChange={e => { setPendingBranchFilter(e.target.value); setPendingPage(1); }}
-                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
                 >
                   {BRANCH_FILTERS.map(bf => (
-                    <option key={bf.key} value={bf.key}>{bf.label}</option>
+                    <option key={bf.key} value={bf.key} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{bf.label}</option>
                   ))}
                 </select>
               </div>
@@ -802,7 +803,7 @@ export default function Opportunities() {
                 <button
                   type="button"
                   onClick={() => { setPendingDateFilter('all'); setPendingTypeFilter(''); setPendingBranchFilter(''); setPendingSearch(''); setPendingPage(1); }}
-                  style={{ background: 'transparent', border: 'none', color: '#DC3545', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '4px 8px' }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--danger, #DC3545)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '4px 8px' }}
                 >
                   Reset Filters
                 </button>
@@ -813,8 +814,8 @@ export default function Opportunities() {
           {/* Recent Automatic Updates from Gmail Section */}
           {autoUpdates.length > 0 && (
             <div style={{
-              background: '#FFFFFF',
-              border: '1px solid #E5EAF0',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderLeft: '4px solid #10B981',
               borderRadius: 10,
               padding: '16px 20px',
@@ -823,14 +824,14 @@ export default function Opportunities() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: showAutoUpdates ? 12 : 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ background: '#ECFDF5', color: '#059669', width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Zap size={14} />
                   </span>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}>
+                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
                       Auto-Updated Jobs from Gmail ({autoUpdates.length})
                     </h4>
-                    <span style={{ fontSize: 11.5, color: '#667085' }}>
+                    <span style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
                       Updates detected from emails. You can review, update, or remove any suggestion here.
                     </span>
                   </div>
@@ -839,7 +840,7 @@ export default function Opportunities() {
                 <button
                   type="button"
                   onClick={() => setShowAutoUpdates(!showAutoUpdates)}
-                  style={{ background: 'transparent', border: 'none', color: '#059669', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ background: 'transparent', border: 'none', color: '#10B981', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   {showAutoUpdates ? 'Hide Auto-Updates' : 'Show Auto-Updates'}
                   {showAutoUpdates ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -860,26 +861,26 @@ export default function Opportunities() {
                       <div
                         key={u._id}
                         style={{
-                          background: '#F9FAFB', border: '1px solid #E5EAF0', borderRadius: 8,
+                          background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 8,
                           padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
                           <div style={{ flex: 1, minWidth: 260 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
-                              <strong style={{ fontSize: 14, color: '#0B1F3A' }}>
+                              <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>
                                 {details.existingCompany || opp.company || 'Job Record'}
                               </strong>
-                              {opp.role && <span style={{ fontSize: 12, color: '#667085' }}>• {opp.role}</span>}
-                              <span style={{ fontSize: 11, background: '#ECFDF5', color: '#059669', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>
+                              {opp.role && <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>• {opp.role}</span>}
+                              <span style={{ fontSize: 11, background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>
                                 Auto-Suggested
                               </span>
-                              <span style={{ fontSize: 11, color: '#9CA3AF' }}>
+                              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                                 {new Date(u.receivedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
-                            <div style={{ fontSize: 12, color: '#374151' }}>
-                              <strong>Changes:</strong> {changes.length > 0 ? changes.join(' | ') : 'Drive/Shortlist details synchronized'}
+                            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                              <strong style={{ color: 'var(--text-primary)' }}>Changes:</strong> {changes.length > 0 ? changes.join(' | ') : 'Drive/Shortlist details synchronized'}
                             </div>
                           </div>
 
@@ -889,7 +890,7 @@ export default function Opportunities() {
                               type="button"
                               onClick={() => setShowAutoEmail(prev => ({ ...prev, [u._id]: !prev[u._id] }))}
                               style={{
-                                background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#334155',
+                                background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)',
                                 padding: '5px 10px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
                                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4
                               }}
@@ -901,7 +902,7 @@ export default function Opportunities() {
                               type="button"
                               onClick={() => setEditingAutoUpdateId(isEditing ? null : u._id)}
                               style={{
-                                background: '#E0F2FE', border: '1px solid #BAE6FD', color: '#0284C7',
+                                background: 'rgba(14, 165, 233, 0.15)', border: '1px solid rgba(14, 165, 233, 0.3)', color: '#0284C7',
                                 padding: '5px 11px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
                                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4
                               }}
@@ -914,7 +915,7 @@ export default function Opportunities() {
                               onClick={() => handleRemoveAutoUpdate(u._id)}
                               disabled={deletingAutoId === u._id}
                               style={{
-                                background: '#FEE2E2', border: '1px solid #FECACA', color: '#DC2626',
+                                background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.25)', color: 'var(--danger, #DC3545)',
                                 padding: '5px 10px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
                                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4
                               }}
@@ -926,7 +927,7 @@ export default function Opportunities() {
                               <Link
                                 to={`/opportunities/${opp._id}`}
                                 style={{
-                                  background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#1F2937',
+                                  background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)',
                                   padding: '5px 11px', borderRadius: 6, fontSize: 11.5, fontWeight: 600,
                                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4
                                 }}
@@ -940,11 +941,11 @@ export default function Opportunities() {
                         {/* Raw Email Display for Auto-Update */}
                         {isEmailOpen && (
                           <div style={{
-                            background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 6,
+                            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6,
                             padding: 12, marginTop: 4
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                              <span style={{ fontSize: 11.5, fontWeight: 700, color: '#475569' }}>
+                              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)' }}>
                                 Original Email: {u.subject} (From: {u.from})
                               </span>
                               <button
@@ -954,8 +955,8 @@ export default function Opportunities() {
                                   toast.success('Email copied!');
                                 }}
                                 style={{
-                                  background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: 4,
-                                  padding: '2px 7px', fontSize: 11, fontWeight: 600, color: '#475569', cursor: 'pointer',
+                                  background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 4,
+                                  padding: '2px 7px', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer',
                                   display: 'inline-flex', alignItems: 'center', gap: 4
                                 }}
                               >
@@ -963,8 +964,8 @@ export default function Opportunities() {
                               </button>
                             </div>
                             <div style={{
-                              whiteSpace: 'pre-wrap', fontSize: 12, color: '#1E293B', lineHeight: 1.5,
-                              maxHeight: 200, overflowY: 'auto', background: '#F8FAFC', padding: 10, borderRadius: 4, border: '1px solid #E2E8F0'
+                              whiteSpace: 'pre-wrap', fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.5,
+                              maxHeight: 200, overflowY: 'auto', background: 'var(--card-subtle)', padding: 10, borderRadius: 4, border: '1px solid var(--border)'
                             }}>
                               {u.rawText || 'No email content available.'}
                             </div>
@@ -974,78 +975,78 @@ export default function Opportunities() {
                         {/* Inline Edit Form for Auto-Update */}
                         {isEditing && (
                           <div style={{
-                            background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 8,
+                            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8,
                             padding: 14, marginTop: 4, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10
                           }}>
                             <div>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                                 Status
                               </label>
                               <select
                                 value={aEdit.status || 'applied'}
                                 onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], status: e.target.value } }))}
-                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                                style={{ width: '100%', background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
                               >
-                                <option value="not_applied">Not Applied</option>
-                                <option value="applied">Applied</option>
-                                <option value="oa">OA / Test</option>
-                                <option value="interview">Interview</option>
-                                <option value="hr">HR Round</option>
-                                <option value="offer">Offer Received</option>
-                                <option value="rejected">Rejected</option>
+                                <option value="not_applied" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Not Applied</option>
+                                <option value="applied" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Applied</option>
+                                <option value="oa" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>OA / Test</option>
+                                <option value="interview" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Interview</option>
+                                <option value="hr" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>HR Round</option>
+                                <option value="offer" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Offer Received</option>
+                                <option value="rejected" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Rejected</option>
                               </select>
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                                 OA / Test Date & Time
                               </label>
                               <input
                                 type="datetime-local"
                                 value={aEdit.testDate || ''}
                                 onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], testDate: e.target.value } }))}
-                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                                style={{ width: '100%', background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                                 Campus Drive Date
                               </label>
                               <input
                                 type="date"
                                 value={aEdit.driveDate ? aEdit.driveDate.substring(0, 10) : ''}
                                 onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], driveDate: e.target.value } }))}
-                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                                style={{ width: '100%', background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                                 Interview Date & Time
                               </label>
                               <input
                                 type="datetime-local"
                                 value={aEdit.interviewDate || ''}
                                 onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], interviewDate: e.target.value } }))}
-                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                                style={{ width: '100%', background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                                 Application Deadline
                               </label>
                               <input
                                 type="datetime-local"
                                 value={aEdit.deadline || ''}
                                 onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], deadline: e.target.value } }))}
-                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                                style={{ width: '100%', background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>
                                 Shortlist / Results Note
                               </label>
                               <input
@@ -1053,7 +1054,7 @@ export default function Opportunities() {
                                 placeholder="e.g. 15 candidates shortlisted"
                                 value={aEdit.shortlistInfo || ''}
                                 onChange={e => setAutoUpdateEdits(ae => ({ ...ae, [u._id]: { ...ae[u._id], shortlistInfo: e.target.value } }))}
-                                style={{ width: '100%', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
+                                style={{ width: '100%', background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}
                               />
                             </div>
 
@@ -1062,7 +1063,7 @@ export default function Opportunities() {
                                 type="button"
                                 onClick={() => setEditingAutoUpdateId(null)}
                                 style={{
-                                  background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#64748B',
+                                  background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
                                   padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer'
                                 }}
                               >
@@ -1108,12 +1109,12 @@ export default function Opportunities() {
             <div className="loading-center" style={{ minHeight: 200 }}><div className="spinner" /></div>
           ) : pendingItems.length === 0 ? (
             <div style={{
-              background: '#FFFFFF', border: '1px dashed #E5EAF0', borderRadius: 12,
+              background: 'var(--surface)', border: '1px dashed var(--border)', borderRadius: 12,
               padding: 48, textAlign: 'center'
             }}>
-              <Mail size={36} color="#DC3545" style={{ marginBottom: 14, opacity: 0.8 }} />
-              <h3 style={{ margin: '0 0 6px 0', fontSize: 18, color: '#0B1F3A', fontWeight: 700 }}>No Pending Emails to Review</h3>
-              <p style={{ margin: '0 auto 20px auto', fontSize: 13.5, color: '#667085', maxWidth: 460, lineHeight: 1.5 }}>
+              <Mail size={36} color="var(--danger, #DC3545)" style={{ marginBottom: 14, opacity: 0.8 }} />
+              <h3 style={{ margin: '0 0 6px 0', fontSize: 18, color: 'var(--text-primary)', fontWeight: 700 }}>No Pending Emails to Review</h3>
+              <p style={{ margin: '0 auto 20px auto', fontSize: 13.5, color: 'var(--text-secondary)', maxWidth: 460, lineHeight: 1.5 }}>
                 When your trusted placement senders email you about new drives or internships, they will be automatically fetched, parsed via AI, and queued here for your confirmation.
               </p>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
@@ -1121,7 +1122,7 @@ export default function Opportunities() {
                   onClick={handleSyncGmail}
                   disabled={syncingGmail}
                   style={{
-                    background: '#0B1F3A', color: '#fff', border: 'none', padding: '9px 18px',
+                    background: 'var(--primary-brand)', color: '#fff', border: 'none', padding: '9px 18px',
                     borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                     display: 'inline-flex', alignItems: 'center', gap: 6
                   }}
@@ -1131,7 +1132,7 @@ export default function Opportunities() {
                 <Link
                   to="/settings"
                   style={{
-                    background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033',
+                    background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)',
                     padding: '9px 16px', borderRadius: 6, fontSize: 13, textDecoration: 'none', fontWeight: 500
                   }}
                 >
@@ -1141,10 +1142,10 @@ export default function Opportunities() {
             </div>
           ) : filteredPending.length === 0 ? (
             <div style={{
-              background: '#FFFFFF', border: '1px dashed #E5EAF0', borderRadius: 12,
-              padding: '40px 20px', textAlign: 'center', color: '#667085'
+              background: 'var(--surface)', border: '1px dashed var(--border)', borderRadius: 12,
+              padding: '40px 20px', textAlign: 'center', color: 'var(--text-secondary)'
             }}>
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#0B1F3A', marginBottom: 4 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
                 No pending opportunities match your filters
               </div>
               <div style={{ fontSize: 13, marginBottom: 16 }}>
@@ -1154,7 +1155,7 @@ export default function Opportunities() {
                 type="button"
                 onClick={() => { setPendingDateFilter('all'); setPendingTypeFilter(''); setPendingBranchFilter(''); setPendingSearch(''); setPendingPage(1); }}
                 style={{
-                  background: '#087F71', color: '#FFFFFF', border: 'none',
+                  background: 'var(--primary-brand)', color: '#FFFFFF', border: 'none',
                   padding: '7px 16px', borderRadius: 6, fontSize: 12.5, fontWeight: 600, cursor: 'pointer'
                 }}
               >
@@ -1164,7 +1165,7 @@ export default function Opportunities() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Top Pagination Control */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
                 <Pagination
                   currentPage={pendingPage}
                   totalItems={filteredPending.length}
@@ -1173,7 +1174,7 @@ export default function Opportunities() {
                   onPageSizeChange={(newSize) => { setPendingPageSize(newSize); setPendingPage(1); }}
                   pageSizeOptions={[10, 20, 50]}
                   itemName="pending opportunities"
-                  accentColor="#087F71"
+                  accentColor="var(--primary-brand)"
                 />
               </div>
 
@@ -1193,35 +1194,35 @@ export default function Opportunities() {
                     <div
                       key={item._id}
                       style={{
-                        background: '#FFFFFF',
-                        border: '1px solid #E5EAF0',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
                         borderLeft: dup?.isDuplicate ? '4px solid #F59E0B' : '4px solid #DC3545',
                         borderRadius: 12,
                         padding: 24,
-                        boxShadow: '0 2px 8px rgba(11, 31, 58, 0.04)'
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
                       }}
                     >
                       {/* Top Bar: Sender, Received Date, Type Badge & Duplicate status */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 11.5, background: '#FEF0F0', color: '#DC3545', border: '1px solid rgba(220, 53, 69, 0.25)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                            <span style={{ fontSize: 11.5, background: 'rgba(220, 53, 69, 0.12)', color: 'var(--danger, #DC3545)', border: '1px solid rgba(220, 53, 69, 0.25)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
                               From: {item.from || 'Placement Cell'}
                             </span>
-                            <span style={{ fontSize: 11.5, color: '#667085', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
                               <Clock size={12} /> {new Date(item.receivedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                             </span>
                             <span style={{
                               fontSize: 11, fontWeight: 800, textTransform: 'uppercase',
-                              background: empTypeStr.includes('intern') ? '#E8F8F5' : '#EAF2FF',
-                              color: empTypeStr.includes('intern') ? '#087F71' : '#2563EB',
+                              background: empTypeStr.includes('intern') ? 'rgba(8, 127, 113, 0.15)' : 'rgba(37, 99, 235, 0.15)',
+                              color: empTypeStr.includes('intern') ? 'var(--primary-brand)' : '#3B82F6',
                               border: empTypeStr.includes('intern') ? '1px solid rgba(8, 127, 113, 0.25)' : '1px solid rgba(37, 99, 235, 0.25)',
                               padding: '2px 7px', borderRadius: 4
                             }}>
                               {empTypeStr}
                             </span>
                           </div>
-                          <h3 style={{ fontSize: 16.5, fontWeight: 700, color: '#0B1F3A', margin: 0, lineHeight: 1.4 }}>
+                          <h3 style={{ fontSize: 16.5, fontWeight: 700, color: 'var(--text-primary)', margin: 0, lineHeight: 1.4 }}>
                             {item.subject}
                           </h3>
                         </div>
@@ -1231,7 +1232,7 @@ export default function Opportunities() {
                             <span style={{
                               display: 'flex', alignItems: 'center', gap: 4,
                               fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
-                              background: '#FFF7E6', color: '#B7791F', border: '1px solid rgba(245, 158, 11, 0.3)'
+                              background: 'rgba(245, 158, 11, 0.12)', color: '#F59E0B', border: '1px solid rgba(245, 158, 11, 0.3)'
                             }}>
                               <AlertTriangle size={12} /> Duplicate: {dup.existingCompany}
                             </span>
@@ -1241,8 +1242,8 @@ export default function Opportunities() {
                             <span style={{
                               display: 'flex', alignItems: 'center', gap: 4,
                               fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6,
-                              background: elig.status === 'eligible' ? '#EAF8EF' : elig.status === 'not_eligible' ? '#FEF0F0' : '#FFF7E6',
-                              color: elig.status === 'eligible' ? '#16A34A' : elig.status === 'not_eligible' ? '#DC3545' : '#B7791F',
+                              background: elig.status === 'eligible' ? 'rgba(22, 163, 74, 0.12)' : elig.status === 'not_eligible' ? 'rgba(220, 53, 69, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                              color: elig.status === 'eligible' ? '#16A34A' : elig.status === 'not_eligible' ? '#DC3545' : '#F59E0B',
                               border: `1px solid ${elig.status === 'eligible' ? 'rgba(22, 163, 74, 0.25)' : elig.status === 'not_eligible' ? 'rgba(220, 53, 69, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`
                             }}>
                               {elig.status === 'eligible' ? 'Eligible' : elig.status === 'not_eligible' ? 'Not Eligible' : 'Needs Review'}
@@ -1254,33 +1255,33 @@ export default function Opportunities() {
                       {/* Main Details Grid: Company, Role, Package, Deadline */}
                       <div style={{
                         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-                        gap: 12, background: '#F8FAFD', padding: 14, borderRadius: 8, border: '1px solid #E5EAF0',
+                        gap: 12, background: 'var(--card-subtle)', padding: 14, borderRadius: 8, border: '1px solid var(--border)',
                         marginBottom: 14
                       }}>
                         <div>
-                          <span style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>Company</span>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A', marginTop: 2 }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Company</span>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
                             {edits.company || ext.company || '—'}
                           </div>
                         </div>
 
                         <div>
-                          <span style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>Role</span>
-                          <div style={{ fontSize: 13.5, fontWeight: 600, color: '#172033', marginTop: 2 }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Role</span>
+                          <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)', marginTop: 2 }}>
                             {edits.role || ext.role || '—'}
                           </div>
                         </div>
 
                         <div>
-                          <span style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>Package / Stipend</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Package / Stipend</span>
                           <div style={{ fontSize: 14, fontWeight: 800, color: '#16A34A', marginTop: 2 }}>
                             {payStr}
                           </div>
                         </div>
 
                         <div>
-                          <span style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>Deadline</span>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#0B1F3A', marginTop: 2 }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Deadline</span>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
                             {edits.deadline ? new Date(edits.deadline).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : ext.deadline ? new Date(ext.deadline).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'No deadline stated'}
                           </div>
                         </div>
@@ -1288,16 +1289,16 @@ export default function Opportunities() {
 
                       {/* Allowed Branches & Eligibility Badges Row */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
-                        <span style={{ fontSize: 11.5, color: '#4B5563', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <GraduationCap size={13} color="#2563EB" /> Allowed Branches:
+                        <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <GraduationCap size={13} color="#3B82F6" /> Allowed Branches:
                         </span>
                         {branches.length > 0 ? (
                           branches.map((b, bIdx) => (
                             <span
                               key={bIdx}
                               style={{
-                                background: '#EFF6FF', border: '1px solid rgba(37, 99, 235, 0.25)',
-                                color: '#1D4ED8', padding: '2px 8px', borderRadius: 4,
+                                background: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(37, 99, 235, 0.25)',
+                                color: '#3B82F6', padding: '2px 8px', borderRadius: 4,
                                 fontSize: 11, fontWeight: 700, textTransform: 'uppercase'
                               }}
                             >
@@ -1305,25 +1306,25 @@ export default function Opportunities() {
                             </span>
                           ))
                         ) : (
-                          <span style={{ fontSize: 11.5, color: '#9CA3AF', fontStyle: 'italic' }}>
+                          <span style={{ fontSize: 11.5, color: 'var(--text-muted)', fontStyle: 'italic' }}>
                             All branches eligible / Not restricted
                           </span>
                         )}
 
                         {ext.eligibility?.minCGPA && (
-                          <span style={{ fontSize: 11, background: '#F3F4F6', color: '#374151', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
+                          <span style={{ fontSize: 11, background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-secondary)', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
                             Min CGPA: {ext.eligibility.minCGPA}
                           </span>
                         )}
 
                         {ext.testDate && (
-                          <span style={{ fontSize: 11, background: '#FEF3C7', color: '#92400E', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                          <span style={{ fontSize: 11, background: 'rgba(245, 158, 11, 0.12)', color: '#F59E0B', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
                             OA Date: {new Date(ext.testDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
                           </span>
                         )}
 
                         {ext.driveDate && (
-                          <span style={{ fontSize: 11, background: '#EDE9FE', color: '#5B21B6', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                          <span style={{ fontSize: 11, background: 'rgba(139, 92, 246, 0.12)', color: '#A855F7', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
                             Drive Date: {new Date(ext.driveDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
                           </span>
                         )}
@@ -1343,9 +1344,9 @@ export default function Opportunities() {
                                 rel="noreferrer"
                                 style={{
                                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                                  fontSize: 12, color: '#2563EB', textDecoration: 'none',
-                                  background: 'rgba(37, 99, 235, 0.08)', padding: '4px 10px',
-                                  borderRadius: 6, border: '1px solid rgba(37, 99, 235, 0.2)',
+                                  fontSize: 12, color: '#3B82F6', textDecoration: 'none',
+                                  background: 'rgba(37, 99, 235, 0.1)', padding: '4px 10px',
+                                  borderRadius: 6, border: '1px solid rgba(37, 99, 235, 0.25)',
                                   fontWeight: 600
                                 }}
                               >
@@ -1359,12 +1360,12 @@ export default function Opportunities() {
                       {/* Missing API Key Warning Callout on Card if not configured */}
                       {(!hasApiKey || ext.note) && (
                         <div style={{
-                          background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8,
+                          background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 8,
                           padding: '10px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <AlertTriangle size={15} color="#D97706" />
-                            <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>
+                            <AlertTriangle size={15} color="#F59E0B" />
+                            <span style={{ fontSize: 12, color: 'var(--amber-text, #F59E0B)', fontWeight: 600 }}>
                               {ext.note || 'AI API Key was not set. Please enter your API key to automatically parse and extract full details.'}
                             </span>
                           </div>
@@ -1388,8 +1389,8 @@ export default function Opportunities() {
                       {/* Full Gmail Content Viewer (Collapsible) */}
                       {showEmailBody[item._id] && (
                         <div style={{
-                          background: '#F8FAFC',
-                          border: '1px solid #CBD5E1',
+                          background: 'var(--card-subtle)',
+                          border: '1px solid var(--border)',
                           borderLeft: '4px solid #EA4335',
                           borderRadius: 8,
                           padding: 14,
@@ -1397,10 +1398,10 @@ export default function Opportunities() {
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
                             <div>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <Mail size={14} color="#EA4335" /> Gmail Message Content
                               </span>
-                              <span style={{ fontSize: 11, color: '#64748B' }}>
+                              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                                 Subject: {item.subject} • From: {item.from} • {new Date(item.receivedAt).toLocaleString()}
                               </span>
                             </div>
@@ -1411,8 +1412,8 @@ export default function Opportunities() {
                                 toast.success('Email text copied to clipboard!');
                               }}
                               style={{
-                                background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 4,
-                                padding: '3px 8px', fontSize: 11, fontWeight: 600, color: '#475569', cursor: 'pointer',
+                                background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4,
+                                padding: '3px 8px', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer',
                                 display: 'inline-flex', alignItems: 'center', gap: 4
                               }}
                             >
@@ -1422,18 +1423,18 @@ export default function Opportunities() {
                           <div style={{
                             whiteSpace: 'pre-wrap',
                             fontSize: 12.5,
-                            color: '#1E293B',
+                            color: 'var(--text-primary)',
                             lineHeight: 1.6,
                             maxHeight: 280,
                             overflowY: 'auto',
-                            background: '#FFFFFF',
+                            background: 'var(--surface)',
                             padding: 12,
                             borderRadius: 6,
-                            border: '1px solid #E2E8F0',
+                            border: '1px solid var(--border)',
                           }}>
                             {item.rawText || 'No email content available.'}
                           </div>
-                          <div style={{ fontSize: 11, color: '#64748B', marginTop: 6 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
                             💡 All content present in Gmail is preserved above. You can read the original email and extract or modify any important data below.
                           </div>
                         </div>
@@ -1442,167 +1443,167 @@ export default function Opportunities() {
                       {/* Expanded Edit Form: Extracted Important Data */}
                       {isExpanded && (
                         <div style={{
-                          background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 8,
+                          background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 8,
                           padding: 16, marginBottom: 16
                         }}>
                           <div style={{ marginBottom: 12 }}>
-                            <h4 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>
+                            <h4 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                               Extracted Important Data (Editable)
                             </h4>
-                            <span style={{ fontSize: 11.5, color: '#667085' }}>
+                            <span style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
                               Review or modify the extracted fields below. Everything here will be saved to your database and synced to Google Calendar.
                             </span>
                           </div>
 
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Company Name</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Company Name</label>
                               <input
                                 type="text"
                                 value={edits.company}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], company: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Role / Designation</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Role / Designation</label>
                               <input
                                 type="text"
                                 value={edits.role}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], role: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Opportunity Type</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Opportunity Type</label>
                               <select
                                 value={edits.employmentType || 'placement'}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], employmentType: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               >
-                                <option value="placement">Placement (Full-time)</option>
-                                <option value="internship">Internship</option>
-                                <option value="internship+ppo">Internship + PPO</option>
-                                <option value="off-campus">Off-Campus Drive</option>
+                                <option value="placement" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Placement (Full-time)</option>
+                                <option value="internship" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Internship</option>
+                                <option value="internship+ppo" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Internship + PPO</option>
+                                <option value="off-campus" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Off-Campus Drive</option>
                               </select>
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>CTC / Package</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>CTC / Package</label>
                               <input
                                 type="text"
                                 placeholder="e.g. 10 LPA or 12,00,000"
                                 value={edits.ctc}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], ctc: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Stipend / PPO</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Stipend / PPO</label>
                               <input
                                 type="text"
                                 placeholder="e.g. 25,000 / month"
                                 value={edits.stipend || edits.ppo}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], stipend: e.target.value, ppo: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Location / Mode</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Location / Mode</label>
                               <input
                                 type="text"
                                 placeholder="e.g. Pune, Bangalore, Hybrid"
                                 value={edits.location}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], location: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Application Deadline</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Application Deadline</label>
                               <input
                                 type="datetime-local"
                                 value={edits.deadline}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], deadline: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>OA / Online Test Date & Time</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>OA / Online Test Date & Time</label>
                               <input
                                 type="datetime-local"
                                 value={edits.testDate}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], testDate: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Campus Drive Date</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Campus Drive Date</label>
                               <input
                                 type="date"
                                 value={edits.driveDate ? edits.driveDate.substring(0, 10) : ''}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], driveDate: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Interview Date & Time</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Interview Date & Time</label>
                               <input
                                 type="datetime-local"
                                 value={edits.interviewDate}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], interviewDate: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Minimum CGPA</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Minimum CGPA</label>
                               <input
                                 type="text"
                                 placeholder="e.g. 6.5 or 7.0"
                                 value={edits.minCGPA}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], minCGPA: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Allowed Branches (comma separated)</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Allowed Branches (comma separated)</label>
                               <input
                                 type="text"
                                 placeholder="e.g. CS, IT, ENTC, Mech"
                                 value={edits.allowedBranches}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], allowedBranches: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div style={{ gridColumn: '1 / -1' }}>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Registration / Application Links</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Registration / Application Links</label>
                               <input
                                 type="text"
                                 placeholder="e.g. https://forms.gle/... or job portal link"
                                 value={edits.links}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], links: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
 
                             <div style={{ gridColumn: '1 / -1' }}>
-                              <label style={{ fontSize: 11, color: '#667085', display: 'block', marginBottom: 4, fontWeight: 600 }}>Shortlist / Eligibility / Round Notes</label>
+                              <label style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, fontWeight: 600 }}>Shortlist / Eligibility / Round Notes</label>
                               <textarea
                                 rows={2}
                                 placeholder="e.g. Online Assessment followed by Technical and HR round..."
                                 value={edits.shortlistInfo}
                                 onChange={e => setPendingEdits(pe => ({ ...pe, [item._id]: { ...pe[item._id], shortlistInfo: e.target.value } }))}
-                                style={{ width: '100%', background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#172033', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
+                                style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 6, fontSize: 13 }}
                               />
                             </div>
                           </div>
@@ -1616,9 +1617,9 @@ export default function Opportunities() {
                             type="button"
                             onClick={() => setShowEmailBody(prev => ({ ...prev, [item._id]: !prev[item._id] }))}
                             style={{
-                              background: showEmailBody[item._id] ? '#EFF6FF' : '#F8FAFC',
-                              border: '1px solid #CBD5E1',
-                              color: showEmailBody[item._id] ? '#1D4ED8' : '#334155',
+                              background: showEmailBody[item._id] ? 'rgba(37, 99, 235, 0.15)' : 'var(--surface)',
+                              border: '1px solid var(--border)',
+                              color: showEmailBody[item._id] ? '#3B82F6' : 'var(--text-primary)',
                               padding: '6px 12px',
                               borderRadius: 6,
                               fontSize: 12,
@@ -1629,7 +1630,7 @@ export default function Opportunities() {
                               gap: 6
                             }}
                           >
-                            <FileText size={13} color={showEmailBody[item._id] ? '#1D4ED8' : '#DC2626'} />
+                            <FileText size={13} color={showEmailBody[item._id] ? '#3B82F6' : '#DC2626'} />
                             {showEmailBody[item._id] ? 'Hide Gmail Content' : 'View Full Gmail Content'}
                           </button>
 
@@ -1637,9 +1638,9 @@ export default function Opportunities() {
                             type="button"
                             onClick={() => setExpandedReviewId(isExpanded ? null : item._id)}
                             style={{
-                              background: isExpanded ? '#E8F8F5' : '#FFFFFF',
-                              border: '1px solid #CBD5E1',
-                              color: '#087F71',
+                              background: isExpanded ? 'rgba(8, 127, 113, 0.15)' : 'var(--surface)',
+                              border: '1px solid var(--border)',
+                              color: 'var(--primary-brand)',
                               fontSize: 12,
                               fontWeight: 600,
                               padding: '6px 12px',
@@ -1659,7 +1660,7 @@ export default function Opportunities() {
                             onClick={() => handleReExtract(item._id)}
                             disabled={reExtractingId === item._id}
                             style={{
-                              background: '#F0FDF4', border: '1px solid rgba(22, 163, 74, 0.25)', color: '#16A34A',
+                              background: 'rgba(22, 163, 74, 0.12)', border: '1px solid rgba(22, 163, 74, 0.25)', color: '#16A34A',
                               padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                               display: 'inline-flex', alignItems: 'center', gap: 5
                             }}
@@ -1675,7 +1676,7 @@ export default function Opportunities() {
                             onClick={() => handleIgnorePending(item._id)}
                             disabled={ignoringId === item._id}
                             style={{
-                              background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#667085',
+                              background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
                               padding: '8px 16px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer'
                             }}
                           >
@@ -1687,10 +1688,10 @@ export default function Opportunities() {
                             onClick={() => handleConfirmPending(item)}
                             disabled={confirmingId === item._id}
                             style={{
-                              background: '#0B1F3A', color: '#FFFFFF', border: 'none',
+                              background: 'var(--primary-brand)', color: '#FFFFFF', border: 'none',
                               padding: '8px 20px', borderRadius: 6, fontSize: 12.5, fontWeight: 700,
                               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                              boxShadow: '0 2px 6px rgba(11, 31, 58, 0.15)'
+                              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
                             }}
                           >
                             <Check size={15} /> {confirmingId === item._id ? 'Saving & Syncing…' : 'Confirm & Add Opportunity'}
@@ -1703,7 +1704,7 @@ export default function Opportunities() {
               </div>
 
               {/* Bottom Pagination Control */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
                 <Pagination
                   currentPage={pendingPage}
                   totalItems={filteredPending.length}
@@ -1712,7 +1713,7 @@ export default function Opportunities() {
                   onPageSizeChange={(newSize) => { setPendingPageSize(newSize); setPendingPage(1); }}
                   pageSizeOptions={[10, 20, 50]}
                   itemName="pending opportunities"
-                  accentColor="#087F71"
+                  accentColor="var(--primary-brand)"
                 />
               </div>
             </div>
@@ -1725,14 +1726,14 @@ export default function Opportunities() {
             {/* Top bar: Category tabs + Search */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
               {/* Category Segmented Control */}
-              <div style={{ display: 'flex', background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 8, padding: 3, gap: 3, boxShadow: '0 1px 3px rgba(11, 31, 58, 0.03)' }}>
+              <div style={{ display: 'flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 3, gap: 3, boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)' }}>
                 {EMP_TYPES.map(t => (
                   <button
                     key={t.key}
                     onClick={() => setFilters(f => ({ ...f, employmentType: t.key }))}
                     style={{
-                      background: filters.employmentType === t.key ? '#E8F8F5' : 'transparent',
-                      color: filters.employmentType === t.key ? '#087F71' : '#667085',
+                      background: filters.employmentType === t.key ? 'rgba(24, 183, 160, 0.15)' : 'transparent',
+                      color: filters.employmentType === t.key ? 'var(--primary-brand)' : 'var(--text-secondary)',
                       border: 'none',
                       padding: '6px 14px',
                       borderRadius: 6,
@@ -1749,7 +1750,7 @@ export default function Opportunities() {
 
               {/* Search box */}
               <div style={{ position: 'relative', width: 280 }}>
-                <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   type="text"
                   placeholder="Search company or role..."
@@ -1757,9 +1758,9 @@ export default function Opportunities() {
                   onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
                   style={{
                     width: '100%',
-                    background: '#FFFFFF',
-                    color: '#172033',
-                    border: '1px solid #E5EAF0',
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border)',
                     borderRadius: 6,
                     paddingLeft: 34,
                     paddingRight: 12,
@@ -1767,7 +1768,7 @@ export default function Opportunities() {
                     paddingBottom: 8,
                     fontSize: 13,
                     outline: 'none',
-                    boxShadow: '0 1px 3px rgba(11, 31, 58, 0.02)'
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)'
                   }}
                 />
               </div>
@@ -1775,29 +1776,29 @@ export default function Opportunities() {
 
             {/* Secondary Filter Row: Status & Sort */}
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 6, padding: '6px 12px' }}>
-                <Filter size={14} color="#667085" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px' }}>
+                <Filter size={14} color="var(--text-muted)" />
                 <select
                   value={filters.status}
                   onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
-                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
                 >
-                  <option value="">Status: All Stages</option>
+                  <option value="" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Status: All Stages</option>
                   {STATUSES.filter(Boolean).map(s => (
-                    <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
+                    <option key={s} value={s} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{s.replace('_', ' ').toUpperCase()}</option>
                   ))}
                 </select>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 6, padding: '6px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px' }}>
                 <select
                   value={filters.sortBy}
                   onChange={e => setFilters(f => ({ ...f, sortBy: e.target.value }))}
-                  style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
                 >
-                  <option value="newest">Sort: Newest First</option>
-                  <option value="company">Sort: Company Name</option>
-                  <option value="deadline">Sort: Deadline Date</option>
+                  <option value="newest" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Newest First</option>
+                  <option value="company" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Company Name</option>
+                  <option value="deadline" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Deadline Date</option>
                 </select>
               </div>
             </div>
@@ -1807,27 +1808,27 @@ export default function Opportunities() {
           {loading ? (
             <div className="loading-center" style={{ minHeight: '40vh' }}><div className="spinner" /></div>
           ) : opps.length === 0 ? (
-            <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, padding: 60, textAlign: 'center', color: '#667085' }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 60, textAlign: 'center', color: 'var(--text-secondary)' }}>
               <div style={{ fontSize: 36, marginBottom: 12 }}>💼</div>
-              <h3 style={{ fontSize: 18, color: '#0B1F3A', margin: '0 0 6px 0', fontWeight: 700 }}>No placement records found</h3>
+              <h3 style={{ fontSize: 18, color: 'var(--text-primary)', margin: '0 0 6px 0', fontWeight: 700 }}>No placement records found</h3>
               <p style={{ fontSize: 13.5, margin: '0 0 20px 0' }}>Add an opportunity manually or auto-fetch incoming recruitment emails with Gmail.</p>
-              <Link to="/opportunities/new" style={{ background: '#0B1F3A', color: '#FFFFFF', padding: '9px 20px', borderRadius: 6, textDecoration: 'none', fontWeight: 600, fontSize: 13 }}>
+              <Link to="/opportunities/new" style={{ background: 'var(--primary-brand)', color: '#FFFFFF', padding: '9px 20px', borderRadius: 6, textDecoration: 'none', fontWeight: 600, fontSize: 13 }}>
                 + Add First Opportunity
               </Link>
             </div>
           ) : (
-            <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(11, 31, 58, 0.04)' }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)' }}>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid #E5EAF0', background: '#F8FAFD' }}>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Company</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Compensation</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deadline</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
+                    <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--card-subtle)' }}>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 200 }}>Company</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 150 }}>Role</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 130 }}>Compensation</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 100 }}>Type</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 150 }}>Deadline</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 140 }}>Status</th>
+                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right', minWidth: 110 }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1840,27 +1841,26 @@ export default function Opportunities() {
                       return (
                         <tr
                           key={opp._id}
-                          style={{ borderBottom: '1px solid #E5EAF0', transition: 'background 0.15s ease' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#F8FAFD'}
-                          onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+                          className="table-row"
+                          style={{ borderBottom: '1px solid var(--border)' }}
                         >
                           {/* Company Name & AI Tag */}
-                          <td style={{ padding: '14px 18px' }}>
+                          <td style={{ padding: '14px 18px', textAlign: 'left' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                               <div
                                 style={{
                                   width: 32,
                                   height: 32,
                                   borderRadius: 8,
-                                  background: '#E8F8F5',
-                                  border: '1px solid rgba(24, 183, 160, 0.25)',
+                                  background: 'rgba(24, 183, 160, 0.15)',
+                                  border: '1px solid rgba(24, 183, 160, 0.3)',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   fontSize: 11,
                                   fontFamily: 'JetBrains Mono, monospace',
                                   fontWeight: 700,
-                                  color: '#087F71'
+                                  color: 'var(--primary-brand)'
                                 }}
                               >
                                 {initials}
@@ -1868,7 +1868,7 @@ export default function Opportunities() {
                               <div>
                                 <Link
                                   to={`/opportunities/${opp._id}`}
-                                  style={{ fontWeight: 600, color: '#0B1F3A', textDecoration: 'none', fontSize: 13.5, display: 'block' }}
+                                  style={{ fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'none', fontSize: 13.5, display: 'block' }}
                                 >
                                   {opp.company}
                                 </Link>
@@ -1880,12 +1880,12 @@ export default function Opportunities() {
                                       gap: 4,
                                       marginTop: 2,
                                       padding: '1px 6px',
-                                      color: '#087F71',
+                                      color: 'var(--primary-brand)',
                                       fontFamily: 'JetBrains Mono, monospace',
                                       fontSize: 10,
                                       fontWeight: 600,
                                       textTransform: 'uppercase',
-                                      background: '#E8F8F5',
+                                      background: 'rgba(24, 183, 160, 0.15)',
                                       borderRadius: 4
                                     }}
                                   >
@@ -1897,37 +1897,37 @@ export default function Opportunities() {
                           </td>
 
                           {/* Role */}
-                          <td style={{ padding: '14px 18px', fontWeight: 500, color: '#172033', fontSize: 13.5 }}>
+                          <td style={{ padding: '14px 18px', textAlign: 'left', fontWeight: 500, color: 'var(--text-primary)', fontSize: 13.5 }}>
                             {opp.role}
                           </td>
 
                           {/* Compensation */}
-                          <td style={{ padding: '14px 18px', fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: pay ? '#16A34A' : '#94A3B8', fontWeight: pay ? 600 : 400 }}>
+                          <td style={{ padding: '14px 18px', textAlign: 'left', fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: pay ? '#16A34A' : 'var(--text-muted)', fontWeight: pay ? 600 : 400 }}>
                             {pay ? pay : <span>—</span>}
                           </td>
 
                           {/* Type */}
-                          <td style={{ padding: '14px 18px', fontSize: 12.5, color: '#667085', textTransform: 'capitalize' }}>
+                          <td style={{ padding: '14px 18px', textAlign: 'left', fontSize: 12.5, color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
                             {typeLabel}
                           </td>
 
                           {/* Deadline */}
-                          <td style={{ padding: '14px 18px' }}>
+                          <td style={{ padding: '14px 18px', textAlign: 'left' }}>
                             <DeadlineBadge deadline={deadline} />
                           </td>
 
                           {/* Status Selector */}
-                          <td style={{ padding: '14px 18px' }}>
+                          <td style={{ padding: '14px 18px', textAlign: 'left' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <select
                                 value={opp.status || 'not_applied'}
                                 onChange={(e) => handleStatusChange(opp._id, e.target.value)}
                                 style={{
-                                  background: '#F8FAFD',
-                                  border: '1px solid #E5EAF0',
-                                  borderRadius: 4,
-                                  padding: '4px 8px',
-                                  color: '#172033',
+                                  background: 'var(--card-subtle)',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: 6,
+                                  padding: '5px 8px',
+                                  color: 'var(--text-primary)',
                                   fontSize: 12,
                                   fontWeight: 600,
                                   cursor: 'pointer',
@@ -1935,11 +1935,11 @@ export default function Opportunities() {
                                   fontFamily: 'Inter, sans-serif'
                                 }}
                               >
-                                <option value={opp.status}>
+                                <option value={opp.status} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>
                                   {opp.status ? opp.status.replace('_', ' ').toUpperCase() : 'NOT APPLIED'}
                                 </option>
                                 {STATUSES.filter(Boolean).filter(s => s !== opp.status).map(s => (
-                                  <option key={s} value={s}>
+                                  <option key={s} value={s} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>
                                     {s.replace('_', ' ').toUpperCase()}
                                   </option>
                                 ))}
@@ -1953,7 +1953,7 @@ export default function Opportunities() {
                               <button
                                 onClick={() => { setActiveAiOpp(opp); setChangesSummary(null); setFollowUpText(''); }}
                                 title="AI Merge Follow-up Email"
-                                style={{ background: 'transparent', border: 'none', color: '#18B7A0', cursor: 'pointer', padding: 4 }}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--primary-brand)', cursor: 'pointer', padding: 4 }}
                               >
                                 <Sparkles size={16} />
                               </button>
@@ -1961,7 +1961,7 @@ export default function Opportunities() {
                               <button
                                 onClick={() => navigate(`/opportunities/${opp._id}`)}
                                 title="View Details"
-                                style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer', padding: 4 }}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 4 }}
                               >
                                 <Eye size={16} />
                               </button>
@@ -1969,7 +1969,7 @@ export default function Opportunities() {
                               <button
                                 onClick={() => handleDelete(opp._id)}
                                 title="Delete Record"
-                                style={{ background: 'transparent', border: 'none', color: '#DC3545', cursor: 'pointer', padding: 4 }}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--danger, #DC3545)', cursor: 'pointer', padding: 4 }}
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -1991,7 +1991,7 @@ export default function Opportunities() {
                 onPageSizeChange={(newSize) => { setTrackedPageSize(newSize); setTrackedPage(1); }}
                 pageSizeOptions={[10, 25, 50]}
                 itemName="opportunities"
-                accentColor="#087F71"
+                accentColor="var(--primary-brand)"
               />
             </div>
           )}
@@ -2000,42 +2000,42 @@ export default function Opportunities() {
 
       {/* AI Merge Modal */}
       {activeAiOpp && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(11, 31, 58, 0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 16, width: '100%', maxWidth: 600, padding: 26, boxShadow: '0 20px 50px rgba(11, 31, 58, 0.18)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 600, padding: 26, boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: '#E8F8F5', border: '1px solid rgba(24, 183, 160, 0.3)', color: '#0D7A6B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(24, 183, 160, 0.15)', border: '1px solid rgba(24, 183, 160, 0.3)', color: 'var(--primary-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Wand2 size={18} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 17, color: '#0B1F3A', fontWeight: 700 }}>Merge Follow-up Email (AI)</h3>
-                  <p style={{ margin: '2px 0 0', fontSize: 12.5, color: '#667085', fontWeight: 500 }}>{activeAiOpp.company} — Paste test links, interview dates, or result emails</p>
+                  <h3 style={{ margin: 0, fontSize: 17, color: 'var(--text-primary)', fontWeight: 700 }}>Merge Follow-up Email (AI)</h3>
+                  <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--text-secondary)', fontWeight: 500 }}>{activeAiOpp.company} — Paste test links, interview dates, or result emails</p>
                 </div>
               </div>
-              <button style={{ background: 'transparent', border: 'none', color: '#667085', cursor: 'pointer', padding: 4 }} onClick={() => setActiveAiOpp(null)}><X size={18} /></button>
+              <button style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }} onClick={() => setActiveAiOpp(null)}><X size={18} /></button>
             </div>
 
             <textarea
-              style={{ width: '100%', background: '#F8FAFD', border: '1px solid #CBD5E1', color: '#172033', padding: 14, borderRadius: 8, minHeight: 160, fontSize: 13, outline: 'none', boxSizing: 'border-box', lineHeight: 1.5 }}
+              style={{ width: '100%', background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: 14, borderRadius: 8, minHeight: 160, fontSize: 13, outline: 'none', boxSizing: 'border-box', lineHeight: 1.5 }}
               placeholder="Paste follow-up email text, interview schedule, or test link here..."
               value={followUpText}
               onChange={e => setFollowUpText(e.target.value)}
             />
 
             {changesSummary && (
-              <div style={{ background: '#EAF8EF', border: '1px solid #A3E5D9', borderRadius: 8, padding: 14 }}>
+              <div style={{ background: 'rgba(22, 163, 74, 0.12)', border: '1px solid rgba(22, 163, 74, 0.25)', borderRadius: 8, padding: 14 }}>
                 <div style={{ fontWeight: 700, fontSize: 12.5, color: '#16A34A', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <CalendarDays size={14} /> Changes Merged & Calendar Updated!
                 </div>
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: '#172033', lineHeight: 1.6 }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: 'var(--text-primary)', lineHeight: 1.6 }}>
                   {changesSummary.map((cs, i) => <li key={i}>{cs}</li>)}
                 </ul>
               </div>
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button onClick={() => setActiveAiOpp(null)} style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#667085', padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleAiUpdateSubmit} disabled={aiUpdating} style={{ background: '#0B1F3A', color: '#FFFFFF', border: 'none', padding: '9px 20px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={() => setActiveAiOpp(null)} style={{ background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-secondary)', padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleAiUpdateSubmit} disabled={aiUpdating} style={{ background: 'var(--primary-brand)', color: '#FFFFFF', border: 'none', padding: '9px 20px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 {aiUpdating ? 'Merging…' : 'Merge Info'}
               </button>
             </div>

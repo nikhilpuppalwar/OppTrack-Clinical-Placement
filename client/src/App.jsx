@@ -22,6 +22,8 @@ import Terms from './pages/Terms';
 import Cookies from './pages/Cookies';
 import CookieConsent from './components/CookieConsent';
 
+import { ThemeProvider } from './context/ThemeContext';
+
 function HomeRoute() {
   const { user, loading } = useAuth();
   if (loading) return <div className="loading-center"><div className="spinner" /></div>;
@@ -31,22 +33,25 @@ function HomeRoute() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
         <Toaster
           position="top-right"
           toastOptions={{
+            duration: 3600,
             style: {
-              background: '#FFFFFF',
-              color: '#172033',
-              border: '1px solid #E5EAF0',
-              boxShadow: '0 8px 24px rgba(11, 31, 58, 0.08)',
+              background: 'var(--surface)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              boxShadow: 'var(--shadow-md)',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '13.5px',
               fontWeight: 500,
-              fontFamily: 'Inter, sans-serif'
+              fontFamily: 'inherit',
             },
-            success: { iconTheme: { primary: '#16A34A', secondary: '#fff' } },
-            error: { iconTheme: { primary: '#DC3545', secondary: '#fff' } },
+            success: { iconTheme: { primary: 'var(--success, #16A34A)', secondary: '#fff' } },
+            error: { iconTheme: { primary: 'var(--danger, #DC2626)', secondary: '#fff' } },
           }}
         />
         <Routes>
@@ -75,5 +80,6 @@ export default function App() {
         <CookieConsent />
       </BrowserRouter>
     </AuthProvider>
+    </ThemeProvider>
   );
 }

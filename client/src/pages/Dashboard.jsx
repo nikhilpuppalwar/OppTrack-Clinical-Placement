@@ -11,12 +11,12 @@ import {
 import toast from 'react-hot-toast';
 
 const PIPELINE_STAGES = [
-  { key: 'not_applied', label: 'Not Applied', color: '#64748B', bg: '#F1F5F9', border: '#CBD5E1' },
-  { key: 'applied', label: 'Applied', color: '#2563EB', bg: '#EAF2FF', border: '#BFDBFE' },
-  { key: 'oa', label: 'OA / Assessment', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-  { key: 'interview', label: 'Interview', color: '#EA580C', bg: '#FFF7ED', border: '#FFEDD5' },
-  { key: 'hr', label: 'HR Round', color: '#7E22CE', bg: '#FAF5FF', border: '#F3E8FF' },
-  { key: 'offer', label: 'Offer', color: '#16A34A', bg: '#EAF8EF', border: '#BBF7D0' },
+  { key: 'not_applied', label: 'Not Applied', color: 'var(--text-secondary)', bg: 'var(--card-subtle)', border: 'var(--border)' },
+  { key: 'applied', label: 'Applied', color: 'var(--info)', bg: 'var(--info-bg)', border: 'var(--border)' },
+  { key: 'oa', label: 'OA / Assessment', color: 'var(--warning)', bg: 'var(--warning-bg)', border: 'var(--border)' },
+  { key: 'interview', label: 'Interview', color: '#EA580C', bg: 'rgba(234, 88, 12, 0.12)', border: 'rgba(234, 88, 12, 0.25)' },
+  { key: 'hr', label: 'HR Round', color: 'var(--purple)', bg: 'var(--purple-bg)', border: 'var(--border)' },
+  { key: 'offer', label: 'Offer', color: 'var(--success)', bg: 'var(--success-bg)', border: 'var(--border)' },
 ];
 
 export default function Dashboard() {
@@ -191,9 +191,9 @@ export default function Dashboard() {
         id: `deadline-${topDeadline._id}`,
         priority: 'urgent',
         badge: '🔴 DEADLINE',
-        color: '#DC2626',
-        bg: '#FEF2F2',
-        border: '#FECACA',
+        color: 'var(--danger)',
+        bg: 'var(--danger-bg)',
+        border: 'rgba(239, 68, 68, 0.25)',
         title: topDeadline.company,
         subtitle: topDeadline.role || 'Placement Drive',
         detail: urgency,
@@ -213,9 +213,9 @@ export default function Dashboard() {
         id: `prep-${testOrInterview._id}`,
         priority: 'high',
         badge: isInterview ? '🔵 PREPARE' : '🟠 ASSESSMENT',
-        color: isInterview ? '#2563EB' : '#D97706',
-        bg: isInterview ? '#EFF6FF' : '#FFFBEB',
-        border: isInterview ? '#BFDBFE' : '#FDE68A',
+        color: isInterview ? 'var(--info)' : 'var(--warning)',
+        bg: isInterview ? 'var(--info-bg)' : 'var(--warning-bg)',
+        border: isInterview ? 'rgba(37, 99, 235, 0.25)' : 'rgba(245, 158, 11, 0.25)',
         title: testOrInterview.company,
         subtitle: testOrInterview.role || 'Round in Progress',
         detail: isInterview ? 'Interview round scheduled or expected' : 'Online Assessment scheduled',
@@ -237,8 +237,8 @@ export default function Dashboard() {
         priority: 'medium',
         badge: '🟠 FOLLOW UP',
         color: '#EA580C',
-        bg: '#FFF7ED',
-        border: '#FED7AA',
+        bg: 'rgba(234, 88, 12, 0.12)',
+        border: 'rgba(234, 88, 12, 0.25)',
         title: staleApp.company,
         subtitle: staleApp.role || 'Application Submitted',
         detail: `No status update since ${daysAgo} days ago`,
@@ -253,9 +253,9 @@ export default function Dashboard() {
         id: 'gmail-pending',
         priority: 'high',
         badge: '✉️ INCOMING',
-        color: '#087F71',
-        bg: '#E8F8F5',
-        border: '#A7F3D0',
+        color: 'var(--primary-brand-text)',
+        bg: 'var(--primary-brand-light)',
+        border: 'rgba(13, 148, 136, 0.25)',
         title: 'Pending Gmail Reviews',
         subtitle: `${pendingGmailCount} opportunities imported`,
         detail: 'New job notifications extracted from college TPO emails',
@@ -267,9 +267,9 @@ export default function Dashboard() {
         id: 'complete-profile',
         priority: 'normal',
         badge: '🟢 COMPLETE',
-        color: '#15803D',
-        bg: '#F0FDF4',
-        border: '#BBF7D0',
+        color: 'var(--success)',
+        bg: 'var(--success-bg)',
+        border: 'rgba(22, 163, 74, 0.25)',
         title: 'Complete Profile Vault',
         subtitle: `Profile is ${profileCompletion}% ready`,
         detail: 'Fill missing fields to power 1-click Chrome Extension autofill',
@@ -284,9 +284,9 @@ export default function Dashboard() {
         id: 'track-first',
         priority: 'normal',
         badge: '✦ GET STARTED',
-        color: '#2563EB',
-        bg: '#EFF6FF',
-        border: '#BFDBFE',
+        color: 'var(--info)',
+        bg: 'var(--info-bg)',
+        border: 'rgba(37, 99, 235, 0.25)',
         title: 'Track a New Application',
         subtitle: 'Keep your placement pipeline active',
         detail: 'Add applications to track deadlines, test dates, and interviews',
@@ -620,162 +620,145 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', paddingBottom: 60 }}>
-      {/* ─── 1. HEADER & COMMAND CENTER ──────────────────────────────────── */}
-      <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 22, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0B1F3A', margin: '0 0 4px 0', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
-            {greeting}, {studentName} 👋
-          </h1>
-          <p style={{ margin: 0, fontSize: 14, color: '#64748B', fontWeight: 500 }}>
-            Here is what needs your attention today across your placement pipeline.
-          </p>
-        </div>
-
-        {/* Header Right Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          {/* Focus Mode Toggle */}
-          <button
-            type="button"
-            onClick={() => setFocusMode(!focusMode)}
-            style={{
-              background: focusMode ? '#0B1F3A' : '#FFFFFF',
-              color: focusMode ? '#FFFFFF' : '#475467',
-              border: `1px solid ${focusMode ? '#0B1F3A' : '#D0D5DD'}`,
-              padding: '8px 14px',
-              borderRadius: 7,
-              fontSize: 12.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              transition: 'all 0.18s ease',
-              boxShadow: focusMode ? '0 2px 5px rgba(11,31,58,0.2)' : '0 1px 2px rgba(11,31,58,0.04)'
-            }}
-          >
-            <Target size={14} color={focusMode ? '#10B981' : '#64748B'} />
-            {focusMode ? 'Focus Mode: ON' : 'Focus Mode'}
-          </button>
-
-          {/* Ask OppTrack AI Trigger */}
-          <button
-            type="button"
-            onClick={() => setShowAiPanel(true)}
-            style={{
-              background: '#FFFFFF',
-              color: '#087F71',
-              border: '1px solid #A3E5D9',
-              padding: '8px 14px',
-              borderRadius: 7,
-              fontSize: 12.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              boxShadow: '0 1px 3px rgba(8,127,113,0.08)'
-            }}
-          >
-            <Sparkles size={14} color="#087F71" />
-            ✦ Ask OppTrack
-          </button>
-
-          {/* Add Opportunity */}
-          <Link
-            to="/opportunities/new"
-            style={{
-              background: '#2563EB',
-              color: '#FFFFFF',
-              fontSize: 13,
-              fontWeight: 600,
-              padding: '8px 16px',
-              textDecoration: 'none',
-              borderRadius: 7,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              boxShadow: '0 1px 2px rgba(37, 99, 235, 0.25)',
-              transition: 'background 0.15s ease'
-            }}
-          >
-            <Plus size={15} /> Add Opportunity
-          </Link>
-        </div>
-      </header>
-
-      {/* ─── 2. COMPACT AI INSIGHT BAR ─────────────────────────────────────── */}
+    <div style={{ maxWidth: 1280, margin: '0 auto', paddingBottom: 60 }}>
+      {/* ─── 1. VESSA HERO & COMMAND CENTER ──────────────────────────────────── */}
       <div
+        className="vessa-card"
         style={{
-          background: 'linear-gradient(135deg, #F0FDF9 0%, #FFFFFF 100%)',
-          border: '1px solid #A3E5D9',
-          borderRadius: 10,
-          padding: '12px 18px',
+          padding: '24px 28px',
           marginBottom: 24,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: 12,
-          boxShadow: '0 1px 3px rgba(8,127,113,0.06)'
+          gap: 20,
+          background: 'linear-gradient(135deg, var(--card) 0%, var(--card-subtle) 100%)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11, flex: 1, minWidth: 280 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 6, background: '#E8F8F5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Sparkles size={15} color="#087F71" />
+        <div style={{ maxWidth: 640 }}>
+          {/* Live Date Pill */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              padding: '4px 12px',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--text-secondary)',
+              marginBottom: 12,
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
+            {now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} • {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
           </div>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#087F71', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
-              ✦ OppTrack Intelligence
-            </div>
-            <div style={{ fontSize: 13, color: '#1E293B', fontWeight: 500, lineHeight: 1.4 }}>
-              {pendingGmailCount > 0 ? (
-                <>You have <strong style={{ color: '#087F71' }}>{pendingGmailCount} opportunities</strong> waiting for your review in Gmail sync, and {nextMoves.length} priority action{nextMoves.length === 1 ? '' : 's'} today.</>
-              ) : (
-                <>You have <strong style={{ color: '#0B1F3A' }}>{nextMoves.length} items</strong> needing attention today. {aiInsights.deadlines}</>
-              )}
-            </div>
+
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px 0', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
+            Welcome back, {studentName}!
+          </h1>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.5 }}>
+            Here's what's moving in your placement pipeline today — <strong style={{ color: 'var(--text-primary)' }}>{nextMoves.length} priority action{nextMoves.length === 1 ? '' : 's'}</strong> and <strong style={{ color: 'var(--text-primary)' }}>{active} active opportunities</strong> in progress.
+          </p>
+
+          {/* Quick Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+            <Link to="/opportunities/new" className="vessa-btn-primary">
+              <Plus size={15} strokeWidth={2.4} /> Add Opportunity
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowAiPanel(true)}
+              style={{
+                background: 'var(--surface)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-pill)',
+                padding: '8px 16px',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: 'var(--shadow-sm)',
+                transition: 'all var(--motion-fast) var(--ease-standard)',
+              }}
+            >
+              <Sparkles size={14} color="var(--vessa-plum)" /> ✦ Ask OppTrack AI
+            </button>
+            <button
+              type="button"
+              onClick={() => setFocusMode(!focusMode)}
+              style={{
+                background: focusMode ? 'var(--vessa-plum)' : 'var(--surface)',
+                color: focusMode ? '#FFFFFF' : 'var(--text-secondary)',
+                border: `1px solid ${focusMode ? 'var(--vessa-plum)' : 'var(--border)'}`,
+                padding: '8px 14px',
+                borderRadius: 'var(--radius-pill)',
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'all var(--motion-fast) var(--ease-standard)',
+              }}
+            >
+              <SlidersHorizontal size={13} />
+              {focusMode ? 'Exit Focus' : 'Focus Mode'}
+            </button>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAiPanel(true)}
+        {/* Intelligence Pill Widget */}
+        <div
           style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#087F71',
-            fontSize: 12.5,
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            padding: '4px 8px'
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            padding: '16px 20px',
+            maxWidth: 320,
+            boxShadow: 'var(--shadow-sm)',
           }}
         >
-          View insights <ArrowRight size={13} />
-        </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <div style={{ width: 22, height: 22, borderRadius: 6, background: 'var(--card-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sparkles size={13} color="var(--vessa-plum)" />
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--vessa-plum)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Pipeline Pulse
+            </span>
+          </div>
+          <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.45, fontWeight: 500 }}>
+            {pendingGmailCount > 0
+              ? `${pendingGmailCount} opportunities detected in your Gmail inbox waiting to be converted.`
+              : aiInsights.deadlines}
+          </div>
+        </div>
       </div>
 
-      {/* ─── 3. QUICK STATS (4 METRIC CARDS) ──────────────────────────────── */}
+      {/* ─── 2. VESSA QUICK STATS (4 METRIC CARDS) ─────────────────────────── */}
       {!focusMode && (
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <section className="stagger-entrance" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18, marginBottom: 26 }}>
           {/* Card 1: Total Tracked */}
-          <div className="card" style={{ padding: '18px 20px', transition: 'transform 0.18s ease, box-shadow 0.18s ease' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B' }}>
-                Total Tracked
+          <div className="vessa-card" style={{ padding: '20px 22px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Total Opportunities
               </span>
-              <div style={{ width: 28, height: 28, borderRadius: 6, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Briefcase size={14} color="#64748B" />
+              <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-squircle)', background: 'var(--card-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vessa-plum)' }}>
+                <Briefcase size={17} />
               </div>
             </div>
-            <div style={{ fontSize: 30, fontWeight: 800, color: '#0B1F3A', lineHeight: 1, letterSpacing: '-0.03em', marginBottom: 6 }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.03em', marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
               {total}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748B' }}>
-              <span style={{ color: '#15803D', fontWeight: 600, background: '#EAF8EF', padding: '1px 6px', borderRadius: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+              <span style={{ color: 'var(--success)', fontWeight: 600, background: 'var(--success-bg)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
                 +{addedThisMonth} this month
               </span>
               <span>Across pipeline</span>
@@ -783,56 +766,65 @@ export default function Dashboard() {
           </div>
 
           {/* Card 2: Active Applications */}
-          <div className="card" style={{ padding: '18px 20px', borderLeft: '3px solid #2563EB' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#2563EB' }}>
-                Active Applications
+          <div className="vessa-card" style={{ padding: '20px 22px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Active in Progress
               </span>
-              <div style={{ width: 28, height: 28, borderRadius: 6, background: '#EAF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <TrendingUp size={14} color="#2563EB" />
+              <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-squircle)', background: 'var(--info-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--info)' }}>
+                <TrendingUp size={17} />
               </div>
             </div>
-            <div style={{ fontSize: 30, fontWeight: 800, color: '#2563EB', lineHeight: 1, letterSpacing: '-0.03em', marginBottom: 6 }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.03em', marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
               {active}
             </div>
-            <div style={{ fontSize: 12, color: '#64748B' }}>
-              <strong style={{ color: '#1E293B', fontWeight: 600 }}>{total > 0 ? Math.round((active / total) * 100) : 0}%</strong> of tracked opportunities in progress
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+              <span style={{ color: 'var(--info)', fontWeight: 600, background: 'var(--info-bg)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
+                {total > 0 ? Math.round((active / total) * 100) : 0}% active
+              </span>
+              <span>Under review / tests</span>
             </div>
           </div>
 
           {/* Card 3: Offers Received */}
-          <div className="card" style={{ padding: '18px 20px', borderLeft: '3px solid #16A34A' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#15803D' }}>
+          <div className="vessa-card" style={{ padding: '20px 22px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)' }}>
                 Offers Received
               </span>
-              <div style={{ width: 28, height: 28, borderRadius: 6, background: '#EAF8EF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Trophy size={14} color="#16A34A" />
+              <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-squircle)', background: 'var(--success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--success)' }}>
+                <Trophy size={17} />
               </div>
             </div>
-            <div style={{ fontSize: 30, fontWeight: 800, color: '#16A34A', lineHeight: 1, letterSpacing: '-0.03em', marginBottom: 6 }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--success)', lineHeight: 1, letterSpacing: '-0.03em', marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
               {offers}
             </div>
-            <div style={{ fontSize: 12, color: '#15803D', fontWeight: 500 }}>
-              {offers > 0 ? 'Congratulations! Pipeline delivered offers.' : 'Keep going — pipeline active'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+              <span style={{ color: 'var(--success)', fontWeight: 600, background: 'var(--success-bg)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
+                {offers > 0 ? 'Offer secured' : 'Pending outcome'}
+              </span>
+              <span>Final selection</span>
             </div>
           </div>
 
           {/* Card 4: Response Rate */}
-          <div className="card" style={{ padding: '18px 20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B' }}>
+          <div className="vessa-card" style={{ padding: '20px 22px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-secondary)' }}>
                 Response Rate
               </span>
-              <div style={{ width: 28, height: 28, borderRadius: 6, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle2 size={14} color="#64748B" />
+              <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-squircle)', background: 'var(--purple-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--purple)' }}>
+                <CheckCircle2 size={17} />
               </div>
             </div>
-            <div style={{ fontSize: 30, fontWeight: 800, color: responseRate !== null ? '#0B1F3A' : '#94A3B8', lineHeight: 1, letterSpacing: '-0.03em', marginBottom: 6 }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: responseRate !== null ? 'var(--text-primary)' : 'var(--text-muted)', lineHeight: 1, letterSpacing: '-0.03em', marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
               {responseRate !== null ? `${responseRate}%` : '—'}
             </div>
-            <div style={{ fontSize: 12, color: '#64748B' }}>
-              {responseRate !== null ? 'Based on applications with outcomes' : 'Not enough data yet'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+              <span style={{ color: 'var(--purple)', fontWeight: 600, background: 'var(--purple-bg)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
+                {responseRate !== null ? 'Evaluated' : 'Awaiting data'}
+              </span>
+              <span>Conversion funnel</span>
             </div>
           </div>
         </section>
@@ -843,14 +835,14 @@ export default function Dashboard() {
         
         {/* Left: YOUR NEXT MOVES */}
         <div className="card" style={{ padding: 22 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid #F1F5F9', paddingBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }} />
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: 0 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)' }} />
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                 Your Next Moves
               </h2>
             </div>
-            <span style={{ fontSize: 12, color: '#64748B', fontWeight: 500 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
               Prioritized by urgency ({nextMoves.length} actions)
             </span>
           </div>
@@ -860,8 +852,8 @@ export default function Dashboard() {
               <div
                 key={move.id}
                 style={{
-                  background: '#FFFFFF',
-                  border: '1px solid #E5EAF0',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 9,
                   padding: '12px 16px',
                   display: 'flex',
@@ -889,13 +881,13 @@ export default function Dashboard() {
                     {move.badge}
                   </span>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
                       {move.title}
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748B', margin: '2px 0' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0' }}>
                       {move.subtitle}
                     </div>
-                    <div style={{ fontSize: 11.5, color: '#475467', fontWeight: 500 }}>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 500 }}>
                       {move.detail}
                     </div>
                   </div>
@@ -905,9 +897,9 @@ export default function Dashboard() {
                   type="button"
                   onClick={move.onClick}
                   style={{
-                    background: '#FFFFFF',
-                    border: '1px solid #D0D5DD',
-                    color: '#0B1F3A',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
                     padding: '7px 14px',
                     borderRadius: 6,
                     fontSize: 12,
@@ -917,7 +909,7 @@ export default function Dashboard() {
                     alignItems: 'center',
                     gap: 5,
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 1px 2px rgba(11,31,58,0.03)'
+                    boxShadow: 'var(--shadow-sm)'
                   }}
                 >
                   {move.actionLabel} <ChevronRight size={13} />
@@ -929,14 +921,14 @@ export default function Dashboard() {
 
         {/* Right: UPCOMING DEADLINES */}
         <div className="card" style={{ padding: 22 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid #F1F5F9', paddingBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <CalendarDays size={16} color="#087F71" />
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: 0 }}>
+              <CalendarDays size={16} color="var(--primary-brand)" />
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                 Upcoming Deadlines
               </h2>
             </div>
-            <Link to="/calendar" style={{ fontSize: 12, color: '#087F71', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Link to="/calendar" style={{ fontSize: 12, color: 'var(--primary-brand)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
               View Calendar <ArrowRight size={13} />
             </Link>
           </div>
@@ -944,11 +936,11 @@ export default function Dashboard() {
           {/* Group: Today */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#DC2626' }} /> TODAY
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)' }} /> TODAY
               </div>
               {upcomingDeadlinesGrouped.today.length === 0 ? (
-                <div style={{ fontSize: 12.5, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0 6px 12px', borderLeft: '2px solid #F1F5F9' }}>
+                <div style={{ fontSize: 12.5, color: 'var(--text-muted)', fontStyle: 'italic', padding: '6px 0 6px 12px', borderLeft: '2px solid var(--border)' }}>
                   No deadlines closing today.
                 </div>
               ) : (
@@ -957,15 +949,15 @@ export default function Dashboard() {
                     key={opp._id}
                     onClick={() => navigate(`/opportunities/${opp._id}`)}
                     style={{
-                      background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 6, padding: '10px 12px',
+                      background: 'var(--danger-bg)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 12px',
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: 6
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#991B1B' }}>{opp.company}</div>
-                      <div style={{ fontSize: 11.5, color: '#B91C1C' }}>{opp.role} · Closes today</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--danger)' }}>{opp.company}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{opp.role} • Closes today</div>
                     </div>
-                    <ArrowRight size={13} color="#DC2626" />
+                    <ArrowRight size={13} color="var(--danger)" />
                   </div>
                 ))
               )}
@@ -973,11 +965,11 @@ export default function Dashboard() {
 
             {/* Group: Tomorrow */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#D97706' }} /> TOMORROW
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--warning)' }} /> TOMORROW
               </div>
               {upcomingDeadlinesGrouped.tomorrow.length === 0 ? (
-                <div style={{ fontSize: 12.5, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0 6px 12px', borderLeft: '2px solid #F1F5F9' }}>
+                <div style={{ fontSize: 12.5, color: 'var(--text-muted)', fontStyle: 'italic', padding: '6px 0 6px 12px', borderLeft: '2px solid var(--border)' }}>
                   No deadlines tomorrow.
                 </div>
               ) : (
@@ -986,15 +978,15 @@ export default function Dashboard() {
                     key={opp._id}
                     onClick={() => navigate(`/opportunities/${opp._id}`)}
                     style={{
-                      background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 6, padding: '10px 12px',
+                      background: 'var(--warning-bg)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 12px',
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: 6
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#92400E' }}>{opp.company}</div>
-                      <div style={{ fontSize: 11.5, color: '#B45309' }}>{opp.role} · 24h remaining</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--warning)' }}>{opp.company}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{opp.role} • 24h remaining</div>
                     </div>
-                    <ArrowRight size={13} color="#D97706" />
+                    <ArrowRight size={13} color="var(--warning)" />
                   </div>
                 ))
               )}
@@ -1003,12 +995,12 @@ export default function Dashboard() {
             {/* Group: Later This Week / Month */}
             {upcomingDeadlinesGrouped.later.length > 0 && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
                   UPCOMING SCHEDULE
                 </div>
                 {upcomingDeadlinesGrouped.later.map(grp => (
                   <div key={grp.dateLabel} style={{ marginBottom: 10 }}>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: '#087F71', background: '#E8F8F5', padding: '2px 6px', borderRadius: 4 }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--primary-brand-text)', background: 'var(--primary-brand-light)', padding: '2px 6px', borderRadius: 4 }}>
                       {grp.dateLabel}
                     </span>
                     {grp.items.map(opp => (
@@ -1016,15 +1008,15 @@ export default function Dashboard() {
                         key={opp._id}
                         onClick={() => navigate(`/opportunities/${opp._id}`)}
                         style={{
-                          background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 6, padding: '8px 12px',
+                          background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: '8px 12px',
                           display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginTop: 4
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#0B1F3A' }}>{opp.company}</div>
-                          <div style={{ fontSize: 11.5, color: '#64748B' }}>{opp.role}</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{opp.company}</div>
+                          <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{opp.role}</div>
                         </div>
-                        <ArrowRight size={12} color="#94A3B8" />
+                        <ArrowRight size={12} color="var(--text-muted)" />
                       </div>
                     ))}
                   </div>
@@ -1036,16 +1028,16 @@ export default function Dashboard() {
             {upcomingDeadlinesGrouped.today.length === 0 && 
              upcomingDeadlinesGrouped.tomorrow.length === 0 && 
              upcomingDeadlinesGrouped.later.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '24px 12px', background: '#F8FAFD', borderRadius: 8, border: '1px dashed #E5EAF0' }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0B1F3A', marginBottom: 4 }}>
+              <div style={{ textAlign: 'center', padding: '24px 12px', background: 'var(--card-subtle)', borderRadius: 8, border: '1px dashed var(--border)' }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
                   You are clear for now.
                 </div>
-                <div style={{ fontSize: 12, color: '#64748B', marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
                   No upcoming deadlines in the next 7 days.
                 </div>
                 <Link
                   to="/opportunities"
-                  style={{ fontSize: 12, fontWeight: 600, color: '#2563EB', textDecoration: 'none' }}
+                  style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary-brand)', textDecoration: 'none' }}
                 >
                   View all opportunities →
                 </Link>
@@ -1058,16 +1050,16 @@ export default function Dashboard() {
       {/* ─── 5. APPLICATION PIPELINE (REDESIGNED VISUAL PIPELINE) ─────────── */}
       {!focusMode && (
         <section className="card" style={{ padding: 22, marginBottom: 28 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '1px solid #F1F5F9', paddingBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                 Application Pipeline
               </h2>
-              <span style={{ fontSize: 12, color: '#64748B' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                 Click any recruitment stage to view filtered opportunities
               </span>
             </div>
-            <Link to="/opportunities" style={{ fontSize: 12.5, color: '#087F71', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Link to="/opportunities" style={{ fontSize: 12.5, color: 'var(--primary-brand)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
               View All Opportunities <ArrowRight size={14} />
             </Link>
           </div>
@@ -1083,8 +1075,8 @@ export default function Dashboard() {
                   key={stage.key}
                   onClick={() => navigate('/opportunities')}
                   style={{
-                    background: count > 0 ? stage.bg : '#F8FAFD',
-                    border: `1px solid ${count > 0 ? stage.border : '#E5EAF0'}`,
+                    background: count > 0 ? stage.bg : 'var(--card-subtle)',
+                    border: `1px solid ${count > 0 ? stage.border : 'var(--border)'}`,
                     borderRadius: 8,
                     padding: '14px 12px',
                     display: 'flex',
@@ -1097,18 +1089,18 @@ export default function Dashboard() {
                 >
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: count > 0 ? stage.color : '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: count > 0 ? stage.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         {stage.label}
                       </span>
                       {idx < PIPELINE_STAGES.length - 1 && (
-                        <span style={{ fontSize: 10, color: '#94A3B8' }}>→</span>
+                        <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>→</span>
                       )}
                     </div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: count > 0 ? stage.color : '#94A3B8', fontFamily: 'JetBrains Mono, monospace' }}>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: count > 0 ? stage.color : 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
                       {count}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 8 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 8 }}>
                     {pctOfTotal}% of pipeline
                   </div>
                 </div>
@@ -1117,11 +1109,11 @@ export default function Dashboard() {
           </div>
 
           {/* Rejected Outcome Banner */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, padding: '10px 14px', background: '#F8FAFD', borderRadius: 6, border: '1px solid #E5EAF0', fontSize: 12 }}>
-            <span style={{ color: '#64748B' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, padding: '10px 14px', background: 'var(--card-subtle)', borderRadius: 6, border: '1px solid var(--border)', fontSize: 12 }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
               <strong>{rejected}</strong> application{rejected === 1 ? '' : 's'} closed without offer.
             </span>
-            <span style={{ color: '#087F71', fontWeight: 600 }}>
+            <span style={{ color: 'var(--primary-brand-text)', fontWeight: 600 }}>
               Outcome feedback updated
             </span>
           </div>
@@ -1136,14 +1128,14 @@ export default function Dashboard() {
           <div className="card" style={{ padding: 22 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: 0 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   Application Momentum
                 </h2>
-                <span style={{ fontSize: 12, color: '#64748B' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                   Weekly added applications (last 30 days)
                 </span>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#2563EB', background: '#EAF2FF', padding: '3px 8px', borderRadius: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--info)', background: 'var(--info-bg)', padding: '3px 8px', borderRadius: 4 }}>
                 Last 30 Days
               </span>
             </div>
@@ -1153,14 +1145,14 @@ export default function Dashboard() {
               <svg width="100%" height="100%" viewBox="0 0 320 100" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
                 <defs>
                   <linearGradient id="momentumGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2563EB" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#2563EB" stopOpacity="0.0" />
+                    <stop offset="0%" stopColor="var(--primary-blue)" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="var(--primary-blue)" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
 
                 {/* Grid guidelines */}
-                <line x1="0" y1="20" x2="320" y2="20" stroke="#F1F5F9" strokeWidth="1" strokeDasharray="3 3" />
-                <line x1="0" y1="60" x2="320" y2="60" stroke="#F1F5F9" strokeWidth="1" strokeDasharray="3 3" />
+                <line x1="0" y1="20" x2="320" y2="20" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 3" />
+                <line x1="0" y1="60" x2="320" y2="60" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 3" />
 
                 {/* Calculate coordinates */}
                 {(() => {
@@ -1177,11 +1169,11 @@ export default function Dashboard() {
                   return (
                     <>
                       <path d={dArea} fill="url(#momentumGrad)" />
-                      <path d={dPath} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d={dPath} fill="none" stroke="var(--primary-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                       {points.map((p, i) => (
                         <g key={i}>
-                          <circle cx={p.x} cy={p.y} r="4" fill="#FFFFFF" stroke="#2563EB" strokeWidth="2.5" />
-                          <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize="10" fontWeight="700" fill="#0B1F3A">
+                          <circle cx={p.x} cy={p.y} r="4" fill="var(--surface)" stroke="var(--primary-blue)" strokeWidth="2.5" />
+                          <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text-primary)">
                             {p.count}
                           </text>
                         </g>
@@ -1193,17 +1185,17 @@ export default function Dashboard() {
             </div>
 
             {/* X-Axis labels */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 16px', fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 16px', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
               {momentumWeeks.map(w => (
                 <span key={w.label}>{w.label}</span>
               ))}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 12, borderTop: '1px solid #F1F5F9', fontSize: 12 }}>
-              <span style={{ color: '#475467' }}>
-                <strong style={{ color: '#0B1F3A' }}>{active}</strong> applications active
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 12 }}>
+              <span style={{ color: 'var(--text-secondary)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>{active}</strong> applications active
               </span>
-              <span style={{ color: '#15803D', fontWeight: 600 }}>
+              <span style={{ color: 'var(--success)', fontWeight: 600 }}>
                 +{addedThisMonth} added this month
               </span>
             </div>
@@ -1213,21 +1205,21 @@ export default function Dashboard() {
           <div className="card" style={{ padding: 22 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: 0 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   Opportunities Worth a Look
                 </h2>
-                <span style={{ fontSize: 12, color: '#64748B' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                   Matches based on Profile Vault skills
                 </span>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#087F71', background: '#E8F8F5', padding: '3px 8px', borderRadius: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary-brand-text)', background: 'var(--primary-brand-light)', padding: '3px 8px', borderRadius: 4 }}>
                 Profile Match
               </span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {opportunityMatches.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '28px 12px', color: '#64748B', fontSize: 13 }}>
+                <div style={{ textAlign: 'center', padding: '28px 12px', color: 'var(--text-muted)', fontSize: 13 }}>
                   Add opportunities and update Profile Vault skills to calculate matching rankings.
                 </div>
               ) : (
@@ -1235,8 +1227,8 @@ export default function Dashboard() {
                   <div
                     key={opp._id}
                     style={{
-                      background: '#FFFFFF',
-                      border: '1px solid #E5EAF0',
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
                       borderRadius: 8,
                       padding: '11px 14px',
                       display: 'flex',
@@ -1247,16 +1239,16 @@ export default function Dashboard() {
                   >
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#15803D', background: '#EAF8EF', border: '1px solid #BBF7D0', padding: '1px 6px', borderRadius: 4 }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--success)', background: 'var(--success-bg)', border: '1px solid var(--border)', padding: '1px 6px', borderRadius: 4 }}>
                           {opp.matchScore}% MATCH
                         </span>
-                        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0B1F3A' }}>{opp.company}</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>{opp.company}</div>
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{opp.role}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{opp.role}</div>
                       {opp.matchedTags && opp.matchedTags.length > 0 && (
                         <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
                           {opp.matchedTags.map(t => (
-                            <span key={t} style={{ fontSize: 10, color: '#475467', background: '#F1F5F9', padding: '1px 5px', borderRadius: 3 }}>
+                            <span key={t} style={{ fontSize: 10, color: 'var(--text-secondary)', background: 'var(--card-subtle)', padding: '1px 5px', borderRadius: 3 }}>
                               {t}
                             </span>
                           ))}
@@ -1268,9 +1260,9 @@ export default function Dashboard() {
                       type="button"
                       onClick={() => navigate(`/opportunities/${opp._id}`)}
                       style={{
-                        background: '#F8FAFD',
-                        border: '1px solid #D0D5DD',
-                        color: '#0B1F3A',
+                        background: 'var(--card-subtle)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-primary)',
                         padding: '6px 12px',
                         borderRadius: 6,
                         fontSize: 12,
@@ -1286,7 +1278,7 @@ export default function Dashboard() {
               )}
             </div>
 
-            <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 12, fontStyle: 'italic' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 12, fontStyle: 'italic' }}>
               ✦ Profile match is estimated based on your Profile Vault skills & department.
             </div>
           </div>
@@ -1297,48 +1289,48 @@ export default function Dashboard() {
       {!focusMode && (
         <section style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-            <Sparkles size={15} color="#087F71" />
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: '#087F71', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
+            <Sparkles size={15} color="var(--primary-brand)" />
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary-brand)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
               OppTrack Intelligence
             </h2>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
             {/* Card 1: Application Pattern */}
-            <div className="card" style={{ padding: 18, background: '#FFFFFF', borderTop: '3px solid #087F71' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#087F71', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div className="card" style={{ padding: 18, background: 'var(--surface)', border: '1px solid var(--border)', borderTop: '3px solid var(--primary-brand)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary-brand)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Sparkles size={13} /> Application Pattern
               </div>
-              <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 14 }}>
                 {aiInsights.pattern}
               </div>
-              <Link to="/opportunities" style={{ fontSize: 12, fontWeight: 700, color: '#087F71', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Link to="/opportunities" style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-brand)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                 View analysis <ArrowRight size={12} />
               </Link>
             </div>
 
             {/* Card 2: Deadline Insight */}
-            <div className="card" style={{ padding: 18, background: '#FFFFFF', borderTop: '3px solid #2563EB' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div className="card" style={{ padding: 18, background: 'var(--surface)', border: '1px solid var(--border)', borderTop: '3px solid var(--info)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--info)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Clock size={13} /> Deadline Insight
               </div>
-              <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 14 }}>
                 {aiInsights.deadlines}
               </div>
-              <Link to="/calendar" style={{ fontSize: 12, fontWeight: 700, color: '#2563EB', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Link to="/calendar" style={{ fontSize: 12, fontWeight: 700, color: 'var(--info)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                 Review deadlines <ArrowRight size={12} />
               </Link>
             </div>
 
             {/* Card 3: Profile Insight */}
-            <div className="card" style={{ padding: 18, background: '#FFFFFF', borderTop: '3px solid #16A34A' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#16A34A', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div className="card" style={{ padding: 18, background: 'var(--surface)', border: '1px solid var(--border)', borderTop: '3px solid var(--success)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <ShieldCheck size={13} /> Profile Readiness
               </div>
-              <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 14 }}>
                 {aiInsights.profile}
               </div>
-              <Link to="/profile" style={{ fontSize: 12, fontWeight: 700, color: '#16A34A', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Link to="/profile" style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                 Complete profile <ArrowRight size={12} />
               </Link>
             </div>
@@ -1352,14 +1344,14 @@ export default function Dashboard() {
           
           {/* RECENT ACTIVITY (Latest 5 Logs) */}
           <div className="card" style={{ padding: 22 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid #F1F5F9', paddingBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <Activity size={16} color="#2563EB" />
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: 0 }}>
+                <Activity size={16} color="var(--primary-blue)" />
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   Recent Activity
                 </h2>
               </div>
-              <Link to="/history" style={{ fontSize: 12, color: '#2563EB', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Link to="/history" style={{ fontSize: 12, color: 'var(--primary-blue)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                 View Activity Log <ArrowRight size={13} />
               </Link>
             </div>
@@ -1369,13 +1361,13 @@ export default function Dashboard() {
                 {recentLogs.slice(0, 5).map(log => {
                   const formattedDate = new Date(log.createdAt).toLocaleDateString('en-IN', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
                   return (
-                    <div key={log._id} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, paddingBottom: 10, borderBottom: '1px solid #F8FAFD' }}>
-                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#2563EB', marginTop: 6, flexShrink: 0 }} />
+                    <div key={log._id} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary-blue)', marginTop: 6, flexShrink: 0 }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, color: '#1E293B', fontWeight: 500, lineHeight: 1.4 }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.4 }}>
                           {log.description}
                         </div>
-                        <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 2 }}>
+                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
                           {formattedDate}
                         </div>
                       </div>
@@ -1384,7 +1376,7 @@ export default function Dashboard() {
                 })}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: '#94A3B8', fontStyle: 'italic', padding: '16px 0' }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic', padding: '16px 0' }}>
                 No recent activity logged yet.
               </div>
             )}
@@ -1392,11 +1384,11 @@ export default function Dashboard() {
 
           {/* CAREER PROGRESS ("Your Placement Journey") */}
           <div className="card" style={{ padding: 22 }}>
-            <div style={{ marginBottom: 16, borderBottom: '1px solid #F1F5F9', paddingBottom: 12 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 2px 0' }}>
+            <div style={{ marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
                 Your Placement Journey
               </h2>
-              <span style={{ fontSize: 12, color: '#64748B' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                 Recruitment funnel conversion
               </span>
             </div>
@@ -1404,45 +1396,45 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Stage 1: Applications */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#1E293B', marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
                   <span>Applications Tracked</span>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{total}</span>
                 </div>
-                <div style={{ height: 6, background: '#F1F5F9', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: total > 0 ? '100%' : '0%', background: '#2563EB', borderRadius: 3 }} />
+                <div style={{ height: 6, background: 'var(--card-subtle)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: total > 0 ? '100%' : '0%', background: 'var(--primary-blue)', borderRadius: 3 }} />
                 </div>
               </div>
 
               {/* Stage 2: Assessments */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#1E293B', marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
                   <span>Assessments Reached</span>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{stats?.byStatus?.oa || 0}</span>
                 </div>
-                <div style={{ height: 6, background: '#F1F5F9', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: total > 0 ? `${Math.round(((stats?.byStatus?.oa || 0) / total) * 100)}%` : '0%', background: '#D97706', borderRadius: 3 }} />
+                <div style={{ height: 6, background: 'var(--card-subtle)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: total > 0 ? `${Math.round(((stats?.byStatus?.oa || 0) / total) * 100)}%` : '0%', background: 'var(--warning)', borderRadius: 3 }} />
                 </div>
               </div>
 
               {/* Stage 3: Interviews */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#1E293B', marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
                   <span>Interviews Scheduled</span>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{(stats?.byStatus?.interview || 0) + (stats?.byStatus?.hr || 0)}</span>
                 </div>
-                <div style={{ height: 6, background: '#F1F5F9', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: 'var(--card-subtle)', borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: total > 0 ? `${Math.round((((stats?.byStatus?.interview || 0) + (stats?.byStatus?.hr || 0)) / total) * 100)}%` : '0%', background: '#EA580C', borderRadius: 3 }} />
                 </div>
               </div>
 
               {/* Stage 4: Offers */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#1E293B', marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
                   <span>Offers Secured</span>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{offers}</span>
                 </div>
-                <div style={{ height: 6, background: '#F1F5F9', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: total > 0 ? `${Math.round((offers / total) * 100)}%` : '0%', background: '#16A34A', borderRadius: 3 }} />
+                <div style={{ height: 6, background: 'var(--card-subtle)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: total > 0 ? `${Math.round((offers / total) * 100)}%` : '0%', background: 'var(--success)', borderRadius: 3 }} />
                 </div>
               </div>
             </div>
@@ -1454,17 +1446,18 @@ export default function Dashboard() {
       {showAiPanel && (
         <div 
           onClick={() => setShowAiPanel(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(11,31,58,0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}
+          className="modal-backdrop-motion"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(11, 17, 32, 0.6)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}
         >
           <div 
             onClick={e => e.stopPropagation()}
-            style={{ width: '100%', maxWidth: 440, background: '#FFFFFF', height: '100%', boxShadow: '-4px 0 25px rgba(11,31,58,0.15)', display: 'flex', flexDirection: 'column' }}
+            style={{ width: '100%', maxWidth: 440, background: 'var(--surface)', borderLeft: '1px solid var(--border)', height: '100%', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column' }}
           >
             {/* Header */}
-            <div style={{ padding: '20px 22px', borderBottom: '1px solid #E5EAF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '20px 22px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Sparkles size={17} color="#087F71" />
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0B1F3A' }}>
+                <Sparkles size={17} color="var(--primary-brand)" />
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                   ✦ Ask OppTrack
                 </h3>
               </div>
@@ -1473,7 +1466,7 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={() => setAiAnswers([])}
-                    style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 4 }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 4 }}
                     title="Clear history"
                   >
                     <Trash2 size={13} /> Clear
@@ -1482,7 +1475,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => setShowAiPanel(false)}
-                  style={{ background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer', padding: 4 }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
                   title="Close (Esc)"
                 >
                   <X size={18} />
@@ -1493,7 +1486,7 @@ export default function Dashboard() {
             {/* Content & Suggested Prompts */}
             <div style={{ padding: 22, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
                   Ask with 1-Click
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1512,9 +1505,9 @@ export default function Dashboard() {
                       onClick={() => handleAskOppTrack(prompt)}
                       style={{
                         textAlign: 'left',
-                        background: '#F8FAFD',
-                        border: '1px solid #E5EAF0',
-                        color: '#1E293B',
+                        background: 'var(--card-subtle)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-primary)',
                         padding: '9px 12px',
                         borderRadius: 6,
                         fontSize: 12.5,
@@ -1531,32 +1524,32 @@ export default function Dashboard() {
 
               {/* Answers feed */}
               {isAiAnswering && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#087F71', fontSize: 13, fontWeight: 600, background: '#E6F4F1', padding: '10px 14px', borderRadius: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary-brand)', fontSize: 13, fontWeight: 600, background: 'var(--primary-brand-light)', padding: '10px 14px', borderRadius: 8 }}>
                   <div className="spinner" style={{ width: 14, height: 14 }} /> OppTrack is analyzing your data…
                 </div>
               )}
 
               {aiAnswers.length === 0 && !isAiAnswering && (
-                <div style={{ textAlign: 'center', padding: '16px 14px', background: '#F8FAFD', borderRadius: 8, border: '1px dashed #CBD5E1' }}>
-                  <p style={{ margin: 0, fontSize: 12.5, color: '#64748B', lineHeight: 1.5 }}>
+                <div style={{ textAlign: 'center', padding: '16px 14px', background: 'var(--card-subtle)', borderRadius: 8, border: '1px dashed var(--border)' }}>
+                  <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                     Click any quick prompt above or type a custom question below to get instant answers about your deadlines, interviews, and applications.
                   </p>
                 </div>
               )}
 
               {aiAnswers.map((item, idx) => (
-                <div key={idx} style={{ background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 8, padding: 14 }}>
+                <div key={idx} style={{ background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 8, padding: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#087F71' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-brand)' }}>
                       Q: {item.query}
                     </div>
                     {item.time && (
-                      <span style={{ fontSize: 11, color: '#94A3B8', fontFamily: 'JetBrains Mono, monospace' }}>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
                         {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 13, color: '#1E293B', whiteSpace: 'pre-line', lineHeight: 1.55 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'pre-line', lineHeight: 1.55 }}>
                     {item.answer}
                   </div>
                 </div>
@@ -1569,7 +1562,7 @@ export default function Dashboard() {
                 e.preventDefault();
                 if (aiQuery.trim()) handleAskOppTrack(aiQuery);
               }}
-              style={{ padding: '16px 22px', borderTop: '1px solid #E5EAF0', display: 'flex', gap: 8 }}
+              style={{ padding: '16px 22px', borderTop: '1px solid var(--border)', display: 'flex', gap: 8 }}
             >
               <input
                 ref={aiInputRef}
@@ -1578,13 +1571,13 @@ export default function Dashboard() {
                 value={aiQuery}
                 disabled={isAiAnswering}
                 onChange={e => setAiQuery(e.target.value)}
-                style={{ flex: 1, padding: '9px 12px', borderRadius: 6, border: '1px solid #D0D5DD', fontSize: 13, outline: 'none' }}
+                style={{ flex: 1, padding: '9px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', fontSize: 13, outline: 'none' }}
               />
               <button
                 type="submit"
                 disabled={!aiQuery.trim() || isAiAnswering}
                 style={{ 
-                  background: (!aiQuery.trim() || isAiAnswering) ? '#94A3B8' : '#087F71', 
+                  background: (!aiQuery.trim() || isAiAnswering) ? 'var(--text-muted)' : 'var(--primary-brand)', 
                   color: '#FFFFFF', 
                   border: 'none', 
                   padding: '9px 14px', 

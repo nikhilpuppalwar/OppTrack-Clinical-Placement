@@ -123,20 +123,20 @@ const PRESET_MODELS = {
   ],
 };
 
-function DarkInput({ id, type = 'text', placeholder, value, onChange, prefix, suffix, accentColor = '#18B7A0' }) {
+function DarkInput({ id, type = 'text', placeholder, value, onChange, prefix, suffix, accentColor = 'var(--primary-brand)' }) {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{
       display: 'flex', alignItems: 'center',
-      background: '#FFFFFF',
-      border: `1px solid ${focused ? accentColor : '#E5EAF0'}`,
-      boxShadow: focused ? `0 0 0 3px rgba(24, 183, 160, 0.15)` : 'none',
+      background: 'var(--surface)',
+      border: `1px solid ${focused ? accentColor : 'var(--border)'}`,
+      boxShadow: focused ? `0 0 0 3px var(--primary-brand-glow)` : 'none',
       borderRadius: 8,
       overflow: 'hidden',
       transition: 'all 0.15s ease',
     }}>
       {prefix && (
-        <span style={{ paddingLeft: 12, color: focused ? accentColor : '#667085', fontSize: 14, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+        <span style={{ paddingLeft: 12, color: focused ? accentColor : 'var(--text-muted)', fontSize: 14, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           {prefix}
         </span>
       )}
@@ -153,7 +153,7 @@ function DarkInput({ id, type = 'text', placeholder, value, onChange, prefix, su
           background: 'transparent',
           border: 'none',
           outline: 'none',
-          color: '#172033',
+          color: 'var(--text-primary)',
           fontSize: 14,
           padding: '10px 12px',
           fontFamily: type === 'password' ? 'ui-monospace, monospace' : 'inherit',
@@ -164,21 +164,21 @@ function DarkInput({ id, type = 'text', placeholder, value, onChange, prefix, su
   );
 }
 
-function DarkSelect({ id, value, onChange, options, accentColor = '#18B7A0', prefix }) {
+function DarkSelect({ id, value, onChange, options, accentColor = 'var(--primary-brand)', prefix }) {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{
       display: 'flex', alignItems: 'center',
-      background: '#FFFFFF',
-      border: `1px solid ${focused ? accentColor : '#E5EAF0'}`,
-      boxShadow: focused ? `0 0 0 3px rgba(37, 99, 235, 0.15)` : 'none',
+      background: 'var(--surface)',
+      border: `1px solid ${focused ? accentColor : 'var(--border)'}`,
+      boxShadow: focused ? `0 0 0 3px var(--primary-brand-glow)` : 'none',
       borderRadius: 8,
       overflow: 'hidden',
       position: 'relative',
       transition: 'all 0.15s ease',
     }}>
       {prefix && (
-        <span style={{ paddingLeft: 12, color: focused ? accentColor : '#667085', fontSize: 14, flexShrink: 0 }}>
+        <span style={{ paddingLeft: 12, color: focused ? accentColor : 'var(--text-muted)', fontSize: 14, flexShrink: 0 }}>
           {prefix}
         </span>
       )}
@@ -190,15 +190,15 @@ function DarkSelect({ id, value, onChange, options, accentColor = '#18B7A0', pre
         onBlur={() => setFocused(false)}
         style={{
           flex: 1, background: 'transparent', border: 'none', outline: 'none',
-          color: '#172033', fontSize: 14, padding: '10px 36px 10px 12px',
+          color: 'var(--text-primary)', fontSize: 14, padding: '10px 36px 10px 12px',
           appearance: 'none', cursor: 'pointer',
         }}
       >
         {options.map(o => (
-          <option key={o.value} value={o.value} style={{ background: '#FFFFFF', color: '#172033' }}>{o.label}</option>
+          <option key={o.value} value={o.value} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{o.label}</option>
         ))}
       </select>
-      <span style={{ position: 'absolute', right: 12, color: '#667085', fontSize: 13, pointerEvents: 'none' }}>
+      <span style={{ position: 'absolute', right: 12, color: 'var(--text-muted)', fontSize: 13, pointerEvents: 'none' }}>
         ▾
       </span>
     </div>
@@ -207,7 +207,7 @@ function DarkSelect({ id, value, onChange, options, accentColor = '#18B7A0', pre
 
 function FieldLabel({ children, htmlFor }) {
   return (
-    <label htmlFor={htmlFor} style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#172033', marginBottom: 6 }}>
+    <label htmlFor={htmlFor} style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
       {children}
     </label>
   );
@@ -663,13 +663,13 @@ export default function Settings() {
     <div style={{ maxWidth: 1000, margin: '0 auto', paddingBottom: 100, fontFamily: 'Manrope, sans-serif' }}>
       
       {/* ── HEADER ── */}
-      <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 24, marginBottom: 28 }}>
+      <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: 24, marginBottom: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0B1F3A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
               System Settings & Integrations
             </h1>
-            <p style={{ margin: 0, fontSize: 14, color: '#667085' }}>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>
               Manage your Google Cloud OAuth, placement milestone alerts, AI parser, SMTP reminders, and database backups.
             </p>
           </div>
@@ -678,18 +678,18 @@ export default function Settings() {
             onClick={handleSave}
             disabled={saving}
             style={{
-              background: '#0B1F3A',
+              background: 'var(--primary-brand)',
               color: '#FFFFFF',
               border: 'none',
               padding: '10px 22px',
-              borderRadius: 8,
+              borderRadius: 'var(--radius-pill)',
               fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              boxShadow: '0 2px 6px rgba(11, 31, 58, 0.15)',
+              boxShadow: 'var(--shadow-plum)',
               transition: 'all 0.15s ease',
             }}
           >
@@ -702,9 +702,9 @@ export default function Settings() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-            background: googleStatus.isConnected ? '#EAF2FF' : googleStatus.tokenExpired ? '#FFFBEB' : '#F7F9FC',
-            border: `1px solid ${googleStatus.isConnected ? '#BFDBFE' : googleStatus.tokenExpired ? '#FDE68A' : '#E5EAF0'}`,
-            color: googleStatus.isConnected ? '#2563EB' : googleStatus.tokenExpired ? '#D97706' : '#667085',
+            background: googleStatus.isConnected ? 'var(--info-bg)' : googleStatus.tokenExpired ? 'var(--warning-bg)' : 'var(--card-subtle)',
+            border: `1px solid ${googleStatus.isConnected ? 'var(--info)' : googleStatus.tokenExpired ? 'var(--warning)' : 'var(--border)'}`,
+            color: googleStatus.isConnected ? 'var(--info)' : googleStatus.tokenExpired ? 'var(--warning)' : 'var(--text-secondary)',
           }}>
             <CalendarDays size={13} />
             <span>Google Sync: <strong>{googleStatus.isConnected ? (googleStatus.googleEmail || 'Connected') : googleStatus.tokenExpired ? 'Session Expired' : 'Not Connected'}</strong></span>
@@ -714,9 +714,9 @@ export default function Settings() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-            background: browserPermission === 'granted' ? '#EAF8EF' : '#FFF7E6',
-            border: `1px solid ${browserPermission === 'granted' ? '#A7F3D0' : '#FDE68A'}`,
-            color: browserPermission === 'granted' ? '#15803D' : '#B45309',
+            background: browserPermission === 'granted' ? 'var(--success-bg)' : 'var(--warning-bg)',
+            border: `1px solid ${browserPermission === 'granted' ? 'var(--success)' : 'var(--warning)'}`,
+            color: browserPermission === 'granted' ? 'var(--success)' : 'var(--warning)',
           }}>
             <Bell size={13} />
             <span>Browser Alerts: <strong>{browserPermission === 'granted' ? 'Enabled' : 'Permission Needed'}</strong></span>
@@ -726,9 +726,9 @@ export default function Settings() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-            background: isAiConfigured ? '#E8F8F5' : '#FEF0F0',
-            border: `1px solid ${isAiConfigured ? '#A3E5D9' : '#FCA5A5'}`,
-            color: isAiConfigured ? '#087F71' : '#DC2626',
+            background: isAiConfigured ? 'var(--brand-light)' : 'var(--danger-bg)',
+            border: `1px solid ${isAiConfigured ? 'var(--primary-brand)' : 'var(--danger)'}`,
+            color: isAiConfigured ? 'var(--primary-brand)' : 'var(--danger)',
           }}>
             <Cpu size={13} />
             <span>AI Parser: <strong>{isAiConfigured ? `${settings.llmProvider?.toUpperCase()} Ready` : 'Key Missing'}</strong></span>
@@ -738,9 +738,9 @@ export default function Settings() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 7,
             padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-            background: '#EAF8EF',
-            border: '1px solid #A7F3D0',
-            color: '#15803D',
+            background: 'var(--success-bg)',
+            border: '1px solid var(--success)',
+            color: 'var(--success)',
           }}>
             <Mail size={13} />
             <span>Email Reminders: <strong>Active (Automated)</strong></span>
@@ -751,16 +751,16 @@ export default function Settings() {
       {/* ── SETTINGS NAVIGATION TABS (ORDERED BY IMPORTANCE) ── */}
       <div style={{
         display: 'flex', gap: 6, marginBottom: 26,
-        background: '#F0F4F8', padding: 5, borderRadius: 10, border: '1px solid #E5EAF0',
+        background: 'var(--card-subtle)', padding: 5, borderRadius: 10, border: '1px solid var(--border)',
         overflowX: 'auto',
       }}>
         {[
           { id: 'all', label: 'All Settings', icon: Sliders },
-          { id: 'google', label: '1. Google & Sync', icon: CalendarDays, accent: '#2563EB' },
-          { id: 'senders', label: '2. Trusted Senders', icon: Mail, accent: '#DC2626' },
-          { id: 'reminders', label: '3. Notifications & Alerts', icon: Bell, accent: '#D97706' },
-          { id: 'ai', label: '4. AI Engine', icon: Cpu, accent: '#087F71' },
-          { id: 'data', label: '5. Data & Backup', icon: Database, accent: '#4F46E5' },
+          { id: 'google', label: '1. Google & Sync', icon: CalendarDays, accent: 'var(--info)' },
+          { id: 'senders', label: '2. Trusted Senders', icon: Mail, accent: 'var(--danger)' },
+          { id: 'reminders', label: '3. Notifications & Alerts', icon: Bell, accent: 'var(--warning)' },
+          { id: 'ai', label: '4. AI Engine', icon: Cpu, accent: 'var(--primary-brand)' },
+          { id: 'data', label: '5. Data & Backup', icon: Database, accent: 'var(--indigo)' },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -771,14 +771,15 @@ export default function Settings() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
                 padding: '8px 16px', borderRadius: 7, fontSize: 13, fontWeight: 600,
-                background: isActive ? '#FFFFFF' : 'transparent',
-                color: isActive ? '#0B1F3A' : '#667085',
+                background: isActive ? 'var(--surface)' : 'transparent',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                 border: 'none',
-                boxShadow: isActive ? '0 1px 3px rgba(11,31,58,0.08)' : 'none',
-                cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s ease',
+                boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'all var(--motion-fast) var(--ease-standard)',
               }}
             >
-              <Icon size={14} color={isActive ? (tab.accent || '#0B1F3A') : '#667085'} />
+              <Icon size={14} color={isActive ? (tab.accent || 'var(--primary-brand)') : 'var(--text-muted)'} />
               {tab.label}
             </button>
           );
@@ -792,27 +793,27 @@ export default function Settings() {
         {/* ══════════════════════════════════════════════════════════════ */}
         {(activeTab === 'all' || activeTab === 'google') && (
           <div style={{
-            background: '#FFFFFF',
-            border: '1px solid #E5EAF0',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderTop: '4px solid #2563EB',
             borderRadius: 14,
             padding: 28,
-            boxShadow: '0 1px 3px rgba(11,31,58,0.04)',
+            boxShadow: 'var(--shadow-sm)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
-                  background: '#EAF2FF', border: '1px solid #BFDBFE',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB'
+                  background: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(37, 99, 235, 0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6'
                 }}>
                   <CalendarDays size={20} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 2px 0' }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
                     Google Cloud & OAuth Integration
                   </h2>
-                  <p style={{ margin: 0, fontSize: 13, color: '#667085' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
                     Auto-fetch placement emails via Gmail API and synchronize application deadlines, test dates, and drives to Google Calendar.
                   </p>
                 </div>
@@ -821,9 +822,9 @@ export default function Settings() {
               <span style={{
                 fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
                 padding: '4px 10px', borderRadius: 6,
-                background: googleStatus.isConnected ? '#EAF8EF' : googleStatus.tokenExpired ? '#FFFBEB' : '#F7F9FC',
-                color: googleStatus.isConnected ? '#15803D' : googleStatus.tokenExpired ? '#D97706' : '#667085',
-                border: `1px solid ${googleStatus.isConnected ? '#A7F3D0' : googleStatus.tokenExpired ? '#FDE68A' : '#E5EAF0'}`
+                background: googleStatus.isConnected ? 'rgba(16, 185, 129, 0.12)' : googleStatus.tokenExpired ? 'rgba(245, 158, 11, 0.12)' : 'var(--card-subtle)',
+                color: googleStatus.isConnected ? '#10B981' : googleStatus.tokenExpired ? 'var(--amber-text, #F59E0B)' : 'var(--text-secondary)',
+                border: `1px solid ${googleStatus.isConnected ? 'rgba(16, 185, 129, 0.3)' : googleStatus.tokenExpired ? 'rgba(245, 158, 11, 0.3)' : 'var(--border)'}`
               }}>
                 {googleStatus.isConnected ? 'OAuth Active' : googleStatus.tokenExpired ? '⚠️ Session Expired' : 'Not Connected'}
               </span>
@@ -831,8 +832,8 @@ export default function Settings() {
 
             {/* Google OAuth Connection Box */}
             <div style={{
-              background: googleStatus.tokenExpired ? '#FFFDF5' : '#F8FAFD',
-              border: `1px solid ${googleStatus.isConnected ? '#A7F3D0' : googleStatus.tokenExpired ? '#FCD34D' : '#E5EAF0'}`,
+              background: googleStatus.tokenExpired ? 'rgba(245, 158, 11, 0.08)' : 'var(--card-subtle)',
+              border: `1px solid ${googleStatus.isConnected ? 'rgba(16, 185, 129, 0.3)' : googleStatus.tokenExpired ? 'rgba(245, 158, 11, 0.3)' : 'var(--border)'}`,
               borderRadius: 12,
               padding: 20,
               marginBottom: 24,
@@ -846,9 +847,9 @@ export default function Settings() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                   <span style={{
                     width: 8, height: 8, borderRadius: '50%',
-                    background: googleStatus.isConnected ? '#15803D' : googleStatus.tokenExpired ? '#DC2626' : '#D97706'
+                    background: googleStatus.isConnected ? '#10B981' : googleStatus.tokenExpired ? '#EF4444' : '#F59E0B'
                   }} />
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#0B1F3A' }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
                     {googleStatus.isConnected
                       ? `Connected as ${googleStatus.googleEmail || 'Google User'}`
                       : googleStatus.tokenExpired
@@ -856,7 +857,7 @@ export default function Settings() {
                         : 'Google Account Not Connected'}
                   </span>
                 </div>
-                <p style={{ margin: 0, fontSize: 12, color: googleStatus.tokenExpired ? '#92400E' : '#667085', maxWidth: 540, lineHeight: 1.5 }}>
+                <p style={{ margin: 0, fontSize: 12, color: googleStatus.tokenExpired ? 'var(--amber-text, #F59E0B)' : 'var(--text-secondary)', maxWidth: 540, lineHeight: 1.5 }}>
                   {googleStatus.isConnected
                     ? `Connected on ${new Date(googleStatus.connectedAt).toLocaleDateString('en-IN')}. Refresh tokens are encrypted with AES-256-GCM. No passwords or IMAP credentials are stored.`
                     : googleStatus.tokenExpired
@@ -870,9 +871,9 @@ export default function Settings() {
                   <button
                     onClick={handleDisconnectGoogle}
                     style={{
-                      background: '#FEF0F0',
-                      border: '1px solid #FCA5A5',
-                      color: '#DC2626',
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      color: 'var(--danger, #DC2626)',
                       padding: '8px 16px',
                       borderRadius: 8,
                       fontSize: 12,
@@ -890,7 +891,7 @@ export default function Settings() {
                     onClick={handleConnectGoogle}
                     disabled={connectingGoogle}
                     style={{
-                      background: googleStatus.tokenExpired ? '#087F71' : '#0B1F3A',
+                      background: 'var(--primary-brand)',
                       color: '#ffffff',
                       border: 'none',
                       padding: '10px 20px',
@@ -901,7 +902,7 @@ export default function Settings() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 8,
-                      boxShadow: '0 2px 6px rgba(11,31,58,0.15)'
+                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
                     }}
                   >
                     {googleStatus.tokenExpired ? <RefreshCw size={15} className={connectingGoogle ? 'spin' : ''} /> : <CalendarDays size={15} />}
@@ -914,8 +915,8 @@ export default function Settings() {
             {/* Google OAuth Beta Tester Notice Banner */}
             <div style={{
               marginBottom: 20,
-              background: '#E8F8F5',
-              border: '1px solid rgba(24,183,160,0.3)',
+              background: 'rgba(24, 183, 160, 0.12)',
+              border: '1px solid rgba(24, 183, 160, 0.25)',
               borderRadius: 10,
               padding: '12px 18px',
               display: 'flex',
@@ -925,10 +926,10 @@ export default function Settings() {
               gap: 12
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <ShieldCheck size={20} color="#0D7A6B" />
+                <ShieldCheck size={20} color="var(--primary-brand)" />
                 <div>
-                  <strong style={{ fontSize: 13, color: '#0D7A6B' }}>Google OAuth 100-User Testing Mode Active</strong>
-                  <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#475569' }}>
+                  <strong style={{ fontSize: 13, color: 'var(--primary-brand)' }}>Google OAuth 100-User Testing Mode Active</strong>
+                  <p style={{ margin: '2px 0 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
                     Google limits OAuth testing to 100 users. If your Gmail is not yet authorized in Google Cloud Console, submit your request to be added.
                   </p>
                 </div>
@@ -937,7 +938,7 @@ export default function Settings() {
               <Link
                 to="/google-tester"
                 style={{
-                  background: '#0B1F3A',
+                  background: 'var(--primary-brand)',
                   color: '#FFFFFF',
                   padding: '7px 14px',
                   borderRadius: 6,
@@ -957,8 +958,8 @@ export default function Settings() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
                 {/* Gmail Auto-Fetch Toggle */}
                 <div style={{
-                  background: '#F8FAFD',
-                  border: '1px solid #E5EAF0',
+                  background: 'var(--card-subtle)',
+                  border: '1px solid var(--border)',
                   borderRadius: 10,
                   padding: 16,
                   display: 'flex',
@@ -969,10 +970,10 @@ export default function Settings() {
                 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Mail size={15} color="#2563EB" />
-                      <strong style={{ fontSize: 13, color: '#0B1F3A' }}>Automatic Gmail Placement Polling</strong>
+                      <Mail size={15} color="#3B82F6" />
+                      <strong style={{ fontSize: 13, color: 'var(--text-primary)' }}>Automatic Gmail Placement Polling</strong>
                     </div>
-                    <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#667085' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
                       Periodically scans your inbox for placement and internship notifications strictly from configured trusted senders.
                     </p>
                   </div>
@@ -982,9 +983,9 @@ export default function Settings() {
                       onClick={handleSyncGmailNow}
                       disabled={syncingGmail}
                       style={{
-                        background: '#FFFFFF',
-                        border: '1px solid #E5EAF0',
-                        color: '#2563EB',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        color: '#3B82F6',
                         padding: '6px 14px',
                         borderRadius: 6,
                         fontSize: 12,
@@ -1002,9 +1003,9 @@ export default function Settings() {
                     <button
                       onClick={handleToggleGmailSync}
                       style={{
-                        background: googleStatus.gmailSyncEnabled ? '#2563EB' : '#FFFFFF',
-                        color: googleStatus.gmailSyncEnabled ? '#FFFFFF' : '#667085',
-                        border: `1px solid ${googleStatus.gmailSyncEnabled ? '#2563EB' : '#E5EAF0'}`,
+                        background: googleStatus.gmailSyncEnabled ? '#2563EB' : 'var(--surface)',
+                        color: googleStatus.gmailSyncEnabled ? '#FFFFFF' : 'var(--text-secondary)',
+                        border: `1px solid ${googleStatus.gmailSyncEnabled ? '#2563EB' : 'var(--border)'}`,
                         padding: '6px 14px',
                         borderRadius: 6,
                         fontSize: 12,
@@ -1020,8 +1021,8 @@ export default function Settings() {
 
                 {/* Google Calendar Multi-Milestone Sync Toggle */}
                 <div style={{
-                  background: '#F8FAFD',
-                  border: '1px solid #E5EAF0',
+                  background: 'var(--card-subtle)',
+                  border: '1px solid var(--border)',
                   borderRadius: 10,
                   padding: 16,
                   display: 'flex',
@@ -1032,10 +1033,10 @@ export default function Settings() {
                 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Calendar size={15} color="#15803D" />
-                      <strong style={{ fontSize: 13, color: '#0B1F3A' }}>Google Calendar Multi-Milestone Sync</strong>
+                      <Calendar size={15} color="#10B981" />
+                      <strong style={{ fontSize: 13, color: 'var(--text-primary)' }}>Google Calendar Multi-Milestone Sync</strong>
                     </div>
-                    <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#667085' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
                       Automatically synchronizes Application Deadlines, OA/Assessment Tests, Campus Drives, and Interviews to Google Calendar with 24h & 1h prior popups.
                     </p>
                   </div>
@@ -1045,9 +1046,9 @@ export default function Settings() {
                       onClick={handleSyncCalendarNow}
                       disabled={syncingCalendar}
                       style={{
-                        background: '#FFFFFF',
-                        border: '1px solid #E5EAF0',
-                        color: '#15803D',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        color: '#10B981',
                         padding: '6px 14px',
                         borderRadius: 6,
                         fontSize: 12,
@@ -1065,9 +1066,9 @@ export default function Settings() {
                     <button
                       onClick={handleToggleCalendarSync}
                       style={{
-                        background: googleStatus.calendarSyncEnabled ? '#15803D' : '#FFFFFF',
-                        color: googleStatus.calendarSyncEnabled ? '#FFFFFF' : '#667085',
-                        border: `1px solid ${googleStatus.calendarSyncEnabled ? '#15803D' : '#E5EAF0'}`,
+                        background: googleStatus.calendarSyncEnabled ? '#10B981' : 'var(--surface)',
+                        color: googleStatus.calendarSyncEnabled ? '#FFFFFF' : 'var(--text-secondary)',
+                        border: `1px solid ${googleStatus.calendarSyncEnabled ? '#10B981' : 'var(--border)'}`,
                         padding: '6px 14px',
                         borderRadius: 6,
                         fontSize: 12,
@@ -1090,27 +1091,27 @@ export default function Settings() {
         {/* ══════════════════════════════════════════════════════════════ */}
         {(activeTab === 'all' || activeTab === 'senders' || activeTab === 'google') && (
           <div style={{
-            background: '#FFFFFF',
-            border: '1px solid #E5EAF0',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderTop: '4px solid #DC2626',
             borderRadius: 14,
             padding: 28,
-            boxShadow: '0 1px 3px rgba(11,31,58,0.04)',
+            boxShadow: 'var(--shadow-sm)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
-                  background: '#FEF0F0', border: '1px solid #FCA5A5',
+                  background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626'
                 }}>
                   <Mail size={20} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 2px 0' }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
                     Trusted Placement Senders ({trustedSenders.length})
                   </h2>
-                  <p style={{ margin: 0, fontSize: 13, color: '#667085' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
                     Only emails from these registered campus TPO coordinators and placement cell addresses are fetched and parsed by AI.
                   </p>
                 </div>
@@ -1121,9 +1122,9 @@ export default function Settings() {
                 onClick={handleAddPresetTpo}
                 disabled={addingSender}
                 style={{
-                  background: '#FFFFFF',
-                  border: '1px solid #BFDBFE',
-                  color: '#2563EB',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  color: '#3B82F6',
                   fontSize: 12,
                   fontWeight: 600,
                   padding: '6px 12px',
@@ -1176,9 +1177,9 @@ export default function Settings() {
 
             {/* Senders List */}
             {loadingSenders ? (
-              <div style={{ fontSize: 13, color: '#667085', padding: '12px 0' }}>Loading senders…</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', padding: '12px 0' }}>Loading senders…</div>
             ) : trustedSenders.length === 0 ? (
-              <div style={{ fontSize: 13, color: '#667085', padding: '16px', background: '#F8FAFD', borderRadius: 8, textAlign: 'center' }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', padding: '16px', background: 'var(--card-subtle)', borderRadius: 8, textAlign: 'center' }}>
                 No trusted sender addresses registered yet. Add your college TPO email above to start automatic fetching.
               </div>
             ) : (
@@ -1191,14 +1192,14 @@ export default function Settings() {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '10px 14px',
-                      background: '#F8FAFD',
+                      background: 'var(--card-subtle)',
                       borderRadius: 8,
-                      border: '1px solid #E5EAF0'
+                      border: '1px solid var(--border)'
                     }}
                   >
                     <div>
-                      <strong style={{ fontSize: 13, color: '#0B1F3A' }}>{s.email}</strong>
-                      {s.name && <span style={{ fontSize: 12, color: '#667085', marginLeft: 8 }}>({s.name})</span>}
+                      <strong style={{ fontSize: 13, color: 'var(--text-primary)' }}>{s.email}</strong>
+                      {s.name && <span style={{ fontSize: 12, color: 'var(--text-secondary)', marginLeft: 8 }}>({s.name})</span>}
                     </div>
                     <button
                       type="button"
@@ -1206,7 +1207,7 @@ export default function Settings() {
                       style={{
                         background: 'transparent',
                         border: 'none',
-                        color: '#DC3545',
+                        color: 'var(--danger, #DC3545)',
                         cursor: 'pointer',
                         padding: '4px',
                         display: 'flex',
@@ -1228,27 +1229,27 @@ export default function Settings() {
         {/* ══════════════════════════════════════════════════════════════ */}
         {(activeTab === 'all' || activeTab === 'reminders') && (
           <div style={{
-            background: '#FFFFFF',
-            border: '1px solid #E5EAF0',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderTop: '4px solid #D97706',
             borderRadius: 14,
             padding: 28,
-            boxShadow: '0 1px 3px rgba(11,31,58,0.04)',
+            boxShadow: 'var(--shadow-sm)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
-                  background: '#FFF7E6', border: '1px solid #FDE68A',
+                  background: 'rgba(217, 119, 6, 0.12)', border: '1px solid rgba(217, 119, 6, 0.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706'
                 }}>
                   <Bell size={20} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 2px 0' }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
                     Notifications & Milestone Alerts
                   </h2>
-                  <p style={{ margin: 0, fontSize: 13, color: '#667085' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
                     Configure automatic desktop popups and reminders for Online Assessment Tests, Drive Dates, Interviews, and Application Deadlines.
                   </p>
                 </div>
@@ -1261,9 +1262,9 @@ export default function Settings() {
                   onClick={handleEnableDesktopNotifications}
                   style={{
                     padding: '7px 14px', borderRadius: 7, fontSize: 12, fontWeight: 600,
-                    background: browserPermission === 'granted' ? '#EAF8EF' : '#FEF3C7',
-                    border: `1px solid ${browserPermission === 'granted' ? '#A7F3D0' : '#FCD34D'}`,
-                    color: browserPermission === 'granted' ? '#15803D' : '#B45309',
+                    background: browserPermission === 'granted' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                    border: `1px solid ${browserPermission === 'granted' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                    color: browserPermission === 'granted' ? '#10B981' : 'var(--amber-text, #F59E0B)',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
@@ -1277,9 +1278,9 @@ export default function Settings() {
                   disabled={testingNotification}
                   style={{
                     padding: '7px 14px', borderRadius: 7, fontSize: 12, fontWeight: 600,
-                    background: '#0B1F3A', border: 'none', color: '#FFFFFF',
+                    background: 'var(--primary-brand)', border: 'none', color: '#FFFFFF',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                    boxShadow: '0 1px 3px rgba(11,31,58,0.15)',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
                   }}
                 >
                   <Send size={13} />
@@ -1306,7 +1307,7 @@ export default function Settings() {
                     { value: 48, label: '48 Hours Before Milestone' },
                   ]}
                 />
-                <span style={{ fontSize: 11, color: '#667085', display: 'block', marginTop: 4 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginTop: 4 }}>
                   Controls how early before a test or deadline the system alerts you.
                 </span>
               </div>
@@ -1324,19 +1325,19 @@ export default function Settings() {
                     { value: 'both', label: 'Both Browser & Email Notifications' },
                   ]}
                 />
-                <span style={{ fontSize: 11, color: '#667085', display: 'block', marginTop: 4 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginTop: 4 }}>
                   Desktop popups trigger while using your browser; SMTP sends directly to your email inbox.
                 </span>
               </div>
             </div>
 
             {/* Milestone Event Toggles */}
-            <div style={{ background: '#F8FAFD', border: '1px solid #E5EAF0', borderRadius: 10, padding: 18, marginBottom: 24 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A', marginBottom: 12 }}>
+            <div style={{ background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 10, padding: 18, marginBottom: 24 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>
                 Milestone Types to Notify:
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-primary)', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={settings.notifyTests !== false}
@@ -1346,7 +1347,7 @@ export default function Settings() {
                   <span>Online Assessments &amp; Tests</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-primary)', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={settings.notifyDeadlines !== false}
@@ -1356,7 +1357,7 @@ export default function Settings() {
                   <span>Application Deadlines</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-primary)', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={settings.notifyDrives !== false}
@@ -1366,7 +1367,7 @@ export default function Settings() {
                   <span>Campus Drive Dates</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#172033', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-primary)', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={settings.notifyInterviews !== false}
@@ -1379,22 +1380,22 @@ export default function Settings() {
             </div>
 
             {/* Live Upcoming Milestone Reminders Preview */}
-            <div style={{ borderTop: '1px solid #E5EAF0', paddingTop: 18 }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 18 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                   Active Upcoming Reminders ({upcomingReminders.length})
                 </span>
                 <button
                   type="button"
                   onClick={fetchUpcomingReminders}
-                  style={{ background: 'transparent', border: 'none', color: '#2563EB', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+                  style={{ background: 'transparent', border: 'none', color: '#3B82F6', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
                 >
                   <RefreshCw size={12} /> Refresh
                 </button>
               </div>
 
               {upcomingReminders.length === 0 ? (
-                <div style={{ padding: '16px', background: '#F8FAFD', borderRadius: 8, textAlign: 'center', color: '#667085', fontSize: 12.5 }}>
+                <div style={{ padding: '16px', background: 'var(--card-subtle)', borderRadius: 8, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 12.5 }}>
                   No pending milestones due in the next 14 days. When new placement tests or drive dates arrive, they will appear here.
                 </div>
               ) : (
@@ -1404,9 +1405,9 @@ export default function Settings() {
                       key={rem.id}
                       style={{
                         padding: '10px 14px',
-                        background: rem.isUrgent ? '#FFFBEB' : '#F8FAFD',
+                        background: rem.isUrgent ? 'rgba(245, 158, 11, 0.1)' : 'var(--card-subtle)',
                         borderRadius: 8,
-                        border: `1px solid ${rem.isUrgent ? '#FDE68A' : '#E5EAF0'}`,
+                        border: `1px solid ${rem.isUrgent ? 'rgba(245, 158, 11, 0.3)' : 'var(--border)'}`,
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
@@ -1417,22 +1418,22 @@ export default function Settings() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 16 }}>{rem.icon}</span>
                         <div>
-                          <strong style={{ fontSize: 13, color: '#0B1F3A' }}>{rem.company}</strong>
-                          <span style={{ fontSize: 12, color: '#667085', marginLeft: 6 }}>
+                          <strong style={{ fontSize: 13, color: 'var(--text-primary)' }}>{rem.company}</strong>
+                          <span style={{ fontSize: 12, color: 'var(--text-secondary)', marginLeft: 6 }}>
                             {rem.milestoneLabel} ({rem.role})
                           </span>
                         </div>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <span style={{ fontSize: 12, color: '#475569' }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                           {new Date(rem.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                         </span>
                         <span style={{
                           fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-                          background: rem.isUrgent ? '#FEF0F0' : '#EAF2FF',
-                          color: rem.isUrgent ? '#DC2626' : '#2563EB',
-                          border: `1px solid ${rem.isUrgent ? '#FCA5A5' : '#BFDBFE'}`,
+                          background: rem.isUrgent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(37, 99, 235, 0.15)',
+                          color: rem.isUrgent ? '#EF4444' : '#3B82F6',
+                          border: `1px solid ${rem.isUrgent ? 'rgba(239, 68, 68, 0.3)' : 'rgba(37, 99, 235, 0.3)'}`,
                         }}>
                           {rem.hoursLeft > 0 ? `In ${rem.hoursLeft}h` : 'Due today'}
                         </span>
@@ -1450,27 +1451,27 @@ export default function Settings() {
         {/* ══════════════════════════════════════════════════════════════ */}
         {(activeTab === 'all' || activeTab === 'ai') && (
           <div style={{
-            background: '#FFFFFF',
-            border: '1px solid #E5EAF0',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderTop: '4px solid #18B7A0',
             borderRadius: 14,
             padding: 28,
-            boxShadow: '0 1px 3px rgba(11,31,58,0.04)',
+            boxShadow: 'var(--shadow-sm)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
-                  background: '#E8F8F5', border: '1px solid #A3E5D9',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#087F71'
+                  background: 'rgba(24, 183, 160, 0.12)', border: '1px solid rgba(24, 183, 160, 0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#18B7A0'
                 }}>
                   <Cpu size={20} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 2px 0' }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
                     AI Extraction Engine Configuration
                   </h2>
-                  <p style={{ margin: 0, fontSize: 13, color: '#667085' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
                     Powers automated email parsing, autofill extraction, and shortlisted student tracking.
                   </p>
                 </div>
@@ -1481,7 +1482,7 @@ export default function Settings() {
                 onClick={handleTestAi}
                 disabled={testingAi}
                 style={{
-                  background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#087F71',
+                  background: 'var(--card-subtle)', border: '1px solid var(--border)', color: '#18B7A0',
                   padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
                 }}
@@ -1546,7 +1547,7 @@ export default function Settings() {
                     value={settings.llmProvider}
                     onChange={e => setSettings(s => ({ ...s, llmProvider: e.target.value }))}
                   />
-                  <span style={{ fontSize: 11.5, color: '#667085', marginTop: 4, display: 'block' }}>
+                  <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, display: 'block' }}>
                     Identifier name for logging and provider-specific endpoint resolution.
                   </span>
                 </div>
@@ -1559,7 +1560,7 @@ export default function Settings() {
                     value={settings.llmBaseUrl || ''}
                     onChange={e => setSettings(s => ({ ...s, llmBaseUrl: e.target.value }))}
                   />
-                  <span style={{ fontSize: 11.5, color: '#667085', marginTop: 4, display: 'block' }}>
+                  <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, display: 'block' }}>
                     Custom root or /chat/completions URL for self-hosted or proxy endpoints.
                   </span>
                 </div>
@@ -1576,7 +1577,7 @@ export default function Settings() {
                   value={settings.llmModel}
                   onChange={e => setSettings(s => ({ ...s, llmModel: e.target.value }))}
                 />
-                <span style={{ fontSize: 11.5, color: '#667085', marginTop: 4, display: 'block' }}>
+                <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 4, display: 'block' }}>
                   Enter the exact model string required by your chosen provider.
                 </span>
               </div>
@@ -1586,7 +1587,7 @@ export default function Settings() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <FieldLabel htmlFor="llmApiKey">LLM API Key</FieldLabel>
                 {(settings.llmProvider === 'ollama' || settings.llmBaseUrl?.includes('localhost')) && (
-                  <span style={{ fontSize: 11.5, color: '#16A34A', fontWeight: 600 }}>
+                  <span style={{ fontSize: 11.5, color: '#10B981', fontWeight: 600 }}>
                     Local endpoint detected — API key is optional
                   </span>
                 )}
@@ -1605,7 +1606,7 @@ export default function Settings() {
                   <button
                     type="button"
                     onClick={() => setShowKey(!showKey)}
-                    style={{ background: 'transparent', border: 'none', padding: '0 12px', color: '#667085', cursor: 'pointer' }}
+                    style={{ background: 'transparent', border: 'none', padding: '0 12px', color: 'var(--text-muted)', cursor: 'pointer' }}
                   >
                     {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
@@ -1620,27 +1621,27 @@ export default function Settings() {
         {/* ══════════════════════════════════════════════════════════════ */}
         {(activeTab === 'all' || activeTab === 'data') && (
           <div style={{
-            background: '#FFFFFF',
-            border: '1px solid #E5EAF0',
-            borderTop: '4px solid #4F46E5',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderTop: '4px solid #6366F1',
             borderRadius: 14,
             padding: 28,
-            boxShadow: '0 1px 3px rgba(11,31,58,0.04)',
+            boxShadow: 'var(--shadow-sm)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
-                  background: '#EEF2FF', border: '1px solid #C7D2FE',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4F46E5'
+                  background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366F1'
                 }}>
                   <Database size={20} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0B1F3A', margin: '0 0 2px 0' }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
                     Data Backup, Spreadsheet Export & Restore
                   </h2>
-                  <p style={{ margin: 0, fontSize: 13, color: '#667085' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
                     Safely export complete JSON backups, download Excel-ready CSV spreadsheets, and restore your placement data anytime.
                   </p>
                 </div>
@@ -1654,9 +1655,9 @@ export default function Settings() {
                   disabled={exportingCsv}
                   style={{
                     padding: '8px 14px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
-                    background: '#FFFFFF', border: '1px solid #E5EAF0', color: '#15803D',
+                    background: 'var(--card-subtle)', border: '1px solid var(--border)', color: '#10B981',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                    boxShadow: '0 1px 2px rgba(11,31,58,0.05)',
+                    boxShadow: 'var(--shadow-sm)',
                   }}
                 >
                   <FileSpreadsheet size={14} />
@@ -1668,9 +1669,9 @@ export default function Settings() {
                   onClick={handleExport}
                   style={{
                     padding: '8px 16px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
-                    background: '#4F46E5', border: 'none', color: '#FFFFFF',
+                    background: '#6366F1', border: 'none', color: '#FFFFFF',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                    boxShadow: '0 1px 3px rgba(79, 70, 229, 0.25)',
+                    boxShadow: '0 1px 3px rgba(99, 102, 241, 0.25)',
                   }}
                 >
                   <Download size={14} /> Export Backup (JSON)
@@ -1679,12 +1680,12 @@ export default function Settings() {
             </div>
 
             {/* Restore / Import Box */}
-            <div style={{ background: '#F8FAFD', border: '1px dashed #CBD5E1', borderRadius: 12, padding: 22, marginTop: 16 }}>
+            <div style={{ background: 'var(--card-subtle)', border: '1px dashed var(--border)', borderRadius: 12, padding: 22, marginTop: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Upload size={16} color="#4F46E5" />
-                <strong style={{ fontSize: 14, color: '#0B1F3A' }}>Restore & Import Data from Backup</strong>
+                <Upload size={16} color="#6366F1" />
+                <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>Restore & Import Data from Backup</strong>
               </div>
-              <p style={{ fontSize: 12.5, color: '#667085', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
                 Select an OppTrack JSON backup file to restore your placement opportunities, student profile, and activity history.
               </p>
 
@@ -1704,49 +1705,49 @@ export default function Settings() {
                       alignItems: 'center',
                       gap: 8,
                       padding: '9px 18px',
-                      background: '#FFFFFF',
-                      border: '1px solid #CBD5E1',
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
                       borderRadius: 8,
                       fontSize: 13,
                       fontWeight: 600,
-                      color: '#0B1F3A',
+                      color: 'var(--text-primary)',
                       cursor: 'pointer',
-                      boxShadow: '0 1px 2px rgba(11,31,58,0.04)',
+                      boxShadow: 'var(--shadow-sm)',
                     }}
                   >
-                    <Upload size={14} color="#4F46E5" />
+                    <Upload size={14} color="#6366F1" />
                     {backupFile ? backupFile.name : 'Choose Backup JSON File…'}
                   </label>
                   {backupFile && (
-                    <span style={{ fontSize: 12, color: '#15803D', fontWeight: 600, marginLeft: 10 }}>
+                    <span style={{ fontSize: 12, color: '#10B981', fontWeight: 600, marginLeft: 10 }}>
                       ✓ File Loaded ({Math.round(backupFile.size / 1024)} KB)
                     </span>
                   )}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#172033', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-primary)', cursor: 'pointer' }}>
                     <input
                       type="radio"
                       name="backupMode"
                       value="merge"
                       checked={backupMode === 'merge'}
                       onChange={() => setBackupMode('merge')}
-                      style={{ accentColor: '#4F46E5' }}
+                      style={{ accentColor: '#6366F1' }}
                     />
                     <span>Merge (Recommended)</span>
                   </label>
 
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#172033', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-primary)', cursor: 'pointer' }}>
                     <input
                       type="radio"
                       name="backupMode"
                       value="replace"
                       checked={backupMode === 'replace'}
                       onChange={() => setBackupMode('replace')}
-                      style={{ accentColor: '#DC2626' }}
+                      style={{ accentColor: '#EF4444' }}
                     />
-                    <span style={{ color: backupMode === 'replace' ? '#DC2626' : 'inherit' }}>Replace All</span>
+                    <span style={{ color: backupMode === 'replace' ? '#EF4444' : 'inherit' }}>Replace All</span>
                   </label>
 
                   <button
@@ -1758,8 +1759,8 @@ export default function Settings() {
                       borderRadius: 7,
                       fontSize: 12.5,
                       fontWeight: 700,
-                      background: backupData ? '#4F46E5' : '#E2E8F0',
-                      color: backupData ? '#FFFFFF' : '#94A3B8',
+                      background: backupData ? '#6366F1' : 'var(--border)',
+                      color: backupData ? '#FFFFFF' : 'var(--text-muted)',
                       border: 'none',
                       cursor: backupData ? 'pointer' : 'not-allowed',
                       display: 'flex',
@@ -1775,11 +1776,11 @@ export default function Settings() {
             </div>
 
             {/* Database & System Info Footnote */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginTop: 20, paddingTop: 16, borderTop: '1px solid #E5EAF0' }}>
-              <div style={{ fontSize: 12, color: '#667085' }}>
-                Storage Engine: <strong style={{ color: '#0B1F3A' }}>MongoDB Atlas Cluster</strong> • OppTrack Clinical Career Intelligence v1.5.0
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Storage Engine: <strong style={{ color: 'var(--text-primary)' }}>MongoDB Atlas Cluster</strong> • OppTrack Clinical Career Intelligence v1.5.0
               </div>
-              <div style={{ fontSize: 11, color: '#94A3B8', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                 All backups are portable JSON and compatible across environments.
               </div>
             </div>
@@ -1796,9 +1797,9 @@ export default function Settings() {
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 999,
-          background: '#0B1F3A',
-          border: '1px solid #18B7A0',
-          boxShadow: '0 12px 36px rgba(11, 31, 58, 0.25)',
+          background: 'var(--surface)',
+          border: '1px solid var(--primary-brand)',
+          boxShadow: 'var(--shadow-xl)',
           borderRadius: 12,
           padding: '12px 24px',
           display: 'flex',
@@ -1807,8 +1808,8 @@ export default function Settings() {
           animation: 'fadeIn 0.2s ease-out',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#18B7A0' }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary-brand)' }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
               You have unsaved setting changes
             </span>
           </div>
@@ -1817,7 +1818,7 @@ export default function Settings() {
             <button
               onClick={() => setSettings(initialSettings)}
               style={{
-                background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#CBD5E1',
+                background: 'var(--card-subtle)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
                 padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer'
               }}
             >
@@ -1828,7 +1829,7 @@ export default function Settings() {
               onClick={handleSave}
               disabled={saving}
               style={{
-                background: '#18B7A0', color: '#0B1F3A', border: 'none',
+                background: 'var(--primary-brand)', color: '#FFFFFF', border: 'none',
                 padding: '6px 18px', borderRadius: 6, fontSize: 12, fontWeight: 700,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}

@@ -1,13 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import TopBar from './TopBar';
 import { settingsAPI } from '../api';
 import { sendDesktopNotification } from '../utils/notifications';
 import toast from 'react-hot-toast';
 
 export default function ProtectedLayout({ children }) {
   const { user, loading } = useAuth();
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    return localStorage.getItem('opptrack_sidebar_expanded') === 'true';
+  });
+
+  const toggleSidebar = () => {
+    setSidebarExpanded((prev) => {
+      const next = !prev;
+      localStorage.setItem('opptrack_sidebar_expanded', String(next));
+      return next;
+    });
+  };
 
   // Background reminder checker for tests, deadlines, campus drives & interviews
   useEffect(() => {
@@ -39,10 +51,10 @@ export default function ProtectedLayout({ children }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 20 }}>{rem.icon}</span>
                     <div>
-                      <strong style={{ display: 'block', fontSize: 13, color: '#0B1F3A' }}>
+                      <strong style={{ display: 'block', fontSize: 13, color: 'var(--text-primary)' }}>
                         {rem.milestoneLabel}: {rem.company}
                       </strong>
-                      <span style={{ fontSize: 12, color: '#667085' }}>
+                      <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                         {rem.role} • {rem.hoursLeft > 0 ? `In ${rem.hoursLeft} hours` : 'Due today'}
                       </span>
                     </div>
@@ -70,8 +82,13 @@ export default function ProtectedLayout({ children }) {
   if (!user) return <Navigate to="/login" replace />;
   return (
     <div className="app-layout">
-      <Sidebar />
-      <main className="main-content">{children}</main>
+      <Sidebar isExpanded={sidebarExpanded} onToggleExpand={toggleSidebar} />
+      <main className={`main-content ${sidebarExpanded ? 'sidebar-expanded' : ''}`}>
+        <TopBar />
+        <div className="screen-enter">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

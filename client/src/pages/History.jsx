@@ -5,14 +5,14 @@ import toast from 'react-hot-toast';
 import Pagination from '../components/Pagination';
 
 const EVENT_BADGES = {
-  created:                 { label: 'Created',        color: '#2563EB', bg: '#EAF2FF' },
-  status_changed:          { label: 'Status Update',  color: '#087F71', bg: '#E8F8F5' },
-  edited:                  { label: 'Edited',          color: '#475467', bg: '#F2F4F7' },
-  deleted:                 { label: 'Deleted',         color: '#DC2626', bg: '#FEF0F0' },
-  reminder_sent:           { label: 'Reminder',        color: '#B7791F', bg: '#FFF7E6' },
-  profile_updated:         { label: 'Profile Vault',   color: '#123C73', bg: '#EBF2FB' },
-  sensitive_field_revealed:{ label: 'Sensitive Reveal', color: '#C2410C', bg: '#FFEDD5' },
-  applied_via_extension:   { label: 'Extension Applied',color: '#15803D', bg: '#EAF8EF' },
+  created:                  { label: 'Created',           color: '#3B82F6',                bg: 'rgba(59, 130, 246, 0.12)' },
+  status_changed:           { label: 'Status Update',     color: 'var(--primary-brand)',   bg: 'rgba(24, 183, 160, 0.12)' },
+  edited:                   { label: 'Edited',            color: 'var(--text-secondary)',  bg: 'var(--card-subtle)' },
+  deleted:                  { label: 'Deleted',           color: '#EF4444',                bg: 'rgba(239, 68, 68, 0.12)' },
+  reminder_sent:            { label: 'Reminder',          color: '#F59E0B',                bg: 'rgba(245, 158, 11, 0.12)' },
+  profile_updated:          { label: 'Profile Vault',     color: '#8B5CF6',                bg: 'rgba(139, 92, 246, 0.12)' },
+  sensitive_field_revealed: { label: 'Sensitive Reveal',  color: '#F97316',                bg: 'rgba(249, 115, 22, 0.12)' },
+  applied_via_extension:    { label: 'Extension Applied', color: '#10B981',                bg: 'rgba(16, 185, 129, 0.12)' },
 };
 
 const EVENT_TYPES = [
@@ -28,9 +28,9 @@ const EVENT_TYPES = [
 ];
 
 const FORM_ACTION_BADGES = {
-  autofilled: { label: 'Autofilled', color: '#15803D', bg: '#EAF8EF' },
-  synced:     { label: 'Synced',     color: '#2563EB', bg: '#EAF2FF' },
-  opened:     { label: 'Opened',     color: '#475467', bg: '#F2F4F7' },
+  autofilled: { label: 'Autofilled', color: '#10B981',                bg: 'rgba(16, 185, 129, 0.12)' },
+  synced:     { label: 'Synced',     color: '#3B82F6',                bg: 'rgba(59, 130, 246, 0.12)' },
+  opened:     { label: 'Opened',     color: 'var(--text-secondary)',  bg: 'var(--card-subtle)' },
 };
 
 export default function History() {
@@ -100,39 +100,39 @@ export default function History() {
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', paddingBottom: 60 }}>
       {/* Header */}
-      <header style={{ borderBottom: '1px solid #E5EAF0', paddingBottom: 20, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+      <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: 20, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0B1F3A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
             Activity Log
           </h1>
-          <p style={{ margin: 0, fontSize: 14, color: '#667085' }}>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>
             Audit trail of all placement events, status updates, and Chrome extension activity.
           </p>
         </div>
 
         {/* Tab switcher */}
-        <div style={{ display: 'flex', gap: 4, background: '#F0F4F8', border: '1px solid #E5EAF0', borderRadius: 8, padding: 4 }}>
+        <div style={{ display: 'flex', gap: 4, background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 8, padding: 4 }}>
           <button
             onClick={() => { setActiveTab('activity'); setPage(1); }}
             style={{
               ...tabBase,
-              background: activeTab === 'activity' ? '#FFFFFF' : 'transparent',
-              color: activeTab === 'activity' ? '#0B1F3A' : '#667085',
-              boxShadow: activeTab === 'activity' ? '0 1px 3px rgba(11,31,58,0.08)' : 'none',
+              background: activeTab === 'activity' ? 'var(--surface)' : 'transparent',
+              color: activeTab === 'activity' ? 'var(--text-primary)' : 'var(--text-secondary)',
+              boxShadow: activeTab === 'activity' ? 'var(--shadow-sm)' : 'none',
             }}
           >
-            <Activity size={14} /> App Activity
+            <Activity size={14} color={activeTab === 'activity' ? 'var(--primary-brand)' : 'currentColor'} /> App Activity
           </button>
           <button
             onClick={() => { setActiveTab('extension'); setFormPage(1); }}
             style={{
               ...tabBase,
-              background: activeTab === 'extension' ? '#FFFFFF' : 'transparent',
-              color: activeTab === 'extension' ? '#087F71' : '#667085',
-              boxShadow: activeTab === 'extension' ? '0 1px 3px rgba(11,31,58,0.08)' : 'none',
+              background: activeTab === 'extension' ? 'var(--surface)' : 'transparent',
+              color: activeTab === 'extension' ? 'var(--primary-brand)' : 'var(--text-secondary)',
+              boxShadow: activeTab === 'extension' ? 'var(--shadow-sm)' : 'none',
             }}
           >
-            <Puzzle size={14} /> Extension Activity
+            <Puzzle size={14} color={activeTab === 'extension' ? 'var(--primary-brand)' : 'currentColor'} /> Extension Activity
           </button>
         </div>
       </header>
@@ -142,21 +142,21 @@ export default function History() {
         <>
           {/* Filter dropdown */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 8, padding: '6px 12px', boxShadow: '0 1px 2px rgba(11,31,58,0.04)' }}>
-              <Filter size={14} color="#667085" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', boxShadow: 'var(--shadow-sm)' }}>
+              <Filter size={14} color="var(--text-muted)" />
               <select
                 value={eventType}
                 onChange={e => { setEventType(e.target.value); setPage(1); }}
-                style={{ background: 'transparent', border: 'none', color: '#172033', fontSize: 13, outline: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 13, outline: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 {EVENT_TYPES.map(t => (
-                  <option key={t.value} value={t.value} style={{ background: '#FFFFFF', color: '#172033' }}>{t.label}</option>
+                  <option key={t.value} value={t.value} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{t.label}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
             {loading ? (
               <div className="loading-center" style={{ padding: 60 }}><div className="spinner" /></div>
             ) : logs.length === 0 ? (
@@ -164,7 +164,7 @@ export default function History() {
             ) : (
               <>
                 {logs.map((log, index) => {
-                  const badge = EVENT_BADGES[log.eventType] || { label: log.eventType, color: '#667085', bg: '#F2F4F7' };
+                  const badge = EVENT_BADGES[log.eventType] || { label: log.eventType, color: 'var(--text-secondary)', bg: 'var(--card-subtle)' };
                   const formattedDate = fmtDate(log.createdAt);
                   return (
                     <LogRow
@@ -172,9 +172,9 @@ export default function History() {
                       isLast={index === logs.length - 1}
                       dot={{ color: badge.color }}
                     >
-                      <div style={{ fontSize: 14, color: '#172033', fontWeight: 600, lineHeight: 1.4 }}>{log.description}</div>
+                      <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600, lineHeight: 1.4 }}>{log.description}</div>
                       {log.opportunityId && (
-                        <div style={{ fontSize: 13, color: '#087F71', fontFamily: 'ui-monospace, monospace', marginTop: 2, fontWeight: 500 }}>
+                        <div style={{ fontSize: 13, color: 'var(--primary-brand)', fontFamily: 'ui-monospace, monospace', marginTop: 2, fontWeight: 500 }}>
                           {log.opportunityId.company} — {log.opportunityId.role}
                         </div>
                       )}
@@ -182,16 +182,18 @@ export default function History() {
                     </LogRow>
                   );
                 })}
-                <Pagination
-                  currentPage={page}
-                  totalItems={totalLogs}
-                  pageSize={pageSize}
-                  onPageChange={setPage}
-                  onPageSizeChange={(newSize) => { setPageSize(newSize); setPage(1); }}
-                  pageSizeOptions={[10, 15, 25, 50]}
-                  itemName="activity logs"
-                  accentColor="#2563EB"
-                />
+                <div style={{ borderTop: '1px solid var(--border)' }}>
+                  <Pagination
+                    currentPage={page}
+                    totalItems={totalLogs}
+                    pageSize={pageSize}
+                    onPageChange={setPage}
+                    onPageSizeChange={(newSize) => { setPageSize(newSize); setPage(1); }}
+                    pageSizeOptions={[10, 15, 25, 50]}
+                    itemName="activity logs"
+                    accentColor="var(--primary-brand)"
+                  />
+                </div>
               </>
             )}
           </div>
@@ -200,7 +202,7 @@ export default function History() {
 
       {/* ── Extension Activity Tab ────────────────────────────────────────── */}
       {activeTab === 'extension' && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #E5EAF0', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 3px rgba(11,31,58,0.04)' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
           {formLoading ? (
             <div className="loading-center" style={{ padding: 60 }}><div className="spinner" /></div>
           ) : formLogs.length === 0 ? (
@@ -212,7 +214,7 @@ export default function History() {
           ) : (
             <>
               {formLogs.map((entry, index) => {
-                const badge = FORM_ACTION_BADGES[entry.action] || { label: entry.action, color: '#667085', bg: '#F2F4F7' };
+                const badge = FORM_ACTION_BADGES[entry.action] || { label: entry.action, color: 'var(--text-secondary)', bg: 'var(--card-subtle)' };
                 const opp = entry.matchedOpportunityId;
                 const title = entry.formTitle || shortenUrl(entry.formUrl);
                 return (
@@ -221,36 +223,38 @@ export default function History() {
                     isLast={index === formLogs.length - 1}
                     dot={{ color: badge.color }}
                   >
-                    <div style={{ fontSize: 14, color: '#172033', fontWeight: 600, lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600, lineHeight: 1.4 }}>
                       {title}
                       {entry.fieldsFilledCount > 0 && (
-                        <span style={{ marginLeft: 8, fontSize: 12, color: '#087F71', fontFamily: 'ui-monospace, monospace' }}>
+                        <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--primary-brand)', fontFamily: 'ui-monospace, monospace' }}>
                           {entry.fieldsFilledCount} fields filled
                         </span>
                       )}
                     </div>
                     {opp && (
-                      <div style={{ fontSize: 13, color: '#087F71', fontFamily: 'ui-monospace, monospace', marginTop: 2, fontWeight: 500 }}>
+                      <div style={{ fontSize: 13, color: 'var(--primary-brand)', fontFamily: 'ui-monospace, monospace', marginTop: 2, fontWeight: 500 }}>
                         {opp.company} — {opp.role}
                       </div>
                     )}
-                    <div style={{ fontSize: 12, color: '#667085', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
                       {entry.formUrl.length > 55 ? entry.formUrl.slice(0, 55) + '…' : entry.formUrl}
                     </div>
                     <BadgeAndTime badge={badge} time={fmtDate(entry.createdAt)} />
                   </LogRow>
                 );
               })}
-              <Pagination
-                currentPage={formPage}
-                totalItems={formTotal}
-                pageSize={formPageSize}
-                onPageChange={setFormPage}
-                onPageSizeChange={(newSize) => { setFormPageSize(newSize); setFormPage(1); }}
-                pageSizeOptions={[10, 15, 25, 50]}
-                itemName="extension logs"
-                accentColor="#087F71"
-              />
+              <div style={{ borderTop: '1px solid var(--border)' }}>
+                <Pagination
+                  currentPage={formPage}
+                  totalItems={formTotal}
+                  pageSize={formPageSize}
+                  onPageChange={setFormPage}
+                  onPageSizeChange={(newSize) => { setFormPageSize(newSize); setFormPage(1); }}
+                  pageSizeOptions={[10, 15, 25, 50]}
+                  itemName="extension logs"
+                  accentColor="var(--primary-brand)"
+                />
+              </div>
             </>
           )}
         </div>
@@ -262,7 +266,7 @@ export default function History() {
 // ─── Shared sub-components ────────────────────────────────────────────────────
 function LogRow({ children, isLast, dot }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '16px 20px', borderBottom: isLast ? 'none' : '1px solid #F0F4F8', gap: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '16px 20px', borderBottom: isLast ? 'none' : '1px solid var(--border)', gap: 16 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flex: 1 }}>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: dot.color, flexShrink: 0, marginTop: 5 }} />
         <div style={{ flex: 1 }}>{children}</div>
@@ -277,7 +281,7 @@ function BadgeAndTime({ badge, time }) {
       <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, color: badge.color, background: badge.bg, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
         {badge.label}
       </span>
-      <span style={{ fontSize: 12, color: '#667085', fontFamily: 'ui-monospace, monospace', display: 'flex', alignItems: 'center', gap: 4 }}>
+      <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace', display: 'flex', alignItems: 'center', gap: 4 }}>
         <Clock size={12} /> {time}
       </span>
     </div>
@@ -286,10 +290,10 @@ function BadgeAndTime({ badge, time }) {
 
 function EmptyState({ icon, text, sub }) {
   return (
-    <div style={{ padding: 60, textAlign: 'center', color: '#667085' }}>
+    <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-secondary)' }}>
       <div style={{ opacity: 0.3, marginBottom: 12 }}>{icon}</div>
-      <div style={{ fontSize: 16, fontWeight: 600, color: '#0B1F3A', marginBottom: 4 }}>{text}</div>
-      <div style={{ fontSize: 13, color: '#667085' }}>{sub}</div>
+      <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{text}</div>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{sub}</div>
     </div>
   );
 }

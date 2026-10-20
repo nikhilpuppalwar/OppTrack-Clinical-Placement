@@ -3,13 +3,15 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { authAPI } from '../api';
 import logoImg from '../assets/logo.png';
 import toast from 'react-hot-toast';
-import { Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, AlertCircle, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const SPECIAL_CHAR_REGEX = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { toggleTheme, isDark } = useTheme();
 
   const [email, setEmail] = useState('');
   const [token, setToken] = useState('');
@@ -44,7 +46,7 @@ export default function ResetPassword() {
   const passwordStrength = useMemo(() => {
     const { minLength, hasUpper, hasLower, hasNumber, hasSpecial } = passwordRules;
     const score = [minLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
-    if (newPassword.length === 0) return { label: 'Empty', level: 0, color: '#CBD5E1' };
+    if (newPassword.length === 0) return { label: 'Empty', level: 0, color: 'var(--border)' };
     if (score <= 2) return { label: 'Weak', level: 1, color: '#EF4444' };
     if (score === 3 || score === 4) return { label: 'Fair', level: 2, color: '#F59E0B' };
     if (score === 5 && newPassword.length < 12) return { label: 'Good', level: 3, color: '#10B981' };
@@ -105,68 +107,90 @@ export default function ResetPassword() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#F8FAFC',
+        background: 'var(--bg)',
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-        color: '#0F172A',
+        color: 'var(--text-primary)',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      {/* Top Header */}
-      <header
-        style={{
-          height: 60,
-          borderBottom: '1px solid #E2E8F0',
-          background: '#FFFFFF',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-        }}
-      >
-        <div style={{ maxWidth: 1200, width: '100%', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
-            <span style={{ fontSize: 18, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em' }}>OppTrack</span>
-            <span style={{ color: '#CBD5E1', fontSize: 13, userSelect: 'none' }}>|</span>
-            <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 500 }}>Create New Password</span>
+      {/* ── TOP FLOATING NAVIGATION BAR (VESSA DOCK) ── */}
+      <div style={{ position: 'sticky', top: 14, zIndex: 100, padding: '0 20px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+        <header className="vessa-topbar">
+          <Link to="/" className="vessa-brand">
+            <div className="vessa-brand-logo" style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: 3 }}>
+              <img src={logoImg} alt="OppTrack Logo" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 8 }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+                OppTrack
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+                Create New Password
+              </div>
+            </div>
           </Link>
 
-          <Link
-            to="/login"
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#0F172A',
-              textDecoration: 'none',
-              padding: '6px 14px',
-              borderRadius: 6,
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            Sign In
-          </Link>
-        </div>
-      </header>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'var(--card-subtle)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+            >
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
 
-      {/* Main Container */}
+            <Link
+              to="/login"
+              className="vessa-pill-tab"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontWeight: 600,
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <ArrowLeft size={14} />
+              <span>Sign In</span>
+            </Link>
+          </div>
+        </header>
+      </div>
+
+      {/* ── MAIN CONTAINER ── */}
       <main
         style={{
           flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '40px 20px',
+          padding: '40px 20px 60px',
         }}
       >
         <div
           style={{
             width: '100%',
             maxWidth: 460,
-            background: '#FFFFFF',
-            borderRadius: 12,
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+            background: 'var(--surface)',
+            borderRadius: 14,
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow)',
             padding: '36px 32px',
           }}
         >
@@ -174,10 +198,10 @@ export default function ResetPassword() {
             <>
               {/* Header */}
               <div style={{ marginBottom: 24 }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: '0 0 6px' }}>
                   Create a new password
                 </h1>
-                <p style={{ fontSize: 13.5, color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
                   Choose a secure password for your OppTrack account.
                 </p>
               </div>
@@ -192,9 +216,9 @@ export default function ResetPassword() {
                     gap: 8,
                     padding: '10px 14px',
                     borderRadius: 8,
-                    background: '#FEF2F2',
-                    border: '1px solid #FEE2E2',
-                    color: '#B91C1C',
+                    background: 'var(--danger-bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--danger)',
                     fontSize: 13,
                     marginBottom: 16,
                   }}
@@ -208,7 +232,7 @@ export default function ResetPassword() {
                 
                 {/* Email Address (Prefilled or editable) */}
                 <div>
-                  <label htmlFor="reset-email" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                  <label htmlFor="reset-email" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                     Email address
                   </label>
                   <input
@@ -223,11 +247,11 @@ export default function ResetPassword() {
                       width: '100%',
                       height: 42,
                       padding: '0 14px',
-                      background: '#FFFFFF',
-                      border: '1px solid #CBD5E1',
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
                       borderRadius: 8,
                       fontSize: 14,
-                      color: '#0F172A',
+                      color: 'var(--text-primary)',
                       outline: 'none',
                     }}
                   />
@@ -236,7 +260,7 @@ export default function ResetPassword() {
                 {/* Reset Token Input if not in URL */}
                 {(!searchParams.get('token') || !token) && (
                   <div>
-                    <label htmlFor="reset-token" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                    <label htmlFor="reset-token" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                       Reset Security Token
                     </label>
                     <input
@@ -250,11 +274,11 @@ export default function ResetPassword() {
                         width: '100%',
                         height: 42,
                         padding: '0 14px',
-                        background: '#FFFFFF',
-                        border: '1px solid #CBD5E1',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
                         borderRadius: 8,
                         fontSize: 13,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
                         fontFamily: 'monospace',
                       }}
@@ -264,11 +288,11 @@ export default function ResetPassword() {
 
                 {/* New Password Field */}
                 <div>
-                  <label htmlFor="new-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                  <label htmlFor="new-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                     New password
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: touched.password && errors.password ? '#EF4444' : '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', left: 12, color: touched.password && errors.password ? 'var(--danger)' : 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                       <Lock size={16} />
                     </span>
                     <input
@@ -289,12 +313,13 @@ export default function ResetPassword() {
                         height: 42,
                         paddingLeft: 38,
                         paddingRight: 42,
-                        background: '#FFFFFF',
-                        border: `1px solid ${touched.password && errors.password ? '#EF4444' : '#CBD5E1'}`,
+                        background: 'var(--surface)',
+                        border: `1px solid ${touched.password && errors.password ? 'var(--danger)' : 'var(--border)'}`,
                         borderRadius: 8,
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                     <button
@@ -306,7 +331,7 @@ export default function ResetPassword() {
                         right: 8,
                         background: 'transparent',
                         border: 'none',
-                        color: '#64748B',
+                        color: 'var(--text-muted)',
                         cursor: 'pointer',
                         padding: 6,
                         borderRadius: 4,
@@ -323,7 +348,7 @@ export default function ResetPassword() {
                   {newPassword.length > 0 && (
                     <div style={{ marginTop: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, color: '#64748B' }}>Password strength:</span>
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Password strength:</span>
                         <span style={{ fontSize: 12, fontWeight: 600, color: passwordStrength.color }}>
                           {passwordStrength.label}
                         </span>
@@ -335,7 +360,7 @@ export default function ResetPassword() {
                             style={{
                               height: 4,
                               borderRadius: 2,
-                              background: passwordStrength.level >= step ? passwordStrength.color : '#E2E8F0',
+                              background: passwordStrength.level >= step ? passwordStrength.color : 'var(--border)',
                               transition: 'background-color 0.2s ease',
                             }}
                           />
@@ -347,37 +372,37 @@ export default function ResetPassword() {
                   {/* Requirements Checklist */}
                   <div
                     style={{
-                      background: '#F8FAFC',
+                      background: 'var(--card-subtle)',
                       borderRadius: 6,
-                      border: '1px solid #E2E8F0',
+                      border: '1px solid var(--border)',
                       padding: '10px 12px',
                       marginTop: 8,
                       fontSize: 12,
-                      color: '#475569',
+                      color: 'var(--text-secondary)',
                     }}
                   >
-                    <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                       Password must contain:
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.minLength ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.minLength ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.minLength ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.minLength ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>At least 8 characters</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasUpper ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.hasUpper ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasUpper ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.hasUpper ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>One uppercase letter</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasLower ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.hasLower ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasLower ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.hasLower ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>One lowercase letter</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasNumber ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.hasNumber ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasNumber ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.hasNumber ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>One number</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasSpecial ? '#16A34A' : '#64748B' }}>
-                        {passwordRules.hasSpecial ? <CheckCircle2 size={13} color="#16A34A" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: passwordRules.hasSpecial ? '#10B981' : 'var(--text-muted)' }}>
+                        {passwordRules.hasSpecial ? <CheckCircle2 size={13} color="#10B981" /> : <span style={{ width: 13, textAlign: 'center', fontSize: 11 }}>•</span>}
                         <span>One special character (!@#$%^&*)</span>
                       </div>
                     </div>
@@ -386,11 +411,11 @@ export default function ResetPassword() {
 
                 {/* Confirm Password Field */}
                 <div>
-                  <label htmlFor="confirm-new-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                  <label htmlFor="confirm-new-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                     Confirm new password
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, color: touched.confirm && errors.confirm ? '#EF4444' : '#94A3B8', display: 'flex', pointerEvents: 'none' }}>
+                    <span style={{ position: 'absolute', left: 12, color: touched.confirm && errors.confirm ? 'var(--danger)' : 'var(--text-muted)', display: 'flex', pointerEvents: 'none' }}>
                       <Lock size={16} />
                     </span>
                     <input
@@ -416,12 +441,13 @@ export default function ResetPassword() {
                         height: 42,
                         paddingLeft: 38,
                         paddingRight: 42,
-                        background: '#FFFFFF',
-                        border: `1px solid ${touched.confirm && errors.confirm ? '#EF4444' : '#CBD5E1'}`,
+                        background: 'var(--surface)',
+                        border: `1px solid ${touched.confirm && errors.confirm ? 'var(--danger)' : 'var(--border)'}`,
                         borderRadius: 8,
                         fontSize: 14,
-                        color: '#0F172A',
+                        color: 'var(--text-primary)',
                         outline: 'none',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                       }}
                     />
                     <button
@@ -433,7 +459,7 @@ export default function ResetPassword() {
                         right: 8,
                         background: 'transparent',
                         border: 'none',
-                        color: '#64748B',
+                        color: 'var(--text-muted)',
                         cursor: 'pointer',
                         padding: 6,
                         borderRadius: 4,
@@ -446,7 +472,7 @@ export default function ResetPassword() {
                     </button>
                   </div>
                   {touched.confirm && errors.confirm && (
-                    <p role="alert" style={{ fontSize: 12, color: '#DC2626', margin: '4px 0 0' }}>
+                    <p role="alert" style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0' }}>
                       {errors.confirm}
                     </p>
                   )}
@@ -459,7 +485,7 @@ export default function ResetPassword() {
                   style={{
                     width: '100%',
                     height: 44,
-                    background: '#2563EB',
+                    background: 'var(--primary-brand)',
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: 8,
@@ -470,9 +496,10 @@ export default function ResetPassword() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    boxShadow: '0 2px 10px var(--primary-brand-glow)',
                     marginTop: 6,
                     opacity: loading ? 0.8 : 1,
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   <span>{loading ? 'Updating password...' : 'Update Password'}</span>
@@ -487,8 +514,8 @@ export default function ResetPassword() {
                   width: 48,
                   height: 48,
                   borderRadius: '50%',
-                  background: '#F0FDF4',
-                  color: '#16A34A',
+                  background: 'var(--success-bg)',
+                  color: 'var(--success)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -498,10 +525,10 @@ export default function ResetPassword() {
                 <CheckCircle2 size={28} />
               </div>
 
-              <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0F172A', margin: '0 0 8px' }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px' }}>
                 Your password has been updated.
               </h2>
-              <p style={{ fontSize: 13.5, color: '#64748B', lineHeight: 1.6, margin: '0 0 24px' }}>
+              <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 24px' }}>
                 You can now sign in to your OppTrack workspace using your new password.
               </p>
 
@@ -511,7 +538,7 @@ export default function ResetPassword() {
                 style={{
                   width: '100%',
                   height: 44,
-                  background: '#2563EB',
+                  background: 'var(--primary-brand)',
                   color: '#FFFFFF',
                   border: 'none',
                   borderRadius: 8,
@@ -522,7 +549,8 @@ export default function ResetPassword() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 2px 10px var(--primary-brand-glow)',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 <span>Sign in</span>
@@ -536,16 +564,16 @@ export default function ResetPassword() {
             style={{
               marginTop: 24,
               paddingTop: 16,
-              borderTop: '1px solid #F1F5F9',
+              borderTop: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 6,
               fontSize: 11.5,
-              color: '#64748B',
+              color: 'var(--text-secondary)',
             }}
           >
-            <ShieldCheck size={14} color="#0D9488" />
+            <ShieldCheck size={14} color="var(--primary-brand)" />
             <span>Secure authentication • Passwords hashed with bcrypt</span>
           </div>
         </div>

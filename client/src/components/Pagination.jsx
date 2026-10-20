@@ -9,7 +9,7 @@ export default function Pagination({
   onPageSizeChange,
   pageSizeOptions = [10, 20, 50],
   itemName = 'items',
-  accentColor = '#087F71',
+  accentColor = 'var(--primary-brand)',
 }) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const safePage = Math.min(Math.max(1, currentPage), totalPages);
@@ -44,9 +44,9 @@ export default function Pagination({
     fontSize: 13,
     fontWeight: 500,
     fontFamily: 'inherit',
-    border: '1px solid #E5EAF0',
-    background: '#FFFFFF',
-    color: '#344054',
+    border: '1px solid var(--border)',
+    background: 'var(--surface)',
+    color: 'var(--text-secondary)',
     cursor: 'pointer',
     transition: 'all 0.15s ease',
   };
@@ -60,23 +60,23 @@ export default function Pagination({
         flexWrap: 'wrap',
         gap: 12,
         padding: '14px 18px',
-        background: '#F8FAFD',
-        borderTop: '1px solid #E5EAF0',
+        background: 'var(--card-subtle)',
+        borderTop: '1px solid var(--border)',
         fontSize: 13,
-        color: '#475467',
+        color: 'var(--text-secondary)',
       }}
     >
       {/* Left: Summary & Per-page selector */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <span>
-          Showing <strong style={{ color: '#0B1F3A', fontWeight: 600 }}>{startItem}</strong>–
-          <strong style={{ color: '#0B1F3A', fontWeight: 600 }}>{endItem}</strong> of{' '}
-          <strong style={{ color: '#0B1F3A', fontWeight: 600 }}>{totalItems}</strong> {itemName}
+          Showing <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{startItem}</strong>–
+          <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{endItem}</strong> of{' '}
+          <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{totalItems}</strong> {itemName}
         </span>
 
         {onPageSizeChange && pageSizeOptions && pageSizeOptions.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 12, color: '#667085' }}>Show:</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Show:</span>
             <select
               value={pageSize}
               onChange={(e) => {
@@ -87,9 +87,9 @@ export default function Pagination({
                 height: 30,
                 padding: '0 8px',
                 borderRadius: 6,
-                border: '1px solid #D0D5DD',
-                background: '#FFFFFF',
-                color: '#1D2939',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text-primary)',
                 fontSize: 12.5,
                 fontWeight: 500,
                 outline: 'none',
@@ -98,7 +98,7 @@ export default function Pagination({
               }}
             >
               {pageSizeOptions.map((opt) => (
-                <option key={opt} value={opt}>
+                <option key={opt} value={opt} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>
                   {opt} per page
                 </option>
               ))}
@@ -152,7 +152,7 @@ export default function Pagination({
                     justifyContent: 'center',
                     width: 28,
                     height: 32,
-                    color: '#98A2B3',
+                    color: 'var(--text-muted)',
                     fontWeight: 600,
                   }}
                 >
@@ -169,11 +169,11 @@ export default function Pagination({
                 onClick={() => onPageChange(p)}
                 style={{
                   ...btnBase,
-                  background: isActive ? accentColor : '#FFFFFF',
-                  color: isActive ? '#FFFFFF' : '#344054',
-                  borderColor: isActive ? accentColor : '#E5EAF0',
+                  background: isActive ? accentColor : 'var(--surface)',
+                  color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
+                  borderColor: isActive ? accentColor : 'var(--border)',
                   fontWeight: isActive ? 600 : 500,
-                  boxShadow: isActive ? `0 1px 3px ${accentColor}40` : 'none',
+                  boxShadow: isActive ? 'var(--shadow-plum)' : 'none',
                 }}
               >
                 {p}
