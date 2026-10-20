@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -514,8 +515,8 @@ export default function Sidebar({ isExpanded = false, onToggleExpand }) {
         </div>
       </div>
 
-      {/* Sign Out Confirmation Modal */}
-      {showLogoutConfirm && (
+      {/* Sign Out Confirmation Modal via Portal */}
+      {showLogoutConfirm && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -523,11 +524,12 @@ export default function Sidebar({ isExpanded = false, onToggleExpand }) {
             background: 'rgba(11, 31, 58, 0.65)',
             backdropFilter: 'blur(6px)',
             WebkitBackdropFilter: 'blur(6px)',
-            zIndex: 99999,
+            zIndex: 999999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: 20,
+            pointerEvents: 'auto',
             animation: 'fadeIn var(--motion-fast) var(--ease-standard)',
           }}
           onClick={() => setShowLogoutConfirm(false)}
@@ -546,6 +548,7 @@ export default function Sidebar({ isExpanded = false, onToggleExpand }) {
               alignItems: 'center',
               textAlign: 'center',
               position: 'relative',
+              pointerEvents: 'auto',
               animation: 'scaleIn var(--motion-fast) var(--ease-spring)',
             }}
             onClick={(e) => e.stopPropagation()}
@@ -672,7 +675,8 @@ export default function Sidebar({ isExpanded = false, onToggleExpand }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </aside>
   );

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { settingsAPI, googleAPI, gmailAPI, calendarAPI } from '../api';
 import { 
   Eye, EyeOff, Sparkles, Send, Save, Bell, Download, CheckCircle2, 
   AlertCircle, Cpu, Mail, ShieldCheck, Database, Sliders, Check,
   CalendarDays, RefreshCw, Plus, Trash2, ExternalLink, Calendar, Link2,
-  Upload, FileSpreadsheet, BellRing, Clock, CheckCheck, AlertTriangle
+  Upload, FileSpreadsheet, BellRing, Clock, CheckCheck, AlertTriangle, LogOut, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MissingKeyModal from '../components/MissingKeyModal';
@@ -214,6 +216,8 @@ function FieldLabel({ children, htmlFor }) {
 }
 
 export default function Settings() {
+  const { user, logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [initialSettings, setInitialSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -1787,6 +1791,59 @@ export default function Settings() {
           </div>
         )}
 
+        {/* ── CARD 6: ACCOUNT & AUTHENTICATION SESSION ── */}
+        <div style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 16,
+          padding: 24,
+          boxShadow: 'var(--shadow-sm)',
+          marginTop: 8,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 16,
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                Account & Active Session
+              </h3>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#10B981', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '2px 8px', borderRadius: 9999 }}>
+                Signed In
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
+              Logged in as <strong style={{ color: 'var(--text-primary)' }}>{user?.name || 'Student'}</strong> ({user?.email || 'N/A'})
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowLogoutConfirm(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 20px',
+              borderRadius: 10,
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: 'rgba(239, 68, 68, 0.08)',
+              color: '#EF4444',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all var(--motion-fast) var(--ease-standard)',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.16)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'}
+          >
+            <LogOut size={16} />
+            <span>Sign Out of OppTrack</span>
+          </button>
+        </div>
+
       </div>
 
       {/* ── STICKY FLOATING SAVE BAR (WHEN CHANGED) ── */}
@@ -1847,6 +1904,138 @@ export default function Settings() {
         keyType={keyModal.keyType}
         message={keyModal.message}
       />
+
+      {/* Sign Out Confirmation Modal via Portal */}
+      {showLogoutConfirm && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(11, 31, 58, 0.65)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            pointerEvents: 'auto',
+            animation: 'fadeIn var(--motion-fast) var(--ease-standard)',
+          }}
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 20,
+              padding: '28px 24px 22px',
+              maxWidth: 400,
+              width: '100%',
+              boxShadow: 'var(--shadow-xl)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              position: 'relative',
+              pointerEvents: 'auto',
+              animation: 'scaleIn var(--motion-fast) var(--ease-spring)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowLogoutConfirm(false)}
+              style={{
+                position: 'absolute',
+                top: 14,
+                right: 14,
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                padding: 6,
+                borderRadius: 8,
+              }}
+              title="Cancel"
+            >
+              <X size={18} />
+            </button>
+
+            <div
+              style={{
+                width: 54,
+                height: 54,
+                borderRadius: 16,
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#EF4444',
+                marginBottom: 16,
+              }}
+            >
+              <LogOut size={26} strokeWidth={2.2} />
+            </div>
+
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+              Sign Out Confirmation
+            </h3>
+
+            <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 24px 0' }}>
+              Are you sure you want to log out of your OppTrack session? You will need to sign in again to access your profile vault and opportunities.
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, width: '100%', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '11px 18px',
+                  borderRadius: 10,
+                  border: '1px solid var(--border)',
+                  background: 'var(--card-subtle)',
+                  color: 'var(--text-primary)',
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  logout();
+                }}
+                style={{
+                  flex: 1,
+                  padding: '11px 18px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: '#EF4444',
+                  color: '#FFFFFF',
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  boxShadow: '0 4px 14px rgba(239, 68, 68, 0.35)',
+                }}
+              >
+                <LogOut size={16} />
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

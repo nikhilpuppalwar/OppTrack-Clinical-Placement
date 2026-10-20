@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -320,7 +321,7 @@ export default function MobileNav() {
       )}
 
       {/* ── Mobile Sign Out Confirmation Modal ── */}
-      {showLogoutConfirm && (
+      {showLogoutConfirm && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -328,11 +329,12 @@ export default function MobileNav() {
             background: 'rgba(11, 31, 58, 0.65)',
             backdropFilter: 'blur(6px)',
             WebkitBackdropFilter: 'blur(6px)',
-            zIndex: 99999,
+            zIndex: 999999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: 20,
+            pointerEvents: 'auto',
             animation: 'fadeIn var(--motion-fast) var(--ease-standard)',
           }}
           onClick={() => setShowLogoutConfirm(false)}
@@ -351,6 +353,7 @@ export default function MobileNav() {
               alignItems: 'center',
               textAlign: 'center',
               position: 'relative',
+              pointerEvents: 'auto',
               animation: 'scaleIn var(--motion-fast) var(--ease-spring)',
             }}
             onClick={(e) => e.stopPropagation()}
@@ -445,7 +448,8 @@ export default function MobileNav() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
