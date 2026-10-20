@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import MobileNav from './MobileNav';
 import { settingsAPI } from '../api';
 import { sendDesktopNotification } from '../utils/notifications';
 import toast from 'react-hot-toast';
@@ -89,6 +90,7 @@ export default function ProtectedLayout({ children }) {
           {children}
         </div>
       </main>
+      <MobileNav />
     </div>
   );
 }

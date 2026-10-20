@@ -1310,13 +1310,219 @@ tr:hover td {
   color: var(--indigo) !important;
 }
 
-/* Responsive */
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE BOTTOM NAVIGATION & DRAWER SYSTEM (<= 860px)
+   ══════════════════════════════════════════════════════════════════════════ */
+.vessa-mobile-nav {
+  display: none;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 @media (max-width: 860px) {
-  .sidebar, .vessa-sidebar { display: none !important; }
-  .main-content { margin-left: 0 !important; padding: 20px 16px; }
-  .form-row { grid-template-columns: 1fr; }
-  .grid-2, .grid-3 { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .vessa-pill-tabs { display: none !important; }
-  .vessa-topbar-telemetry { display: none !important; }
+  .sidebar, .vessa-sidebar {
+    display: none !important;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding: 12px 14px 92px 14px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  .main-content.sidebar-expanded {
+    margin-left: 0 !important;
+  }
+
+  /* Fixed Mobile Bottom Nav */
+  .vessa-mobile-nav {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 990;
+    padding: 0 8px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .vessa-mobile-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    color: var(--text-muted);
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    gap: 3px;
+    padding: 6px 0;
+    transition: all var(--motion-fast) var(--ease-standard);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .vessa-mobile-tab:active {
+    transform: scale(0.94);
+  }
+
+  .vessa-mobile-tab.active {
+    color: var(--primary-brand);
+  }
+
+  .vessa-mobile-tab-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .vessa-mobile-badge {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background: var(--danger);
+    color: #FFFFFF;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Mobile Drawer Sheet */
+  .vessa-mobile-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 31, 58, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: flex;
+    align-items: flex-end;
+    animation: fadeIn var(--motion-fast) var(--ease-standard);
+  }
+
+  .vessa-mobile-drawer {
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 24px 24px 0 0;
+    padding: 14px 18px 34px 18px;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
+    animation: slideUp 220ms var(--ease-spring);
+    box-sizing: border-box;
+  }
+
+  .vessa-mobile-drawer-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--border);
+    margin: 0 auto 16px auto;
+  }
+
+  .vessa-mobile-drawer-new-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: var(--primary-brand);
+    color: #FFFFFF;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(24, 183, 160, 0.25);
+    transition: all var(--motion-fast) var(--ease-standard);
+    box-sizing: border-box;
+  }
+
+  /* TopBar on Mobile */
+  .vessa-topbar {
+    top: 6px !important;
+    padding: 8px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .vessa-topbar-telemetry {
+    display: none !important;
+  }
+
+  .vessa-search-text,
+  .vessa-kbd {
+    display: none !important;
+  }
+
+  .vessa-topbar-search {
+    padding: 8px 10px !important;
+    min-width: auto !important;
+    border-radius: 50% !important;
+    width: 38px !important;
+    height: 38px !important;
+    justify-content: center !important;
+  }
+
+  .vessa-pill-tabs {
+    display: none !important;
+  }
+
+  /* Grid & Layout Fluid Adaptations */
+  .form-row { grid-template-columns: 1fr !important; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr !important; }
+  .stats-grid { grid-template-columns: 1fr 1fr !important; }
+
+  /* Tables container touch scrolling */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 8px 10px 88px 10px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .vessa-brand > div:last-child {
+    display: none !important;
+  }
+
+  .vessa-topbar {
+    padding: 6px 10px !important;
+  }
 }
