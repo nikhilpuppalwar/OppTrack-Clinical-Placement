@@ -39,7 +39,25 @@
           <span class="brand-subtitle">Smart Placement Assistant</span>
         </div>
       </div>
-      <span id="backend-badge-login" class="badge-tag">Cloud</span>
+      <div class="header-actions">
+        <span class="badge-tag badge-prod">Production</span>
+        <button id="theme-toggle-login" class="btn-icon theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
+          <svg class="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
     </header>
 
     <div class="view-intro">
@@ -74,18 +92,6 @@
       <div class="divider-line"></div>
     </div>
 
-    <div class="field-group">
-      <label for="backend-server-select">API Backend Server</label>
-      <div class="select-wrapper">
-        <select id="backend-server-select">
-          <option value="https://opptrack-clinical-placement.onrender.com/api">Render Cloud (Live Production)</option>
-          <option value="http://localhost:5000/api">Localhost (http://localhost:5000)</option>
-        </select>
-        <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </div>
-    </div>
 
     <div class="field-group">
       <label for="email">Account Email</label>
@@ -170,12 +176,28 @@
         <div>
           <div class="brand-title-row">
             <span class="brand-title">OppTrack <span class="brand-gradient-text">AI</span></span>
-            <span id="backend-badge-main" class="badge-tag">Cloud</span>
+            <span class="badge-tag badge-prod">Production</span>
           </div>
           <span class="brand-subtitle">Smart Placement Assistant</span>
         </div>
       </div>
       <div class="header-right">
+        <button id="theme-toggle-main" class="btn-icon theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
+          <svg class="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
         <div class="user-chip-container">
           <div class="user-avatar-dot"></div>
           <span id="user-name" class="user-chip">Student</span>
@@ -241,34 +263,8 @@
         <span class="badge-account">Account Specific</span>
       </div>
 
-      <!-- AI Notice -->
-      <div class="notice-box">
-        <div class="notice-title">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          AI Model Updates (2025–2026)
-        </div>
-        <div>
-          Groq decommissioned legacy models. Recommended: <strong>openai/gpt-oss-120b</strong> or <strong>gemini-2.0-flash</strong> for highest speed & accuracy.
-        </div>
-      </div>
 
-      <!-- Backend Server Selector -->
-      <div class="field-group">
-        <label for="main-backend-select">OppTrack API Backend</label>
-        <div class="select-wrapper">
-          <select id="main-backend-select">
-            <option value="https://opptrack-clinical-placement.onrender.com/api">Render Cloud (Live Production)</option>
-            <option value="http://localhost:5000/api">Localhost (http://localhost:5000)</option>
-          </select>
-          <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </div>
-      </div>
+
 
       <!-- AI Provider -->
       <div class="field-group">
@@ -387,21 +383,7 @@
       </button>
     </div>
 
-    <!-- Recent Forms Activity Timeline -->
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title-group">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-          <span class="section-title">Recent Activity</span>
-        </div>
-      </div>
-      <div id="recent-forms-list" class="recent-list">
-        <div class="recent-empty">No recent form autofill activity yet</div>
-      </div>
-    </div>
+
 
     <!-- Extension Footer Links -->
     <footer class="main-footer">

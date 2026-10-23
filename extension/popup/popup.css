@@ -272,6 +272,40 @@ body {
   border: 1px solid rgba(13, 148, 136, 0.25);
 }
 
+.badge-prod {
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--primary-brand-text);
+  border: 1px solid rgba(13, 148, 136, 0.28);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-toggle-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+:root:not([data-theme="dark"]) .theme-icon-sun {
+  display: none !important;
+}
+
+:root:not([data-theme="dark"]) .theme-icon-moon {
+  display: block !important;
+}
+
+[data-theme="dark"] .theme-icon-moon {
+  display: none !important;
+}
+
+[data-theme="dark"] .theme-icon-sun {
+  display: block !important;
+  color: #FBBF24;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -1267,3 +1301,200 @@ body {
 .footer-link:hover {
   color: var(--primary-brand);
 }
+
+/* ==============================================================================
+ * 🌙 DARK THEME TOKENS & COMPONENTS (Parity with client/src/theme.css)
+ * ============================================================================== */
+[data-theme="dark"] {
+  /* ── 1. Website Primary Brand Tokens (Dark) ── */
+  --primary-brand: #14B8A6;         /* Glowing Mint Teal */
+  --primary-brand-hover: #2DD4BF;   /* Bright Mint Teal on hover */
+  --primary-brand-light: #0C2D32;   /* Deep teal dark glass tint */
+  --primary-brand-text: #2DD4BF;    /* Bright legible teal text */
+  --primary-brand-glow: rgba(20, 184, 166, 0.38);
+
+  /* ── 2. Backgrounds & Surfaces (Dark) ── */
+  --bg: #0B1120;                    /* Deep Midnight Navy Canvas */
+  --surface: #131E32;               /* Elevated Velvet Navy Surface */
+  --card-subtle: #1E293B;           /* Inset & secondary box background */
+  --border: #22334F;                /* Dark subtle border */
+  --border-hover: #33486B;          /* Border on hover */
+
+  /* ── 3. Slate Navy & Typography (Dark) ── */
+  --text-primary: #F8FAFC;          /* Clean white text for headings & body */
+  --text-secondary: #94A3B8;        /* Light muted slate */
+  --text-muted: #64748B;            /* Secondary muted text */
+  --navy: #F8FAFC;
+
+  /* ── 4. Semantic Status Colors (Dark) ── */
+  --success: #22C55E;
+  --success-bg: #0D2818;
+  --warning: #F59E0B;
+  --warning-bg: #2B1D09;
+  --danger: #EF4444;
+  --danger-bg: #2B1113;
+  --info: #60A5FA;
+  --info-bg: #10233D;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 4px 14px var(--primary-brand-glow);
+}
+
+[data-theme="dark"] body {
+  background-color: var(--bg);
+  background-image: radial-gradient(circle at 90% 0%, rgba(20, 184, 166, 0.12) 0%, transparent 60%);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #33486B;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+[data-theme="dark"] .badge-prod {
+  background: rgba(20, 184, 166, 0.15);
+  color: #2DD4BF;
+  border-color: rgba(20, 184, 166, 0.35);
+}
+
+[data-theme="dark"] .loading-card {
+  background: #131E32;
+  border-color: #22334F;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .loading-progress-track {
+  background: #1E293B;
+}
+
+[data-theme="dark"] .sync-banner {
+  background: linear-gradient(135deg, #10233D 0%, #0C2D32 100%);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+[data-theme="dark"] .sync-banner-title {
+  color: #60A5FA;
+}
+
+[data-theme="dark"] .sync-banner-desc {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .opp-banner {
+  background: linear-gradient(135deg, #0C2D32 0%, #131E32 100%);
+  border-color: rgba(20, 184, 166, 0.35);
+}
+
+[data-theme="dark"] .opp-title {
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .opp-sub {
+  color: #2DD4BF;
+}
+
+[data-theme="dark"] .opp-badge-icon {
+  background: rgba(20, 184, 166, 0.2);
+  color: #2DD4BF;
+}
+
+[data-theme="dark"] .settings-card,
+[data-theme="dark"] .action-card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .recent-item,
+[data-theme="dark"] .recent-empty,
+[data-theme="dark"] .manual-token-card,
+[data-theme="dark"] .status-bar,
+[data-theme="dark"] .footer-btn,
+[data-theme="dark"] .btn-icon,
+[data-theme="dark"] .user-chip-container {
+  background: #131E32;
+  border-color: #22334F;
+}
+
+[data-theme="dark"] .btn-icon:hover,
+[data-theme="dark"] .footer-btn:hover,
+[data-theme="dark"] .recent-item:hover {
+  background: #1E293B;
+  border-color: #33486B;
+}
+
+[data-theme="dark"] .field-group input,
+[data-theme="dark"] .field-group select,
+[data-theme="dark"] .custom-input,
+[data-theme="dark"] .manual-token-card textarea {
+  background: #131E32;
+  border-color: #22334F;
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .field-group input:focus,
+[data-theme="dark"] .field-group select:focus,
+[data-theme="dark"] .custom-input:focus,
+[data-theme="dark"] .manual-token-card textarea:focus {
+  border-color: #14B8A6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.25);
+}
+
+[data-theme="dark"] .field-group select {
+  color: #F8FAFC;
+  background-color: #131E32;
+}
+
+[data-theme="dark"] .field-group select option {
+  background-color: #131E32;
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .notice-box {
+  background: #2B1D09;
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #FBBF24;
+}
+
+[data-theme="dark"] .notice-title {
+  color: #F59E0B;
+}
+
+[data-theme="dark"] .notice-box code {
+  background: rgba(245, 158, 11, 0.25);
+  color: #FDE68A;
+}
+
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .btn-secondary-full {
+  background: #1E293B;
+  border-color: #33486B;
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .btn-secondary:hover,
+[data-theme="dark"] .btn-secondary-full:hover {
+  background: #24354D;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .toggle-slider {
+  background: #33486B;
+}
+
+[data-theme="dark"] .modal-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="dark"] .modal-box {
+  background: #131E32;
+  border-color: #22334F;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .badge-account {
+  background: #1E293B;
+  color: #94A3B8;
+  border-color: #33486B;
+}
+

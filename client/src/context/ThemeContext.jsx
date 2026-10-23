@@ -15,6 +15,9 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('opptrack_theme', theme);
+    try {
+      window.dispatchEvent(new CustomEvent('opptrack:theme-change', { detail: { theme } }));
+    } catch {}
   }, [theme]);
 
   const toggleTheme = () => {

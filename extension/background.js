@@ -9,7 +9,6 @@
  */
 
 const PRIMARY_API_BASE = 'https://opptrack-clinical-placement.onrender.com/api';
-const LOCAL_API_BASE = 'http://localhost:5000/api';
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 async function getToken() {
@@ -17,18 +16,18 @@ async function getToken() {
   return opptrack_token || null;
 }
 
-async function getApiBase() {
-  const { opptrack_api_url } = await chrome.storage.local.get('opptrack_api_url');
-  return opptrack_api_url || PRIMARY_API_BASE;
+function getApiBase() {
+  return PRIMARY_API_BASE;
 }
 
 async function authedFetch(path, options = {}) {
   const isAuthRoute = path.includes('/auth/login') || path.includes('/auth/register');
   const token = isAuthRoute ? null : await getToken();
-  let base = await getApiBase();
+  const base = PRIMARY_API_BASE;
 
-  const doFetch = async (baseUrl) => {
-    const res = await fetch(`${baseUrl}${path}`, {
+  let result;
+  try {
+    const res = await fetch(`${base}${path}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -37,22 +36,9 @@ async function authedFetch(path, options = {}) {
       },
     });
     const data = await res.json().catch(() => null);
-    return { ok: res.ok, status: res.status, data };
-  };
-
-  let result;
-  try {
-    result = await doFetch(base);
+    result = { ok: res.ok, status: res.status, data };
   } catch (err) {
-    const altBase = base.includes('onrender.com') ? LOCAL_API_BASE : PRIMARY_API_BASE;
-    try {
-      result = await doFetch(altBase);
-      if (result.ok) {
-        await chrome.storage.local.set({ opptrack_api_url: altBase });
-      }
-    } catch {
-      return { ok: false, status: 0, error: err.message };
-    }
+    return { ok: false, status: 0, error: err.message };
   }
 
   // Handle 401 Unauthorized: token expired, invalid, or user deleted
@@ -181,14 +167,14 @@ async function handleMessage(msg, sender) {
     case 'SYNC_TOKEN_FROM_WEB': {
       if (msg.token) {
         const userObj = msg.user || null;
-        let apiUrl = null;
-        if (msg.origin && (msg.origin.includes('localhost') || msg.origin.includes('127.0.0.1'))) {
-          apiUrl = LOCAL_API_BASE;
-        } else if (msg.origin && (msg.origin.includes('vercel.app') || msg.origin.includes('onrender.com'))) {
-          apiUrl = PRIMARY_API_BASE;
+        const updates = {
+          opptrack_token: msg.token,
+          opptrack_user: userObj,
+          opptrack_api_url: PRIMARY_API_BASE,
+        };
+        if (msg.theme) {
+          updates.opptrack_theme = msg.theme;
         }
-        const updates = { opptrack_token: msg.token, opptrack_user: userObj };
-        if (apiUrl) updates.opptrack_api_url = apiUrl;
         await chrome.storage.local.set(updates);
         return { ok: true, synced: true };
       } else {
@@ -199,8 +185,10 @@ async function handleMessage(msg, sender) {
 
     case 'SET_MANUAL_TOKEN': {
       if (!msg.token) return { ok: false, error: 'Token cannot be empty' };
-      const updates = { opptrack_token: msg.token.trim() };
-      if (msg.apiUrl) updates.opptrack_api_url = msg.apiUrl;
+      const updates = {
+        opptrack_token: msg.token.trim(),
+        opptrack_api_url: PRIMARY_API_BASE,
+      };
       if (msg.user) updates.opptrack_user = msg.user;
       await chrome.storage.local.set(updates);
       // Validate by fetching profile
@@ -220,15 +208,23 @@ async function handleMessage(msg, sender) {
     }
 
     case 'GET_API_BASE': {
-      const base = await getApiBase();
-      return { ok: true, apiUrl: base };
+      return { ok: true, apiUrl: PRIMARY_API_BASE };
     }
 
     case 'SET_API_BASE': {
-      if (msg.apiUrl) {
-        await chrome.storage.local.set({ opptrack_api_url: msg.apiUrl });
-      }
-      return { ok: true };
+      await chrome.storage.local.set({ opptrack_api_url: PRIMARY_API_BASE });
+      return { ok: true, apiUrl: PRIMARY_API_BASE };
+    }
+
+    case 'GET_THEME': {
+      const { opptrack_theme } = await chrome.storage.local.get('opptrack_theme');
+      return { ok: true, theme: opptrack_theme || 'light' };
+    }
+
+    case 'SET_THEME': {
+      const theme = msg.theme === 'dark' ? 'dark' : 'light';
+      await chrome.storage.local.set({ opptrack_theme: theme });
+      return { ok: true, theme };
     }
 
     case 'VERIFY_TOKEN': {

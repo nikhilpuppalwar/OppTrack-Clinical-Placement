@@ -92,6 +92,8 @@ let isCustomModel = false;
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
+  await setupTheme();
+
   show('loading-view');
   hide('login-view');
   hide('main-view');
@@ -101,14 +103,12 @@ async function init() {
   currentTab = tab;
 
   let auth = await msg('GET_AUTH');
-  updateBackendUI(auth.apiUrl || 'https://opptrack-clinical-placement.onrender.com/api');
 
   if (!auth.token) {
     // Attempt silent auto-sync from any open OppTrack tab
     const autoSynced = await tryAutoSyncWebSession(false);
     if (autoSynced) {
       auth = await msg('GET_AUTH');
-      updateBackendUI(auth.apiUrl || 'https://opptrack-clinical-placement.onrender.com/api');
     }
   }
 
@@ -452,31 +452,46 @@ $('save-settings-btn').addEventListener('click', async () => {
   }
 });
 
-// ─── Backend & Web Session Helpers ──────────────────────────────────────────
-function updateBackendUI(apiUrl) {
-  const isLocal = apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1');
-  const label = isLocal ? 'Localhost' : 'Cloud';
-  if ($('backend-badge-login')) $('backend-badge-login').textContent = label;
-  if ($('backend-badge-main')) $('backend-badge-main').textContent = label;
-  if ($('backend-server-select')) $('backend-server-select').value = apiUrl;
-  if ($('main-backend-select')) $('main-backend-select').value = apiUrl;
-}
+// ─── Theme Management (Light & Dark Mode) ───────────────────────────────────
+let themeInitialized = false;
 
-if ($('backend-server-select')) {
-  $('backend-server-select').addEventListener('change', async (e) => {
-    const url = e.target.value;
-    await msg('SET_API_BASE', { apiUrl: url });
-    updateBackendUI(url);
+function applyTheme(theme) {
+  const effectiveTheme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', effectiveTheme);
+  const isDark = effectiveTheme === 'dark';
+  document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
+    btn.setAttribute('title', isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+    btn.setAttribute('aria-label', isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
   });
 }
 
-if ($('main-backend-select')) {
-  $('main-backend-select').addEventListener('change', async (e) => {
-    const url = e.target.value;
-    await msg('SET_API_BASE', { apiUrl: url });
-    updateBackendUI(url);
-    loadSettings();
-  });
+async function setupTheme() {
+  const { opptrack_theme } = await chrome.storage.local.get('opptrack_theme');
+  let currentTheme = opptrack_theme;
+  if (!currentTheme) {
+    currentTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  }
+  applyTheme(currentTheme);
+
+  if (!themeInitialized) {
+    themeInitialized = true;
+    document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const activeTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const newTheme = activeTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+        await chrome.storage.local.set({ opptrack_theme: newTheme });
+      });
+    });
+
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local' && changes.opptrack_theme) {
+        applyTheme(changes.opptrack_theme.newValue);
+      }
+    });
+  }
 }
 
 async function tryAutoSyncWebSession(showFeedback = true) {
@@ -509,6 +524,7 @@ async function tryAutoSyncWebSession(showFeedback = true) {
         const res = await chrome.tabs.sendMessage(tab.id, { type: 'GET_WEB_SESSION' }).catch(() => null);
         if (res?.token) {
           await msg('SYNC_TOKEN_FROM_WEB', res);
+          if (res.theme) applyTheme(res.theme);
           if (showFeedback) hideError();
           return true;
         }
@@ -519,6 +535,7 @@ async function tryAutoSyncWebSession(showFeedback = true) {
           func: () => ({
             token: localStorage.getItem('opptrack_token'),
             user: localStorage.getItem('opptrack_user'),
+            theme: localStorage.getItem('opptrack_theme'),
             origin: window.location.origin,
           }),
         }).catch(() => null);
@@ -530,8 +547,10 @@ async function tryAutoSyncWebSession(showFeedback = true) {
           await msg('SYNC_TOKEN_FROM_WEB', {
             token: item.token,
             user: userObj,
+            theme: item.theme,
             origin: item.origin,
           });
+          if (item.theme) applyTheme(item.theme);
           if (showFeedback) hideError();
           return true;
         }
@@ -719,9 +738,10 @@ $('analyze-btn').addEventListener('click', async () => {
 
 // ─── Recent Forms ─────────────────────────────────────────────────────────────
 async function loadRecentForms() {
-  const res = await msg('GET_FORM_HISTORY');
   const list = $('recent-forms-list');
+  if (!list) return;
 
+  const res = await msg('GET_FORM_HISTORY');
   if (!res.ok || !res.data?.entries?.length) {
     list.innerHTML = '<div class="recent-empty">No recent form activity</div>';
     return;
