@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { profileAPI } from '../api';
 import { 
   Edit, Save, Plus, Trash2, Check, Copy, ExternalLink, X, RotateCcw, 
@@ -336,6 +337,9 @@ export default function Profile() {
 
   // Field CRUD state
   const [deletedFieldIds, setDeletedFieldIds] = useState([]);
+  const [showRestoreConfirmModal, setShowRestoreConfirmModal] = useState(false);
+  const [restoreConfirmInput, setRestoreConfirmInput] = useState('');
+  const [restoringDefaults, setRestoringDefaults] = useState(false);
   const [quickEditModal, setQuickEditModal] = useState(null);
   const [quickEditSaving, setQuickEditSaving] = useState(false);
 
@@ -449,6 +453,26 @@ export default function Profile() {
     loadProfile();
     fetchPendingSyncs();
   }, []);
+
+  const anyModalOpen = Boolean(
+    showImportModal ||
+    showResumeModal ||
+    showHistoryModal ||
+    showConfirmMergeModal ||
+    showRestoreConfirmModal ||
+    quickEditModal ||
+    addingSection
+  );
+
+  useEffect(() => {
+    if (anyModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [anyModalOpen]);
 
   // When user changes selected sync item
   const handleSelectSync = (idx) => {
@@ -763,14 +787,29 @@ export default function Profile() {
     }
   };
 
-  const handleRestoreDefaults = async () => {
-    if (!window.confirm('Restore all default profile fields that were removed?')) return;
+  const handleOpenRestoreModal = () => {
+    setRestoreConfirmInput('');
+    setShowRestoreConfirmModal(true);
+  };
+
+  const handleConfirmRestoreDefaults = async (e) => {
+    if (e) e.preventDefault();
+    if (restoreConfirmInput.trim().toLowerCase() !== 'confirm') {
+      return toast.error('Please type "confirm" to unlock the restore action.');
+    }
+
+    setRestoringDefaults(true);
+    const toastId = toast.loading('Restoring default profile fields…');
     try {
       await profileAPI.restoreDefaults();
-      toast.success('Default fields restored!');
+      toast.success('Default fields restored successfully!', { id: toastId });
+      setShowRestoreConfirmModal(false);
+      setRestoreConfirmInput('');
       await loadProfile();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to restore default fields');
+      toast.error(err.response?.data?.message || 'Failed to restore default fields', { id: toastId });
+    } finally {
+      setRestoringDefaults(false);
     }
   };
 
@@ -941,7 +980,7 @@ export default function Profile() {
                 {deletedFieldIds.length > 0 && (
                   <button
                     type="button"
-                    onClick={handleRestoreDefaults}
+                    onClick={handleOpenRestoreModal}
                     style={{
                       background: 'rgba(245, 158, 11, 0.12)',
                       color: '#F59E0B',
@@ -1679,14 +1718,14 @@ export default function Profile() {
       </div>
 
       {/* ── QUICK EDIT FIELD MODAL ── */}
-      {quickEditModal && (
+      {quickEditModal && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.55)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 9999,
+            background: 'rgba(11, 31, 58, 0.6)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1955,18 +1994,19 @@ export default function Profile() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── ADD CUSTOM FIELD MODAL ── */}
-      {addingSection && (
+      {addingSection && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.55)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 9999,
+            background: 'rgba(11, 31, 58, 0.6)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -2099,18 +2139,19 @@ export default function Profile() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── AI FORM IMPORT MODAL (PASTE GOOGLE FORM / TEXT) ── */}
-      {showImportModal && (
+      {showImportModal && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.55)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 9999,
+            background: 'rgba(11, 31, 58, 0.6)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -2194,7 +2235,6 @@ export default function Profile() {
                     outline: 'none',
                     resize: 'vertical',
                   }}
-                  autoFocus
                 />
               </div>
 
@@ -2257,18 +2297,19 @@ export default function Profile() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── AI RESUME IMPORT MODAL ── */}
-      {showResumeModal && (
+      {showResumeModal && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.55)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 9999,
+            background: 'rgba(11, 31, 58, 0.6)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -2479,7 +2520,8 @@ export default function Profile() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── CONFIRMATION MODAL BEFORE SAVING ── */}
@@ -2501,13 +2543,13 @@ export default function Profile() {
           })
           .filter(f => f.action !== 'keep');
 
-        return (
+        return typeof document !== 'undefined' && createPortal(
           <div
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(11, 31, 58, 0.55)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(11, 31, 58, 0.6)',
+              backdropFilter: 'blur(5px)',
               zIndex: 99999,
               display: 'flex',
               alignItems: 'center',
@@ -2595,19 +2637,20 @@ export default function Profile() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         );
       })()}
 
       {/* ── IMPORT & SYNC HISTORY MODAL ── */}
-      {showHistoryModal && (
+      {showHistoryModal && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(11, 31, 58, 0.55)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 9999,
+            background: 'rgba(11, 31, 58, 0.6)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -2765,7 +2808,167 @@ export default function Profile() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── RESTORE DEFAULTS CONFIRMATION MODAL ── */}
+      {showRestoreConfirmModal && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(11, 31, 58, 0.65)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={() => !restoringDefaults && setShowRestoreConfirmModal(false)}
+        >
+          <div
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 14,
+              padding: 24,
+              width: '100%',
+              maxWidth: 480,
+              boxShadow: 'var(--shadow-xl)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid rgba(245, 158, 11, 0.25)',
+                  color: '#F59E0B',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <RotateCcw size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Restore Default Fields
+                  </h3>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    Reset removed template fields back to Student Profile Vault
+                  </p>
+                </div>
+              </div>
+              {!restoringDefaults && (
+                <button
+                  type="button"
+                  onClick={() => setShowRestoreConfirmModal(false)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+              borderRadius: 8,
+              padding: '12px 14px',
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+              fontSize: 12.5,
+              color: 'var(--text-primary)',
+              lineHeight: 1.5,
+            }}>
+              <AlertTriangle size={18} color="#F59E0B" style={{ flexShrink: 0, marginTop: 1 }} />
+              <div>
+                This will restore <strong>{deletedFieldIds.length} removed default field{deletedFieldIds.length === 1 ? '' : 's'}</strong> back into your Profile Vault. Any existing custom fields and entered values will remain safe.
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmRestoreDefaults}>
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  Type <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace', fontWeight: 700, background: 'var(--card-subtle)', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)' }}>confirm</span> to unlock the restore button:
+                </label>
+                <input
+                  type="text"
+                  value={restoreConfirmInput}
+                  onChange={e => setRestoreConfirmInput(e.target.value)}
+                  placeholder="type confirm"
+                  disabled={restoringDefaults}
+                  autoComplete="off"
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: 8,
+                    border: restoreConfirmInput.trim().toLowerCase() === 'confirm'
+                      ? '1px solid #10B981'
+                      : '1px solid var(--border)',
+                    background: 'var(--card-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    fontFamily: 'monospace',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowRestoreConfirmModal(false)}
+                  disabled={restoringDefaults}
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    padding: '8px 16px',
+                    borderRadius: 6,
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={restoringDefaults || restoreConfirmInput.trim().toLowerCase() !== 'confirm'}
+                  style={{
+                    background: restoreConfirmInput.trim().toLowerCase() === 'confirm' ? '#F59E0B' : 'var(--card-subtle)',
+                    color: restoreConfirmInput.trim().toLowerCase() === 'confirm' ? '#FFFFFF' : 'var(--text-muted)',
+                    border: restoreConfirmInput.trim().toLowerCase() === 'confirm' ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--border)',
+                    padding: '8px 18px',
+                    borderRadius: 6,
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    cursor: restoringDefaults || restoreConfirmInput.trim().toLowerCase() !== 'confirm' ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: restoreConfirmInput.trim().toLowerCase() === 'confirm' ? '0 2px 8px rgba(245, 158, 11, 0.3)' : 'none',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <RotateCcw size={13} style={restoringDefaults ? { animation: 'spin 1.2s linear infinite' } : {}} />
+                  {restoringDefaults ? 'Restoring Defaults…' : 'Restore Defaults'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>

@@ -7,111 +7,213 @@
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <!-- ── Login View ─────────────────────────────────────────────────── -->
-  <div id="login-view" class="view hidden">
-    <div class="logo-row">
-      <div class="logo-dot"></div>
-      <span class="logo-text">OppTrack</span>
-      <span id="backend-badge-login" class="badge-tag" style="margin-left:auto;font-size:10px;">Cloud</span>
-    </div>
-    <h2 class="view-title">Sign in to autofill</h2>
-    <p class="view-sub">Connect your OppTrack account to enable intelligent AI form autofilling.</p>
 
-    <!-- Quick Web Session Auto-Sync Button -->
-    <div style="background:#EBF5FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px;margin-bottom:14px;text-align:center;">
-      <div style="font-size:11px;font-weight:600;color:#1E40AF;margin-bottom:6px;">Logged in on the OppTrack website?</div>
-      <button id="sync-web-token-btn" class="btn-primary" style="background:#2563EB;width:100%;padding:8px 10px;font-size:12px;">
-        🔄 Sync Session from Web Tab
-      </button>
-    </div>
-
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-      <div style="flex:1;height:1px;background:#E5EAF0;"></div>
-      <span style="font-size:10px;color:#98A2B3;text-transform:uppercase;font-weight:600;">or sign in with password</span>
-      <div style="flex:1;height:1px;background:#E5EAF0;"></div>
-    </div>
-
-    <div class="field-group">
-      <label for="backend-server-select">Backend Server</label>
-      <select id="backend-server-select" style="font-size:11px;">
-        <option value="https://opptrack-clinical-placement.onrender.com/api">Render Cloud (Live)</option>
-        <option value="http://localhost:5000/api">Localhost (http://localhost:5000)</option>
-      </select>
-    </div>
-
-    <div class="field-group">
-      <label for="email">Email</label>
-      <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
-    </div>
-    <div class="field-group">
-      <label for="password">Password</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
-    </div>
-    <div id="login-error" class="error-msg hidden"></div>
-    <button id="login-btn" class="btn-primary">Sign In</button>
-
-    <!-- Manual Token Option -->
-    <div style="margin-top:12px;text-align:center;">
-      <button type="button" id="toggle-manual-token" class="text-link-btn" style="font-size:11px;">
-        🔑 Paste JWT Token Manually
-      </button>
-    </div>
-
-    <div id="manual-token-card" class="field-group hidden" style="margin-top:8px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:8px;">
-      <label for="manual-jwt-input" style="font-size:10px;">Paste JWT Token (Bearer)</label>
-      <textarea id="manual-jwt-input" rows="2" placeholder="eyJhbGciOiJIUzI1NiIsIn..." style="width:100%;font-size:11px;font-family:monospace;border:1px solid #CBD5E1;border-radius:6px;padding:6px;"></textarea>
-      <button type="button" id="apply-manual-token-btn" class="btn-primary" style="width:100%;margin-top:6px;padding:6px;font-size:11px;background:#0B1F3A;">
-        ✓ Apply & Verify Token
-      </button>
-    </div>
-
-    <div class="login-footer">
-      <p style="margin: 12px 0 6px; font-size:12px; color:#667085; text-align:center;">
-        Don't have an account?
-      </p>
-      <button id="open-register-btn" class="btn-outline-full">
-        🌐 Register on OppTrack Website
-      </button>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;justify-content:center;">
-        <a id="github-link-login" href="https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement" target="_blank"
-           style="color:#667085;font-size:11px;text-decoration:none;display:flex;align-items:center;gap:4px;">
-          ⭐ GitHub Repo
-        </a>
+  <!-- ── 1. Initial Loading Splash Screen (Zero White Flash) ─────────────── -->
+  <div id="loading-view" class="view loading-view">
+    <div class="loading-card">
+      <div class="loading-logo-container">
+        <div class="loading-pulse-ring"></div>
+        <img src="../icons/icon128.png" alt="OppTrack Logo" class="loading-logo-img" />
+      </div>
+      <div class="loading-brand-row">
+        <h2 class="loading-brand-title">OppTrack <span class="brand-gradient-text">AI</span></h2>
+        <span class="loading-badge">Autofill</span>
+      </div>
+      <div id="loading-status-text" class="loading-status">Connecting to OppTrack session…</div>
+      <div class="loading-progress-track">
+        <div class="loading-progress-bar"></div>
       </div>
     </div>
   </div>
 
-  <!-- ── Main View ──────────────────────────────────────────────────── -->
-  <div id="main-view" class="view hidden">
+  <!-- ── 2. Login View ─────────────────────────────────────────────────── -->
+  <div id="login-view" class="view hidden">
+    <!-- Header -->
     <header class="popup-header">
-      <div class="logo-row">
-        <div class="logo-dot"></div>
-        <span class="logo-text">OppTrack AI</span>
-        <span id="backend-badge-main" class="badge-tag" style="margin-left:4px;font-size:10px;">Cloud</span>
+      <div class="brand-badge-group">
+        <div class="brand-logo-frame">
+          <img src="../icons/icon48.png" alt="OppTrack Logo" class="brand-logo-img" />
+        </div>
+        <div class="brand-meta">
+          <span class="brand-title">OppTrack <span class="brand-gradient-text">AI</span></span>
+          <span class="brand-subtitle">Smart Placement Assistant</span>
+        </div>
+      </div>
+      <span id="backend-badge-login" class="badge-tag">Cloud</span>
+    </header>
+
+    <div class="view-intro">
+      <h3 class="view-title">Welcome Back</h3>
+      <p class="view-sub">Sign in to connect your profile vault and enable one-click AI Google Form autofilling.</p>
+    </div>
+
+    <!-- Quick Web Session Auto-Sync Button -->
+    <div class="sync-banner">
+      <div class="sync-banner-text">
+        <div class="sync-banner-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+            <path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+          </svg>
+          Logged in on OppTrack Website?
+        </div>
+        <p class="sync-banner-desc">Auto-sync your active login token directly from any open web tab.</p>
+      </div>
+      <button id="sync-web-token-btn" class="btn-sync">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        <span>Sync Session from Web Tab</span>
+      </button>
+    </div>
+
+    <div class="divider-row">
+      <div class="divider-line"></div>
+      <span class="divider-text">or sign in with password</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="field-group">
+      <label for="backend-server-select">API Backend Server</label>
+      <div class="select-wrapper">
+        <select id="backend-server-select">
+          <option value="https://opptrack-clinical-placement.onrender.com/api">Render Cloud (Live Production)</option>
+          <option value="http://localhost:5000/api">Localhost (http://localhost:5000)</option>
+        </select>
+        <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label for="email">Account Email</label>
+      <div class="input-wrapper">
+        <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label for="password">Password</label>
+      <div class="input-wrapper">
+        <svg class="input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+    </div>
+
+    <div id="login-error" class="error-msg hidden"></div>
+
+    <button id="login-btn" class="btn-primary">
+      <span>Sign In to OppTrack</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    </button>
+
+    <!-- Manual Token Option -->
+    <div class="manual-token-toggle-row">
+      <button type="button" id="toggle-manual-token" class="text-link-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="7.5" cy="15.5" r="5.5"></circle>
+          <path d="m21 2-9.6 9.6"></path>
+          <path d="m15.5 7.5 3 3L22 7l-3-3"></path>
+        </svg>
+        <span>Paste JWT Token Manually</span>
+      </button>
+    </div>
+
+    <div id="manual-token-card" class="manual-token-card hidden">
+      <label for="manual-jwt-input">JWT Token (Bearer)</label>
+      <textarea id="manual-jwt-input" rows="2" placeholder="eyJhbGciOiJIUzI1NiIsIn..."></textarea>
+      <button type="button" id="apply-manual-token-btn" class="btn-secondary-full">
+        Apply & Verify Token
+      </button>
+    </div>
+
+    <div class="login-footer">
+      <div class="footer-register-row">
+        <span>Don&apos;t have an account?</span>
+        <button id="open-register-btn" class="text-link-accent">
+          Register on Website &rarr;
+        </button>
+      </div>
+      <div class="footer-links">
+        <a id="github-link-login" href="https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement" target="_blank">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <span class="footer-dot">&bull;</span>
+        <span class="version-tag">v1.0.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. Main Dashboard View ───────────────────────────────────────── -->
+  <div id="main-view" class="view hidden">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="brand-badge-group">
+        <div class="brand-logo-frame">
+          <img src="../icons/icon48.png" alt="OppTrack Logo" class="brand-logo-img" />
+        </div>
+        <div>
+          <div class="brand-title-row">
+            <span class="brand-title">OppTrack <span class="brand-gradient-text">AI</span></span>
+            <span id="backend-badge-main" class="badge-tag">Cloud</span>
+          </div>
+          <span class="brand-subtitle">Smart Placement Assistant</span>
+        </div>
       </div>
       <div class="header-right">
-        <span id="user-name" class="user-chip"></span>
-        <button id="settings-toggle-btn" class="btn-icon" title="AI Settings">⚙️</button>
+        <div class="user-chip-container">
+          <div class="user-avatar-dot"></div>
+          <span id="user-name" class="user-chip">Student</span>
+        </div>
+        <button id="settings-toggle-btn" class="btn-icon" title="AI Settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
         <button id="logout-btn" class="btn-icon" title="Sign out">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
           </svg>
         </button>
       </div>
     </header>
 
-    <!-- Opportunity Banner -->
+    <!-- Opportunity Match Banner -->
     <div id="opp-banner" class="opp-banner hidden">
-      <div class="opp-banner-content">
-        <div class="opp-icon">🎯</div>
+      <div class="opp-banner-header">
+        <div class="opp-badge-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+          </svg>
+        </div>
         <div class="opp-info">
-          <div id="opp-title" class="opp-title"></div>
-          <div id="opp-sub" class="opp-sub">Detected from form URL</div>
+          <div id="opp-title" class="opp-title">Target Opportunity Detected</div>
+          <div id="opp-sub" class="opp-sub">Matched automatically from recruitment URL</div>
         </div>
       </div>
       <div class="opp-banner-actions">
         <label class="toggle-row">
-          <span>Auto-mark as Applied after submit?</span>
+          <span>Auto-mark as Applied after submission?</span>
           <div class="toggle-wrap">
             <input type="checkbox" id="auto-apply-toggle" />
             <span class="toggle-slider"></span>
@@ -120,131 +222,208 @@
       </div>
     </div>
 
-    <!-- AI Integration Settings Card (100% Synced with Website) -->
+    <!-- AI Integration Settings Drawer -->
     <div id="settings-card" class="settings-card hidden">
       <div class="settings-header">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:16px;">🤖</span>
+        <div class="settings-title-group">
+          <div class="settings-icon-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
           <div>
             <div class="settings-title">AI Integration Settings</div>
-            <div class="settings-sub">Synced with Web App</div>
+            <div class="settings-sub">Synced in real-time with web app</div>
           </div>
         </div>
-        <span class="badge-tag">Account Specific</span>
+        <span class="badge-account">Account Specific</span>
       </div>
 
-      <!-- AI Model Deprecation & Lifecycle Notice (Synced with Web App) -->
+      <!-- AI Notice -->
       <div class="notice-box">
-        <div class="notice-title">📢 AI Model Updates (2025–2026)</div>
+        <div class="notice-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          AI Model Updates (2025–2026)
+        </div>
         <div>
-          Groq decommissioned older <code>llama-3.1-8b</code> & <code>llama-3.3-70b-versatile</code>. Recommended: <strong>openai/gpt-oss-120b</strong> or <strong>gemini-2.0-flash</strong>.
+          Groq decommissioned legacy models. Recommended: <strong>openai/gpt-oss-120b</strong> or <strong>gemini-2.0-flash</strong> for highest speed & accuracy.
         </div>
       </div>
 
       <!-- Backend Server Selector -->
       <div class="field-group">
         <label for="main-backend-select">OppTrack API Backend</label>
-        <select id="main-backend-select" style="font-size:11px;">
-          <option value="https://opptrack-clinical-placement.onrender.com/api">Render Cloud (Live)</option>
-          <option value="http://localhost:5000/api">Localhost (http://localhost:5000)</option>
-        </select>
+        <div class="select-wrapper">
+          <select id="main-backend-select">
+            <option value="https://opptrack-clinical-placement.onrender.com/api">Render Cloud (Live Production)</option>
+            <option value="http://localhost:5000/api">Localhost (http://localhost:5000)</option>
+          </select>
+          <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
       </div>
 
       <!-- AI Provider -->
       <div class="field-group">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="field-label-row">
           <label for="llm-provider">AI Provider</label>
           <button type="button" id="toggle-custom-provider" class="text-link-btn">✏️ Custom</button>
         </div>
-        <select id="llm-provider">
-          <option value="groq">Groq Cloud (Fast LPU Inference — Recommended)</option>
-          <option value="gemini">Google Gemini (gemini-2.0-flash / 1.5-flash)</option>
-          <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
-          <option value="anthropic">Anthropic (Claude 3.5 / 3.7)</option>
-          <option value="deepseek">DeepSeek AI (V3 / R1)</option>
-          <option value="openrouter">OpenRouter.ai (Universal Multi-Model API)</option>
-          <option value="together">Together.ai (Open Source Models)</option>
-          <option value="mistral">Mistral AI (Codestral / Large)</option>
-          <option value="ollama">Ollama / Local LLM (Self-hosted)</option>
-          <option value="other">✏️ Custom Provider / OpenAI-Compatible Endpoint...</option>
-        </select>
-        <input type="text" id="custom-provider-input" class="hidden" placeholder="e.g. vllm, lmstudio, perplexity, deepseek, together" />
+        <div class="select-wrapper">
+          <select id="llm-provider">
+            <option value="groq">Groq Cloud (Fast LPU Inference — Recommended)</option>
+            <option value="gemini">Google Gemini (gemini-2.0-flash / 1.5-flash)</option>
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="anthropic">Anthropic (Claude 3.5 / 3.7)</option>
+            <option value="deepseek">DeepSeek AI (V3 / R1)</option>
+            <option value="openrouter">OpenRouter.ai (Universal Multi-Model API)</option>
+            <option value="together">Together.ai (Open Source Models)</option>
+            <option value="mistral">Mistral AI (Codestral / Large)</option>
+            <option value="ollama">Ollama / Local LLM (Self-hosted)</option>
+            <option value="other">✏️ Custom Provider / OpenAI-Compatible Endpoint...</option>
+          </select>
+          <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+        <input type="text" id="custom-provider-input" class="hidden custom-input" placeholder="e.g. vllm, lmstudio, perplexity, deepseek" />
       </div>
 
-      <!-- Custom Base URL (For Ollama, Localhost, or OpenAI-compatible endpoints) -->
+      <!-- Custom Base URL -->
       <div id="base-url-group" class="field-group hidden">
         <label for="llm-base-url">API Base URL / Endpoint</label>
         <input type="text" id="llm-base-url" placeholder="e.g. http://localhost:11434/v1 or https://api.perplexity.ai" />
-        <div class="field-subtext">OpenAI-compatible root or /chat/completions URL for self-hosted or proxy endpoints.</div>
+        <div class="field-subtext">OpenAI-compatible root URL for self-hosted or proxy endpoints.</div>
       </div>
 
       <!-- LLM Model -->
       <div class="field-group">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="field-label-row">
           <label for="llm-model-select">LLM Model</label>
           <button type="button" id="toggle-custom-model" class="text-link-btn">✏️ Custom</button>
         </div>
-        <select id="llm-model-select"></select>
-        <input type="text" id="custom-model-input" class="hidden" placeholder="e.g. openai/gpt-oss-120b, gemini-2.0-flash, llama-3.3:70b" />
+        <div class="select-wrapper">
+          <select id="llm-model-select"></select>
+          <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+        <input type="text" id="custom-model-input" class="hidden custom-input" placeholder="e.g. openai/gpt-oss-120b, gemini-2.0-flash" />
       </div>
 
       <!-- LLM API Key -->
       <div class="field-group">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="field-label-row">
           <label for="llm-api-key">LLM API Key</label>
           <span id="key-hint" class="hint-text">Required</span>
         </div>
-        <div style="position:relative;display:flex;align-items:center;">
-          <input type="password" id="llm-api-key" placeholder="Paste your API key (gsk_… / sk-or-…)" style="padding-right:34px;" />
-          <button type="button" id="toggle-key-visibility" class="eye-btn" title="Toggle visibility">👁️</button>
+        <div class="input-wrapper">
+          <input type="password" id="llm-api-key" placeholder="Paste your API key (gsk_… / sk-or-…)" />
+          <button type="button" id="toggle-key-visibility" class="eye-btn" title="Toggle visibility">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
         </div>
       </div>
 
       <div id="settings-msg" class="settings-msg hidden"></div>
 
       <!-- Action Buttons -->
-      <div style="display:flex;gap:8px;margin-top:12px;">
-        <button id="test-ai-btn" class="btn-purple-outline" style="flex:1;">✨ Test AI</button>
-        <button id="save-settings-btn" class="btn-purple" style="flex:1;">💾 Save AI Settings</button>
+      <div class="settings-actions">
+        <button id="test-ai-btn" class="btn-secondary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span>Test AI</span>
+        </button>
+        <button id="save-settings-btn" class="btn-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save Settings</span>
+        </button>
       </div>
     </div>
 
-    <!-- Status row -->
+    <!-- Active Form Status Pill -->
     <div id="form-status" class="form-status">
-      <div class="status-dot" id="status-dot"></div>
-      <span id="status-text">Checking page...</span>
+      <div class="status-indicator">
+        <div class="status-dot" id="status-dot"></div>
+      </div>
+      <span id="status-text">Checking active browser tab...</span>
     </div>
 
-    <!-- Action Buttons -->
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button id="autofill-btn" class="btn-primary" style="flex:1;" disabled>
-        ✨ AI Vector Autofill
+    <!-- Primary Quick Actions -->
+    <div class="action-grid">
+      <button id="autofill-btn" class="btn-primary-autofill" disabled>
+        <div class="btn-icon-wrapper">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+          </svg>
+        </div>
+        <div class="btn-text-wrapper">
+          <span class="btn-main-text">AI Vector Autofill</span>
+          <span class="btn-sub-text">Fill matching fields with Vault data</span>
+        </div>
       </button>
-      <button id="analyze-btn" class="btn-secondary" style="flex:1;" disabled>
-        🔍 Save New Data
+
+      <button id="analyze-btn" class="btn-secondary-action" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>Save New Data</span>
       </button>
     </div>
 
-    <!-- Recent Forms -->
+    <!-- Recent Forms Activity Timeline -->
     <div class="section">
       <div class="section-header">
-        <span class="section-title">Recent Forms</span>
+        <div class="section-title-group">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span class="section-title">Recent Activity</span>
+        </div>
       </div>
       <div id="recent-forms-list" class="recent-list">
-        <div class="recent-empty">No recent form activity</div>
+        <div class="recent-empty">No recent form autofill activity yet</div>
       </div>
     </div>
 
     <!-- Extension Footer Links -->
-    <div style="border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-      <button id="open-website-btn" style="background: #FFFFFF; border: 1px solid #CBD5E1; color: var(--navy); font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit; transition: all 0.15s ease;">
-        🌐 Open Website
+    <footer class="main-footer">
+      <button id="open-website-btn" class="footer-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>Open Web App</span>
       </button>
-      <a href="https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement" target="_blank"
-         style="color: #667085; font-size: 11.5px; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-        ⭐ GitHub
-      </a>
-    </div>
+      <div class="footer-meta-right">
+        <a href="https://github.com/nikhilpuppalwar/OppTrack-Clinical-Placement" target="_blank" class="footer-link">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <span class="footer-dot">&bull;</span>
+        <span class="version-tag">v1.0.0</span>
+      </div>
+    </footer>
   </div>
 
   <script src="popup.js"></script>

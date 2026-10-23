@@ -18,7 +18,15 @@ const getOpportunities = async (req, res) => {
     if (from) query.deadline.$gte = new Date(from);
     if (to) query.deadline.$lte = new Date(to);
   }
-  if (search) query.$text = { $search: search };
+  if (search && search.trim()) {
+    const s = search.trim();
+    const escaped = s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    query.$or = [
+      { company: { $regex: escaped, $options: 'i' } },
+      { role: { $regex: escaped, $options: 'i' } },
+      { location: { $regex: escaped, $options: 'i' } },
+    ];
+  }
 
   let dbQuery = Opportunity.find(query).sort({ deadline: 1, createdAt: -1 });
   if (fields) dbQuery = dbQuery.select(fields.split(',').join(' '));

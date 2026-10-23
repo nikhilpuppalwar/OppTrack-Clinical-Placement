@@ -92,6 +92,11 @@ let isCustomModel = false;
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
+  show('loading-view');
+  hide('login-view');
+  hide('main-view');
+
+  const startTime = Date.now();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTab = tab;
 
@@ -107,7 +112,14 @@ async function init() {
     }
   }
 
+  // Ensure a smooth ~350ms minimum duration so the user sees the professional loading animation without white screen
+  const elapsed = Date.now() - startTime;
+  if (elapsed < 350) {
+    await new Promise(r => setTimeout(r, 350 - elapsed));
+  }
+
   if (!auth.token) {
+    hide('loading-view');
     show('login-view');
     hide('main-view');
     return;
@@ -119,11 +131,13 @@ async function init() {
     console.warn('OppTrack: Token expired or rejected by server.');
     await msg('LOGOUT');
     showError('Your previous session expired. Please sign in or sync from web tab.');
+    hide('loading-view');
     show('login-view');
     hide('main-view');
     return;
   }
 
+  hide('loading-view');
   show('main-view');
   hide('login-view');
   const name = verifyRes.data?.candidateName || auth.user?.name || auth.user?.email || 'User';
@@ -361,7 +375,9 @@ $('toggle-key-visibility').addEventListener('click', () => {
   const input = $('llm-api-key');
   const isPass = input.type === 'password';
   input.type = isPass ? 'text' : 'password';
-  $('toggle-key-visibility').textContent = isPass ? '🙈' : '👁️';
+  $('toggle-key-visibility').innerHTML = isPass 
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
 });
 
 $('settings-toggle-btn').addEventListener('click', () => {
@@ -545,16 +561,24 @@ $('login-btn').addEventListener('click', async () => {
   const password = $('password').value;
   if (!email || !password) return showError('Please enter email and password.');
 
-  $('login-btn').textContent = 'Signing in…';
+  $('login-btn').innerHTML = `
+    <span>Signing in…</span>
+  `;
   $('login-btn').disabled = true;
 
   const res = await msg('LOGIN', { email, password });
   if (res.ok) {
     hideError();
-    init();
+    await init();
   } else {
     showError(res.data?.message || 'Invalid credentials. Try again.');
-    $('login-btn').textContent = 'Sign In';
+    $('login-btn').innerHTML = `
+      <span>Sign In to OppTrack</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    `;
     $('login-btn').disabled = false;
   }
 });
@@ -594,6 +618,7 @@ $('password').addEventListener('keydown', (e) => {
 
 $('logout-btn').addEventListener('click', async () => {
   await msg('LOGOUT');
+  hide('loading-view');
   show('login-view');
   hide('main-view');
 });
@@ -601,6 +626,7 @@ $('logout-btn').addEventListener('click', async () => {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'AUTH_EXPIRED') {
     showError(msg.message || 'Session expired. Please log in or sync your token.');
+    hide('loading-view');
     show('login-view');
     hide('main-view');
   }
@@ -616,7 +642,17 @@ $('auto-apply-toggle').addEventListener('change', async (e) => {
 $('autofill-btn').addEventListener('click', async () => {
   if (!currentTab) return;
 
-  $('autofill-btn').textContent = 'AI Thinking…';
+  $('autofill-btn').innerHTML = `
+    <div class="btn-icon-wrapper">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+      </svg>
+    </div>
+    <div class="btn-text-wrapper">
+      <span class="btn-main-text">AI Vector Matching…</span>
+      <span class="btn-sub-text">Analyzing form fields & Vault data</span>
+    </div>
+  `;
   $('autofill-btn').disabled = true;
 
   try {
@@ -642,9 +678,29 @@ $('autofill-btn').addEventListener('click', async () => {
     $('status-dot').className = 'status-dot error';
   }
 
-  $('autofill-btn').textContent = '✓ Done';
+  $('autofill-btn').innerHTML = `
+    <div class="btn-icon-wrapper">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="btn-text-wrapper">
+      <span class="btn-main-text">Autofill Complete!</span>
+      <span class="btn-sub-text">Fields populated with Vault data</span>
+    </div>
+  `;
   setTimeout(() => {
-    $('autofill-btn').textContent = '✨ AI Vector Autofill';
+    $('autofill-btn').innerHTML = `
+      <div class="btn-icon-wrapper">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+        </svg>
+      </div>
+      <div class="btn-text-wrapper">
+        <span class="btn-main-text">AI Vector Autofill</span>
+        <span class="btn-sub-text">Fill matching fields with Vault data</span>
+      </div>
+    `;
     $('autofill-btn').disabled = false;
   }, 2500);
 });

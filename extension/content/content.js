@@ -49,10 +49,10 @@ function injectGlobalStyles() {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: #0B1F3A;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(24, 183, 160, 0.4);
-      box-shadow: 0 10px 30px rgba(11, 31, 58, 0.35);
+      background: #0F172A;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(13, 148, 136, 0.4);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
       border-radius: 30px;
       padding: 6px 14px;
       display: flex;
@@ -62,7 +62,7 @@ function injectGlobalStyles() {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .${NS}-btn {
-      background: #18B7A0;
+      background: #0D9488;
       color: #FFFFFF;
       border: none;
       padding: 8px 14px;
@@ -74,11 +74,12 @@ function injectGlobalStyles() {
       align-items: center;
       gap: 6px;
       transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
     }
     .${NS}-btn:hover {
-      background: #149D89;
+      background: #0F766E;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(24, 183, 160, 0.35);
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.4);
     }
     .${NS}-btn-secondary {
       background: rgba(255, 255, 255, 0.12);
@@ -109,11 +110,11 @@ function injectGlobalStyles() {
       cursor: help;
       z-index: 9999;
       flex-shrink: 0;
-      box-shadow: 0 0 0 2px rgba(11, 31, 58, 0.15);
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15);
       transition: transform 0.15s;
     }
     .${NS}-dot:hover { transform: translateY(-50%) scale(1.4); }
-    .${NS}-dot.high   { background: #18B7A0; }
+    .${NS}-dot.high   { background: #0D9488; }
     .${NS}-dot.medium { background: #F59E0B; }
     .${NS}-dot.manual { background: #2563EB; }
 
@@ -122,17 +123,17 @@ function injectGlobalStyles() {
       position: absolute;
       bottom: calc(100% + 8px);
       right: -8px;
-      background: #0B1F3A;
+      background: #0F172A;
       color: #FFFFFF;
       font-size: 11px;
       font-family: 'Inter', system-ui, sans-serif;
       padding: 6px 10px;
       border-radius: 6px;
-      border: 1px solid rgba(24, 183, 160, 0.3);
+      border: 1px solid rgba(13, 148, 136, 0.35);
       white-space: max-content;
       max-width: 280px;
       pointer-events: none;
-      box-shadow: 0 4px 16px rgba(11, 31, 58, 0.3);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.3);
       z-index: 100000;
       opacity: 0;
       transition: opacity 0.15s;
@@ -144,7 +145,7 @@ function injectGlobalStyles() {
     .${NS}-sensitive-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(11, 31, 58, 0.9);
+      background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(6px);
       border-radius: 4px;
       display: flex;
@@ -156,7 +157,7 @@ function injectGlobalStyles() {
       transition: background 0.2s;
       font-family: 'Inter', system-ui, sans-serif;
     }
-    .${NS}-sensitive-overlay:hover { background: rgba(11, 31, 58, 0.8); }
+    .${NS}-sensitive-overlay:hover { background: rgba(15, 23, 42, 0.85); }
     .${NS}-sensitive-text {
       color: #FFFFFF;
       font-size: 12px;
@@ -167,7 +168,7 @@ function injectGlobalStyles() {
     .${NS}-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(11, 31, 58, 0.6);
+      background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(8px);
       z-index: 1000000;
       display: flex;
@@ -178,20 +179,20 @@ function injectGlobalStyles() {
     }
     .${NS}-modal-card {
       background: #FFFFFF;
-      border: 1px solid #E5EAF0;
+      border: 1px solid #E2E8F0;
       border-radius: 16px;
       width: 100%;
       max-width: 540px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 50px rgba(11, 31, 58, 0.2);
-      color: #172033;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+      color: #0F172A;
       overflow: hidden;
     }
     .${NS}-modal-header {
       padding: 16px 20px;
-      border-bottom: 1px solid #E5EAF0;
+      border-bottom: 1px solid #E2E8F0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -199,7 +200,7 @@ function injectGlobalStyles() {
     .${NS}-modal-title {
       font-size: 16px;
       font-weight: 700;
-      color: #0B1F3A;
+      color: #0F172A;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -210,8 +211,8 @@ function injectGlobalStyles() {
       flex: 1;
     }
     .${NS}-item-row {
-      background: #F8FAFD;
-      border: 1px solid #E5EAF0;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
       border-radius: 8px;
       padding: 10px 14px;
       margin-bottom: 10px;
@@ -220,16 +221,16 @@ function injectGlobalStyles() {
       gap: 12px;
     }
     .${NS}-item-info { flex: 1; }
-    .${NS}-item-label { font-size: 13px; font-weight: 600; color: #0B1F3A; }
-    .${NS}-item-val { font-size: 12px; color: #123C73; font-family: monospace; margin-top: 2px; font-weight: 600; }
-    .${NS}-item-reason { font-size: 11px; color: #667085; margin-top: 4px; }
+    .${NS}-item-label { font-size: 13px; font-weight: 600; color: #0F172A; }
+    .${NS}-item-val { font-size: 12px; color: #0D9488; font-family: monospace; margin-top: 2px; font-weight: 600; }
+    .${NS}-item-reason { font-size: 11px; color: #64748B; margin-top: 4px; }
     .${NS}-modal-footer {
       padding: 14px 20px;
-      border-top: 1px solid #E5EAF0;
+      border-top: 1px solid #E2E8F0;
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      background: #F8FAFD;
+      background: #F8FAFC;
     }
   `;
   document.head.appendChild(style);

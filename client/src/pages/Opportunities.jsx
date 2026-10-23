@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { opportunityAPI, gmailAPI, settingsAPI } from '../api';
 import DeadlineBadge from '../components/DeadlineBadge';
@@ -8,9 +9,36 @@ import {
   Plus, Search, Trash2, Eye, Sparkles, Wand2, CalendarDays, X, Filter, 
   Mail, Check, ExternalLink, RefreshCw, AlertTriangle, Clock, CheckCircle2, 
   ChevronDown, ChevronUp, Edit3, Building2, Briefcase, GraduationCap, Zap, ArrowRight,
-  Copy, FileText, CheckCheck, Save, KeyRound, MapPin, DollarSign, Calendar
+  Copy, FileText, CheckCheck, Save, KeyRound, MapPin, DollarSign, Calendar,
+  ArrowUpDown, ArrowUp, ArrowDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const parseNumericCompensation = (str) => {
+  if (!str) return 0;
+  const s = String(str).toLowerCase().replace(/,/g, '');
+  const numMatch = s.match(/[\d.]+/);
+  if (!numMatch) return 0;
+  let val = parseFloat(numMatch[0]);
+  if (s.includes('lpa') || s.includes('lac') || s.includes('lakh')) {
+    val *= 100000;
+  } else if (s.includes('k')) {
+    val *= 1000;
+  } else if (s.includes('month') || s.includes('pm') || s.includes('stipend')) {
+    val *= 12;
+  }
+  return val;
+};
+
+const STATUS_ORDER = {
+  not_applied: 1,
+  applied: 2,
+  oa: 3,
+  interview: 4,
+  hr: 5,
+  offer: 6,
+  rejected: 7,
+};
 
 const STATUSES = ['', 'not_applied', 'applied', 'oa', 'interview', 'hr', 'offer', 'rejected'];
 const EMP_TYPES = [
@@ -51,9 +79,15 @@ const parseLinks = (raw) => {
 };
 
 export default function Opportunities() {
-  const [opps, setOpps] = useState([]);
+  const [allOpps, setAllOpps] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ search: '', status: '', employmentType: '', sortBy: 'newest' });
+  const [filters, setFilters] = useState({ 
+    search: '', 
+    status: '', 
+    employmentType: '', 
+    sortBy: 'newest', 
+    sortOrder: 'desc' 
+  });
   const navigate = useNavigate();
 
   // Primary view tab: 'tracked' or 'pending'
@@ -81,11 +115,14 @@ export default function Opportunities() {
   const [updatingAutoId, setUpdatingAutoId] = useState(null);
   const [deletingAutoId, setDeletingAutoId] = useState(null);
 
-  // Pending Review Filters
+  // Pending Review Filters & Sort
   const [pendingDateFilter, setPendingDateFilter] = useState('all');
   const [pendingTypeFilter, setPendingTypeFilter] = useState('');
   const [pendingBranchFilter, setPendingBranchFilter] = useState('');
+  const [pendingEligibilityFilter, setPendingEligibilityFilter] = useState('');
   const [pendingSearch, setPendingSearch] = useState('');
+  const [pendingSortBy, setPendingSortBy] = useState('receivedAt');
+  const [pendingSortOrder, setPendingSortOrder] = useState('desc');
 
   // ─── Pagination states ───────────────────────────────────────────────────
   const [trackedPage, setTrackedPage] = useState(1);
@@ -97,11 +134,106 @@ export default function Opportunities() {
   const [autoUpdatePage, setAutoUpdatePage] = useState(1);
   const [autoUpdatePageSize, setAutoUpdatePageSize] = useState(5);
 
+  const getOppPay = (opp) => {
+    if (opp.ctc) return opp.ctc;
+    if (opp.stipend) return opp.stipend;
+    if (opp.ppo) return `${opp.ppo} (PPO)`;
+    if (opp.customFields?.length) {
+      const ctcF = opp.customFields.find(f => (f.id === 'ctc' || f.label?.toLowerCase().includes('ctc')) && !f.hidden)?.value;
+      if (ctcF) return ctcF;
+      const stipendF = opp.customFields.find(f => (f.id === 'stipend' || f.label?.toLowerCase().includes('stipend')) && !f.hidden)?.value;
+      if (stipendF) return stipendF;
+    }
+    return null;
+  };
+
+  const getOppDeadline = (opp) => {
+    if (opp.deadline) return opp.deadline;
+    if (opp.customFields?.length) {
+      const dField = opp.customFields.find(f => (f.id === 'deadline' || f.fieldType === 'datetime-local' || f.label?.toLowerCase().includes('date') || f.label?.toLowerCase().includes('deadline')) && !f.hidden)?.value;
+      if (dField && !isNaN(new Date(dField).getTime())) return dField;
+    }
+    return null;
+  };
+
+  // Filtered & Sorted Tracked Opportunities
+  const filteredOpps = useMemo(() => {
+    return allOpps.filter(opp => {
+      // 1. Search filter
+      if (filters.search && filters.search.trim()) {
+        const q = filters.search.toLowerCase().trim();
+        const c = (opp.company || '').toLowerCase();
+        const r = (opp.role || '').toLowerCase();
+        const l = (opp.location || '').toLowerCase();
+        const pay = (getOppPay(opp) || '').toLowerCase();
+        const notes = (opp.notes || '').toLowerCase();
+        if (!c.includes(q) && !r.includes(q) && !l.includes(q) && !pay.includes(q) && !notes.includes(q)) {
+          return false;
+        }
+      }
+
+      // 2. Status filter
+      if (filters.status) {
+        const oppStatus = (opp.status || 'not_applied').toLowerCase();
+        if (oppStatus !== filters.status.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // 3. Employment Type filter
+      if (filters.employmentType) {
+        const oppType = (opp.employmentType || 'placement').toLowerCase();
+        if (!oppType.includes(filters.employmentType.toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
+    }).sort((a, b) => {
+      let diff = 0;
+      const order = filters.sortOrder === 'asc' ? 1 : -1;
+
+      switch (filters.sortBy) {
+        case 'company':
+          diff = (a.company || '').localeCompare(b.company || '', undefined, { sensitivity: 'base' });
+          break;
+        case 'role':
+          diff = (a.role || '').localeCompare(b.role || '', undefined, { sensitivity: 'base' });
+          break;
+        case 'deadline': {
+          const dlA = getOppDeadline(a);
+          const dlB = getOppDeadline(b);
+          const tA = dlA ? new Date(dlA).getTime() : (filters.sortOrder === 'asc' ? 9999999999999 : -1);
+          const tB = dlB ? new Date(dlB).getTime() : (filters.sortOrder === 'asc' ? 9999999999999 : -1);
+          diff = tA - tB;
+          break;
+        }
+        case 'compensation':
+        case 'ctc':
+          diff = parseNumericCompensation(getOppPay(a)) - parseNumericCompensation(getOppPay(b));
+          break;
+        case 'status':
+          diff = (STATUS_ORDER[a.status] || 0) - (STATUS_ORDER[b.status] || 0);
+          break;
+        case 'newest':
+        case 'date':
+        default: {
+          const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          diff = tA - tB;
+          break;
+        }
+      }
+
+      return diff * order;
+    });
+  }, [allOpps, filters]);
+
   // Tracked Opportunities pagination
   const paginatedOpps = useMemo(() => {
     const start = (trackedPage - 1) * trackedPageSize;
-    return opps.slice(start, start + trackedPageSize);
-  }, [opps, trackedPage, trackedPageSize]);
+    return filteredOpps.slice(start, start + trackedPageSize);
+  }, [filteredOpps, trackedPage, trackedPageSize]);
 
   // Reset trackedPage if filters change
   useEffect(() => {
@@ -110,9 +242,23 @@ export default function Opportunities() {
 
   // Adjust trackedPage if opps shrink
   useEffect(() => {
-    const maxP = Math.max(1, Math.ceil(opps.length / trackedPageSize));
+    const maxP = Math.max(1, Math.ceil(filteredOpps.length / trackedPageSize));
     if (trackedPage > maxP) setTrackedPage(maxP);
-  }, [opps.length, trackedPageSize, trackedPage]);
+  }, [filteredOpps.length, trackedPageSize, trackedPage]);
+
+  // Handle table column header sorting
+  const handleColumnSort = (columnKey) => {
+    setFilters(f => {
+      if (f.sortBy === columnKey) {
+        return { ...f, sortOrder: f.sortOrder === 'asc' ? 'desc' : 'asc' };
+      }
+      return { 
+        ...f, 
+        sortBy: columnKey, 
+        sortOrder: columnKey === 'deadline' || columnKey === 'newest' ? 'desc' : 'asc' 
+      };
+    });
+  };
 
   // Filtered Pending Review items
   const filteredPending = useMemo(() => {
@@ -120,6 +266,8 @@ export default function Opportunities() {
       const ext = item.extractionResult?.extractedFields || {};
       const edits = pendingEdits[item._id] || {};
       const empType = (edits.employmentType || ext.employmentType || 'placement').toLowerCase();
+      const elig = item.extractionResult?.eligibility;
+      const dup = item.duplicateWarning;
 
       // Search filter
       if (pendingSearch.trim()) {
@@ -128,7 +276,8 @@ export default function Opportunities() {
         const role = (edits.role || ext.role || '').toLowerCase();
         const loc = (edits.location || ext.location || '').toLowerCase();
         const snippet = (item.rawEmailSnippet || '').toLowerCase();
-        if (!comp.includes(query) && !role.includes(query) && !loc.includes(query) && !snippet.includes(query)) {
+        const subj = (item.subject || '').toLowerCase();
+        if (!comp.includes(query) && !role.includes(query) && !loc.includes(query) && !snippet.includes(query) && !subj.includes(query)) {
           return false;
         }
       }
@@ -149,6 +298,15 @@ export default function Opportunities() {
         if (pendingBranchFilter === 'civil' && !checkBranch(['civil'])) return false;
       }
 
+      // Eligibility filter
+      if (pendingEligibilityFilter) {
+        if (pendingEligibilityFilter === 'duplicate') {
+          if (!dup?.isDuplicate) return false;
+        } else if (elig?.status !== pendingEligibilityFilter) {
+          return false;
+        }
+      }
+
       // Date filter
       if (pendingDateFilter !== 'all') {
         const recDate = new Date(item.receivedAt);
@@ -165,8 +323,47 @@ export default function Opportunities() {
       }
 
       return true;
+    }).sort((a, b) => {
+      let diff = 0;
+      const order = pendingSortOrder === 'asc' ? 1 : -1;
+      const extA = a.extractionResult?.extractedFields || {};
+      const extB = b.extractionResult?.extractedFields || {};
+      const editsA = pendingEdits[a._id] || {};
+      const editsB = pendingEdits[b._id] || {};
+
+      switch (pendingSortBy) {
+        case 'company': {
+          const cA = editsA.company || extA.company || '';
+          const cB = editsB.company || extB.company || '';
+          diff = cA.localeCompare(cB, undefined, { sensitivity: 'base' });
+          break;
+        }
+        case 'deadline': {
+          const dA = editsA.deadline || extA.deadline;
+          const dB = editsB.deadline || extB.deadline;
+          const tA = dA ? new Date(dA).getTime() : (pendingSortOrder === 'asc' ? 9999999999999 : -1);
+          const tB = dB ? new Date(dB).getTime() : (pendingSortOrder === 'asc' ? 9999999999999 : -1);
+          diff = tA - tB;
+          break;
+        }
+        case 'pay': {
+          const pA = editsA.ctc || editsA.stipend || extA.ctc || extA.stipend || '';
+          const pB = editsB.ctc || editsB.stipend || extB.ctc || extB.stipend || '';
+          diff = parseNumericCompensation(pA) - parseNumericCompensation(pB);
+          break;
+        }
+        case 'receivedAt':
+        default: {
+          const tA = a.receivedAt ? new Date(a.receivedAt).getTime() : 0;
+          const tB = b.receivedAt ? new Date(b.receivedAt).getTime() : 0;
+          diff = tA - tB;
+          break;
+        }
+      }
+
+      return diff * order;
     });
-  }, [pendingItems, pendingEdits, pendingSearch, pendingTypeFilter, pendingBranchFilter, pendingDateFilter]);
+  }, [pendingItems, pendingEdits, pendingSearch, pendingTypeFilter, pendingBranchFilter, pendingEligibilityFilter, pendingDateFilter, pendingSortBy, pendingSortOrder]);
 
   // Paginated Pending Review items
   const paginatedPending = useMemo(() => {
@@ -206,20 +403,9 @@ export default function Opportunities() {
   const fetchOpps = async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (filters.search) params.search = filters.search;
-      if (filters.status) params.status = filters.status;
-      if (filters.employmentType) params.employmentType = filters.employmentType;
-      const { data } = await opportunityAPI.list(params);
-
+      const { data } = await opportunityAPI.list({});
       const rawList = Array.isArray(data) ? data : (data?.opportunities || []);
-      let sorted = [...rawList];
-      if (filters.sortBy === 'company') {
-        sorted.sort((a, b) => a.company.localeCompare(b.company));
-      } else if (filters.sortBy === 'deadline') {
-        sorted.sort((a, b) => new Date(a.deadline || '9999-12-31') - new Date(b.deadline || '9999-12-31'));
-      }
-      setOpps(sorted);
+      setAllOpps(rawList);
     } catch {
       toast.error('Failed to load opportunities');
     } finally {
@@ -290,12 +476,9 @@ export default function Opportunities() {
 
   useEffect(() => {
     fetchSettings();
-  }, []);
-
-  useEffect(() => {
     fetchOpps();
     fetchPending();
-  }, [filters]);
+  }, []);
 
   const handleSyncGmail = async () => {
     if (!hasApiKey) {
@@ -536,28 +719,6 @@ export default function Opportunities() {
     return name.substring(0, 3).toUpperCase();
   };
 
-  const getOppPay = (opp) => {
-    if (opp.ctc) return opp.ctc;
-    if (opp.stipend) return opp.stipend;
-    if (opp.ppo) return `${opp.ppo} (PPO)`;
-    if (opp.customFields?.length) {
-      const ctcF = opp.customFields.find(f => (f.id === 'ctc' || f.label?.toLowerCase().includes('ctc')) && !f.hidden)?.value;
-      if (ctcF) return ctcF;
-      const stipendF = opp.customFields.find(f => (f.id === 'stipend' || f.label?.toLowerCase().includes('stipend')) && !f.hidden)?.value;
-      if (stipendF) return stipendF;
-    }
-    return null;
-  };
-
-  const getOppDeadline = (opp) => {
-    if (opp.deadline) return opp.deadline;
-    if (opp.customFields?.length) {
-      const dField = opp.customFields.find(f => (f.id === 'deadline' || f.fieldType === 'datetime-local' || f.label?.toLowerCase().includes('date') || f.label?.toLowerCase().includes('deadline')) && !f.hidden)?.value;
-      if (dField && !isNaN(new Date(dField).getTime())) return dField;
-    }
-    return null;
-  };
-
   return (
     <div style={{ maxWidth: 1160, margin: '0 auto', paddingBottom: 60 }}>
       {/* Header */}
@@ -567,7 +728,7 @@ export default function Opportunities() {
             Opportunities
           </h1>
           <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-secondary)' }}>
-            {opps.length} placement & internship opportunities tracked
+            {allOpps.length} placement & internship opportunities tracked
           </p>
         </div>
 
@@ -607,7 +768,7 @@ export default function Opportunities() {
             }}
           >
             <CalendarDays size={15} color={viewTab === 'tracked' ? 'var(--primary-brand)' : 'currentColor'} />
-            Tracked Opportunities ({opps.length})
+            Tracked Opportunities ({allOpps.length})
           </button>
 
           <button
@@ -799,10 +960,67 @@ export default function Opportunities() {
                 </select>
               </div>
 
-              {(pendingDateFilter !== 'all' || pendingTypeFilter || pendingBranchFilter || pendingSearch) && (
+              {/* Eligibility Filter */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px' }}>
+                <CheckCircle2 size={13} color="var(--text-muted)" />
+                <select
+                  value={pendingEligibilityFilter}
+                  onChange={e => { setPendingEligibilityFilter(e.target.value); setPendingPage(1); }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  <option value="" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>All Eligibility</option>
+                  <option value="eligible" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Eligible Only</option>
+                  <option value="not_eligible" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Not Eligible</option>
+                  <option value="review_needed" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Review Needed</option>
+                  <option value="duplicate" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Duplicate Warnings</option>
+                </select>
+              </div>
+
+              {/* Sort By */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--card-subtle)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px' }}>
+                <ArrowUpDown size={13} color="var(--text-muted)" />
+                <select
+                  value={pendingSortBy}
+                  onChange={e => { setPendingSortBy(e.target.value); setPendingPage(1); }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  <option value="receivedAt" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Received Date</option>
+                  <option value="company" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Company Name</option>
+                  <option value="deadline" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Deadline Date</option>
+                  <option value="pay" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: CTC / Stipend</option>
+                </select>
+              </div>
+
+              {/* Ascending / Descending Toggle */}
+              <button
+                type="button"
+                onClick={() => setPendingSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
+                title={`Current order: ${pendingSortOrder === 'asc' ? 'Ascending' : 'Descending'}. Click to toggle.`}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  background: 'var(--card-subtle)', border: '1px solid var(--border)',
+                  borderRadius: 6, padding: '6px 11px',
+                  color: 'var(--text-primary)', fontSize: 12, fontWeight: 600,
+                  cursor: 'pointer', transition: 'all 0.15s ease'
+                }}
+              >
+                {pendingSortOrder === 'asc' ? <ArrowUp size={13} color="var(--primary-brand)" /> : <ArrowDown size={13} color="var(--primary-brand)" />}
+                <span>{pendingSortOrder === 'asc' ? 'Asc' : 'Desc'}</span>
+              </button>
+
+              {(pendingDateFilter !== 'all' || pendingTypeFilter || pendingBranchFilter || pendingEligibilityFilter || pendingSearch || pendingSortBy !== 'receivedAt' || pendingSortOrder !== 'desc') && (
                 <button
                   type="button"
-                  onClick={() => { setPendingDateFilter('all'); setPendingTypeFilter(''); setPendingBranchFilter(''); setPendingSearch(''); setPendingPage(1); }}
+                  onClick={() => {
+                    setPendingDateFilter('all');
+                    setPendingTypeFilter('');
+                    setPendingBranchFilter('');
+                    setPendingEligibilityFilter('');
+                    setPendingSearch('');
+                    setPendingSortBy('receivedAt');
+                    setPendingSortOrder('desc');
+                    setPendingPage(1);
+                  }}
                   style={{ background: 'transparent', border: 'none', color: 'var(--danger, #DC3545)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '4px 8px' }}
                 >
                   Reset Filters
@@ -1774,32 +1992,90 @@ export default function Opportunities() {
               </div>
             </div>
 
-            {/* Secondary Filter Row: Status & Sort */}
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px' }}>
-                <Filter size={14} color="var(--text-muted)" />
-                <select
-                  value={filters.status}
-                  onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+            {/* Secondary Filter Row: Status, Sort, Order & Active filters */}
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Status Filter */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px' }}>
+                  <Filter size={14} color="var(--text-muted)" />
+                  <select
+                    value={filters.status}
+                    onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+                  >
+                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Status: All Stages</option>
+                    {STATUSES.filter(Boolean).map(s => (
+                      <option key={s} value={s} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>
+                        {s.replace('_', ' ').toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort By Field */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px' }}>
+                  <ArrowUpDown size={14} color="var(--text-muted)" />
+                  <select
+                    value={filters.sortBy}
+                    onChange={e => setFilters(f => ({ ...f, sortBy: e.target.value }))}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+                  >
+                    <option value="newest" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Newest First</option>
+                    <option value="company" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Company Name</option>
+                    <option value="role" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Role / Title</option>
+                    <option value="compensation" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: CTC / Stipend</option>
+                    <option value="deadline" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Deadline Date</option>
+                    <option value="status" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Pipeline Status</option>
+                  </select>
+                </div>
+
+                {/* Ascending / Descending Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setFilters(f => ({ ...f, sortOrder: f.sortOrder === 'asc' ? 'desc' : 'asc' }))}
+                  title={`Sort order: ${filters.sortOrder === 'asc' ? 'Ascending' : 'Descending'}. Click to toggle.`}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                    borderRadius: 6, padding: '7px 12px',
+                    color: 'var(--text-primary)', fontSize: 12.5, fontWeight: 600,
+                    cursor: 'pointer', transition: 'all 0.15s ease'
+                  }}
                 >
-                  <option value="" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Status: All Stages</option>
-                  {STATUSES.filter(Boolean).map(s => (
-                    <option key={s} value={s} style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>{s.replace('_', ' ').toUpperCase()}</option>
-                  ))}
-                </select>
+                  {filters.sortOrder === 'asc' ? (
+                    <ArrowUp size={14} color="var(--primary-brand)" />
+                  ) : (
+                    <ArrowDown size={14} color="var(--primary-brand)" />
+                  )}
+                  <span>{filters.sortOrder === 'asc' ? 'Ascending' : 'Descending'}</span>
+                </button>
+
+                {/* Reset Filters button if any active */}
+                {(filters.search || filters.status || filters.employmentType || filters.sortBy !== 'newest' || filters.sortOrder !== 'desc') && (
+                  <button
+                    type="button"
+                    onClick={() => setFilters({ search: '', status: '', employmentType: '', sortBy: 'newest', sortOrder: 'desc' })}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--danger, #DC3545)',
+                      fontSize: 12.5,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: '6px 10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }}
+                  >
+                    <X size={13} /> Reset Filters
+                  </button>
+                )}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px' }}>
-                <select
-                  value={filters.sortBy}
-                  onChange={e => setFilters(f => ({ ...f, sortBy: e.target.value }))}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 12.5, outline: 'none', cursor: 'pointer', fontWeight: 500 }}
-                >
-                  <option value="newest" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Newest First</option>
-                  <option value="company" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Company Name</option>
-                  <option value="deadline" style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>Sort: Deadline Date</option>
-                </select>
+              {/* Showing count indicator */}
+              <div style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                Showing <strong style={{ color: 'var(--text-primary)' }}>{filteredOpps.length}</strong> of {allOpps.length} tracked
               </div>
             </div>
           </div>
@@ -1807,7 +2083,7 @@ export default function Opportunities() {
           {/* Main Table */}
           {loading ? (
             <div className="loading-center" style={{ minHeight: '40vh' }}><div className="spinner" /></div>
-          ) : opps.length === 0 ? (
+          ) : allOpps.length === 0 ? (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 60, textAlign: 'center', color: 'var(--text-secondary)' }}>
               <div style={{ fontSize: 36, marginBottom: 12 }}>💼</div>
               <h3 style={{ fontSize: 18, color: 'var(--text-primary)', margin: '0 0 6px 0', fontWeight: 700 }}>No placement records found</h3>
@@ -1816,18 +2092,90 @@ export default function Opportunities() {
                 + Add First Opportunity
               </Link>
             </div>
+          ) : filteredOpps.length === 0 ? (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 48, textAlign: 'center', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: 30, marginBottom: 10 }}>🔍</div>
+              <h3 style={{ fontSize: 16, color: 'var(--text-primary)', margin: '0 0 6px 0', fontWeight: 700 }}>No opportunities match your filters</h3>
+              <p style={{ fontSize: 13, margin: '0 0 16px 0' }}>Try adjusting your search terms, status, or employment type filter.</p>
+              <button
+                onClick={() => setFilters({ search: '', status: '', employmentType: '', sortBy: 'newest', sortOrder: 'desc' })}
+                style={{ background: 'var(--primary-brand)', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12.5, cursor: 'pointer' }}
+              >
+                Clear All Filters
+              </button>
+            </div>
           ) : (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)' }}>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--card-subtle)' }}>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 200 }}>Company</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 150 }}>Role</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 130 }}>Compensation</th>
+                      <th
+                        onClick={() => handleColumnSort('company')}
+                        style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: filters.sortBy === 'company' ? 'var(--primary-brand)' : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 200, cursor: 'pointer', userSelect: 'none' }}
+                      >
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <span>Company</span>
+                          {filters.sortBy === 'company' ? (
+                            filters.sortOrder === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />
+                          ) : (
+                            <ArrowUpDown size={12} style={{ opacity: 0.35 }} />
+                          )}
+                        </div>
+                      </th>
+                      <th
+                        onClick={() => handleColumnSort('role')}
+                        style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: filters.sortBy === 'role' ? 'var(--primary-brand)' : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 150, cursor: 'pointer', userSelect: 'none' }}
+                      >
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <span>Role</span>
+                          {filters.sortBy === 'role' ? (
+                            filters.sortOrder === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />
+                          ) : (
+                            <ArrowUpDown size={12} style={{ opacity: 0.35 }} />
+                          )}
+                        </div>
+                      </th>
+                      <th
+                        onClick={() => handleColumnSort('compensation')}
+                        style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: filters.sortBy === 'compensation' ? 'var(--primary-brand)' : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 130, cursor: 'pointer', userSelect: 'none' }}
+                      >
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <span>Compensation</span>
+                          {filters.sortBy === 'compensation' ? (
+                            filters.sortOrder === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />
+                          ) : (
+                            <ArrowUpDown size={12} style={{ opacity: 0.35 }} />
+                          )}
+                        </div>
+                      </th>
                       <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 100 }}>Type</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 150 }}>Deadline</th>
-                      <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 140 }}>Status</th>
+                      <th
+                        onClick={() => handleColumnSort('deadline')}
+                        style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: filters.sortBy === 'deadline' ? 'var(--primary-brand)' : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 150, cursor: 'pointer', userSelect: 'none' }}
+                      >
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <span>Deadline</span>
+                          {filters.sortBy === 'deadline' ? (
+                            filters.sortOrder === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />
+                          ) : (
+                            <ArrowUpDown size={12} style={{ opacity: 0.35 }} />
+                          )}
+                        </div>
+                      </th>
+                      <th
+                        onClick={() => handleColumnSort('status')}
+                        style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: filters.sortBy === 'status' ? 'var(--primary-brand)' : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', minWidth: 140, cursor: 'pointer', userSelect: 'none' }}
+                      >
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <span>Status</span>
+                          {filters.sortBy === 'status' ? (
+                            filters.sortOrder === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />
+                          ) : (
+                            <ArrowUpDown size={12} style={{ opacity: 0.35 }} />
+                          )}
+                        </div>
+                      </th>
                       <th style={{ padding: '14px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right', minWidth: 110 }}>Actions</th>
                     </tr>
                   </thead>
@@ -1985,7 +2333,7 @@ export default function Opportunities() {
               {/* Table Footer & Pagination */}
               <Pagination
                 currentPage={trackedPage}
-                totalItems={opps.length}
+                totalItems={filteredOpps.length}
                 pageSize={trackedPageSize}
                 onPageChange={setTrackedPage}
                 onPageSizeChange={(newSize) => { setTrackedPageSize(newSize); setTrackedPage(1); }}
@@ -1998,10 +2346,10 @@ export default function Opportunities() {
       </>
       )}
 
-      {/* AI Merge Modal */}
-      {activeAiOpp && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 600, padding: 26, boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* AI Merge Modal Portaled to Body */}
+      {activeAiOpp && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: 20 }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 600, padding: 26, boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)', display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(24, 183, 160, 0.15)', border: '1px solid rgba(24, 183, 160, 0.3)', color: 'var(--primary-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2040,7 +2388,8 @@ export default function Opportunities() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Missing Key Modal */}
